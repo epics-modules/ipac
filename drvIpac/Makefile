@@ -22,11 +22,12 @@ LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
 
 # MVME162 & MVME172: IPchip carrier driver:
-LIBSRCS_vxWorks-68040 += drvIpMv162.c
-LIBSRCS_vxWorks-68040lc += drvIpMv162.c
+MYSRCS_68k += drvIpMv162.c
 
 # GreenSpring ATC40 Carrier driver: for ISA bus systems only.
-LIBSRCS_vxWorks-pentium += drvAtc40.c
+MYSRCS_pcPertium += drvAtc40.c
+
+LIBSRCS_vxWorks +=  $(MYSRCS_$(ARCH_CLASS))
 
 LIBSRCS += $(SRCS_$(T_A))
 
