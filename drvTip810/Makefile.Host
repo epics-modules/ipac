@@ -5,6 +5,7 @@ include $(TOP)/config/CONFIG_APP
 DBDINSTALL += devTip810.dbd
 
 INC += canBus.h
+INC += drvTip810.h
 
 HTMLS_DIR = .
 HTMLS += devCan.html
