@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.3 1997-08-21 16:57:41 anj Exp $
+    $Id: drvTip810.c,v 1.4 1997-10-17 12:53:34 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -572,6 +572,7 @@ LOCAL void t810ISR (
 	    case PCA_SR_BS | PCA_SR_ES:
 		status = CAN_BUS_OFF;
 		pdevice->busOffCount++;
+		semGive(pdevice->txSem);		/* Release transmit */
 		pdevice->pchip->control &= ~PCA_CR_RR;	/* Clear Reset state */
 		break;
 	    default:
@@ -676,6 +677,50 @@ int canOpen (
 	pdevice = pdevice->pnext;
     }
     return S_can_noDevice;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    canReset
+
+Purpose:
+    Reset named CANbus
+
+Description:
+    Resets the chip and connected to the named bus and all counters
+
+Returns:
+    OK, or S_can_noDevice if no match found.
+
+Example:
+    status = canReset("CAN1");
+
+*/
+
+int canReset (
+    const char *pbusName
+) {
+    t810Dev_t *pdevice;
+    int status = canOpen(pbusName, (void **) &pdevice);
+    
+    if (status) return status;
+    
+    pdevice->pchip->control |=  PCA_CR_RR;	/* Reset the chip */
+    pdevice->txCount	 = 0;
+    pdevice->rxCount	 = 0;
+    pdevice->overCount   = 0;
+    pdevice->unusedCount = 0;
+    pdevice->errorCount  = 0;
+    pdevice->busOffCount = 0;
+    semGive(pdevice->txSem);
+    pdevice->pchip->control = PCA_CR_OIE |
+			      PCA_CR_EIE |
+			      PCA_CR_TIE |
+			      PCA_CR_RIE;
+
+    return OK;
 }
 
 
@@ -1165,8 +1210,14 @@ int canTest (
 ) {
     void *canBusID;
     canMessage_t message;
-    int status = canOpen(pbusName, &canBusID);
+    int status;
 
+    if (pbusName == NULL) {
+	printf("Usage: canTest \"busname\", id, rtr, len, \"data\"\n");
+	return ERROR;
+    }
+
+    status = canOpen(pbusName, &canBusID);
     if (status) {
 	printf("Error %d opening CAN bus '%s'\n", status, pbusName);
 	return ERROR;

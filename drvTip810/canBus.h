@@ -14,7 +14,7 @@ Author:
 Created:
     25 July 1995
 Version:
-    $Id: canBus.h,v 1.3 1997-08-21 16:57:39 anj Exp $
+    $Id: canBus.h,v 1.4 1997-10-17 12:53:32 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -67,6 +67,7 @@ typedef void canSigCallback_t(void *pprivate, int status);
 extern int canSilenceErrors;	/* Really meant for EPICS use only */
 
 extern int canOpen(const char *busName, void **pcanBusID);
+extern int canReset(const char *busName);
 extern int canRead(void *canBusID, canMessage_t *pmessage, int timeout);
 extern int canWrite(void *canBusID, canMessage_t *pmessage, int timeout);
 extern int canMessage(void *canBusID, ushort_t identifier, 
