@@ -2,6 +2,17 @@
 TOP = ../..
 include $(TOP)/config/CONFIG_APP
 
+SRCS.c += ../devAiCan.c
+SRCS.c += ../devAoCan.c
+SRCS.c += ../devBiCan.c
+SRCS.c += ../devBoCan.c
+SRCS.c += ../devMbbiCan.c
+SRCS.c += ../devMbboCan.c
+SRCS.c += ../devMbbiDirectCan.c
+SRCS.c += ../devMbboDirectCan.c
+SRCS.c += ../devBiTip810.c
+SRCS.c += ../drvTip810.c
+
 LIBOBJS += devAiCan.o
 LIBOBJS += devAoCan.o
 LIBOBJS += devBiCan.o
