@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.4 1997-10-17 12:53:34 anj Exp $
+    $Id: drvTip810.c,v 1.5 1998-05-29 14:23:19 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -683,7 +683,7 @@ int canOpen (
 /*******************************************************************************
 
 Routine:
-    canReset
+    canBusReset
 
 Purpose:
     Reset named CANbus
@@ -695,11 +695,11 @@ Returns:
     OK, or S_can_noDevice if no match found.
 
 Example:
-    status = canReset("CAN1");
+    status = canBusReset("CAN1");
 
 */
 
-int canReset (
+int canBusReset (
     const char *pbusName
 ) {
     t810Dev_t *pdevice;
@@ -707,18 +707,87 @@ int canReset (
     
     if (status) return status;
     
-    pdevice->pchip->control |=  PCA_CR_RR;	/* Reset the chip */
-    pdevice->txCount	 = 0;
-    pdevice->rxCount	 = 0;
+    pdevice->pchip->control |=  PCA_CR_RR;    /* Reset the chip */
+    pdevice->txCount   = 0;
+    pdevice->rxCount   = 0;
     pdevice->overCount   = 0;
     pdevice->unusedCount = 0;
     pdevice->errorCount  = 0;
     pdevice->busOffCount = 0;
     semGive(pdevice->txSem);
     pdevice->pchip->control = PCA_CR_OIE |
-			      PCA_CR_EIE |
-			      PCA_CR_TIE |
-			      PCA_CR_RIE;
+			    PCA_CR_EIE |
+			    PCA_CR_TIE |
+			    PCA_CR_RIE;
+
+    return OK;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    canBusStop
+
+Purpose:
+    Stop I/O on named CANbus
+
+Description:
+    Holds the chip for the named bus in Reset state
+
+Returns:
+    OK, or S_can_noDevice if no match found.
+
+Example:
+    status = canBusStop("CAN1");
+
+*/
+
+int canBusStop (
+    const char *pbusName
+) {
+    t810Dev_t *pdevice;
+    int status = canOpen(pbusName, (void **) &pdevice);
+    
+    if (status) return status;
+    
+    pdevice->pchip->control |=  PCA_CR_RR;    /* Reset the chip */
+    return OK;
+}
+
+
+/*******************************************************************************
+ 
+Routine:
+    canBusRestart
+
+Purpose: 
+    Restart I/O on named CANbus
+
+Description:
+    Restarts the chip for the named bus after a canBusStop
+
+Returns: 
+    OK, or S_can_noDevice if no match found.
+
+Example: 
+    status = canBusRestart("CAN1");
+
+*/
+
+int canBusRestart (
+    const char *pbusName
+) {
+    t810Dev_t *pdevice;
+    int status = canOpen(pbusName, (void **) &pdevice);
+    
+    if (status) return status;
+    
+    semGive(pdevice->txSem);
+    pdevice->pchip->control = PCA_CR_OIE |
+			    PCA_CR_EIE |
+			    PCA_CR_TIE |
+			    PCA_CR_RIE;
 
     return OK;
 }
