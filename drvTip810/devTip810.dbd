@@ -17,7 +17,9 @@ device(stringin, INST_IO,devSiWiener,"CANbus")
 device(bi,INST_IO,devBiTip810,"Tip810")
 
 # CANbus driver support for the TEWS Tip810 IP module...
+registrar(drvTip810Registrar)
 driver(drvTip810)
+
 # ... which depends on the drvIpac driver
 include "drvIpac.dbd"
 
