@@ -6,8 +6,11 @@ HTMLS_DIR = .
 HTMLS += tyGSOctal.html
 HTMLS += tyGSOctalRelease.html
 
-SRCS += tyGSOctal.c
+DBD += tyGSOctal.dbd
 
-OBJS_vxWorks += tyGSOctal.o
+LIBSRCS += tyGSOctal.c
+
+LIBRARY_IOC_vxWorks = TyGSOctal
+TyGSOctal_LIBS += Ipac
 
 include $(TOP)/configure/RULES
