@@ -17,7 +17,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.1 1998-05-29 14:24:33 anj Exp $
+    $Id: drvVipc616.c,v 1.2 1998-08-19 14:06:40 anj Exp $
 
 (c) 1997 Royal Greenwich Observatory
 
@@ -131,18 +131,21 @@ LOCAL int initialise (
     char *cardParams,
     void **pprivate
 ) {
-    int params, status1 = OK, status2 = OK, mSize = 0;
+    int params, ioStatus, memStatus = OK, mSize = 0;
     ulong_t ioBase, mOrig, mBase, addr;
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
-	PROM_A, PROM_B, PROM_C, PROM_D,
-	REGS_A, REGS_B, REGS_C, REGS_D
+	{
+	    PROM_A, PROM_B, PROM_C, PROM_D
+	}, {
+	    REGS_A, REGS_B, REGS_C, REGS_D
+	}
     };
 
     if (cardParams == NULL ||
 	strlen(cardParams) == 0) {
-	/* No or empty string, use manufacturers default settings */
+	/* No params or empty string, use manufacturers default settings */
 	ioBase = 0x6000;
 	mBase = 0xd0000000;
 	params = 2;	/* Pretend, mBase is in A32 space */
@@ -158,23 +161,26 @@ LOCAL int initialise (
 	}
     }
 
-    status1 = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
+    ioStatus = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
 				(char *) ioBase, (char **) &ioBase);
-    if (params == 2) {
+    if (params == 1) {
+    	/* No memory, just the A16 I/O space */
+	mSize = 0;
+    } else if (params == 2) {
 	/* A32 space, 8Mb allocated per module */
-	status2 = sysBusToLocalAdrs(VME_AM_EXT_SUP_DATA, 
+	memStatus = sysBusToLocalAdrs(VME_AM_EXT_SUP_DATA, 
 				    (char *) mBase, (char **) &mBase);
 	mSize = 8 << 20;
 	mOrig = mBase;
     } else {
 	/* A24 space, variable size per module */
-	status2 = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
+	memStatus = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
 				    (char *) mBase, (char **) &mBase);
     	mSize = mSize << 10;	    /* Convert size from K to Bytes */
     	mOrig = mBase & ~(mSize * SLOTS - 1);
 
     }
-    if (status1 || status2) {
+    if (ioStatus || memStatus) {
 	return S_IPAC_badAddress;
     }
 
@@ -188,7 +194,7 @@ LOCAL int initialise (
     for (slot = 0; slot < SLOTS; slot++) {
 	(*private)[ipac_addrIO32][slot] = NULL;
 	addr = mOrig + (mSize * slot);
-	if (addr < mBase) {
+	if ((mSize == 0) || (addr < mBase)) {
 	    (*private)[ipac_addrMem][slot] = NULL;
 	} else {
 	    (*private)[ipac_addrMem][slot] = (void *) addr;
@@ -258,10 +264,15 @@ LOCAL int irqCmd (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	IRQ_A0, IRQ_A1, 
-	IRQ_B0, IRQ_B1,
-	IRQ_C0, IRQ_C1,
-	IRQ_D0, IRQ_D1
+	{
+	    IRQ_A0, IRQ_A1
+	}, {
+	    IRQ_B0, IRQ_B1
+	}, {
+	    IRQ_C0, IRQ_C1
+	}, {
+	    IRQ_D0, IRQ_D1
+	}
     };
 
     switch (cmd) {
