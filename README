@@ -1,11 +1,50 @@
-IPAC Support Application Structure
-==================================
+IPAC and CANbus Driver
+======================
 
-Sites may wish to edit the Makefile found in this directory to change
-the list of module drivers to be built along with the ipac driver.
-Additional driver directories will have to be added to the Makefile by
-hand.  This is intentional to allow the distribution to include all of
-the standard IP module drivers in the future without requiring every
-site to build them all.
+    This README file describes ipac, also previously known as drvIpac,
+    which is a collection of software for vxWorks to interface to one or
+    more Industry Pack carrier boards, and to the TEWS Tip810 CANbus IP
+    module.  This software was written for use with EPICS (Experimental
+    Physics and Industrial Control System, http://www.aps.anl.gov/epics)
+    but the drivers can be compiled and used without the EPICS interface
+    if this is desired - see the HTML documentation in the drvIpac and
+    drvTip810 directories for some details.
 
-- Andrew Johnson, March 1999
+
+EPICS Support Application Structure
+-----------------------------------
+
+    Sites may wish to edit the Makefile found in this directory to change
+    the list of module drivers to be built along with the ipac driver.
+    Additional driver directories will have to be added to the Makefile
+    by hand.  This is intentional to allow the distribution to include
+    all of the standard IP module drivers in the future without requiring
+    every site to build them all.
+
+
+- Andrew Johnson <anjohnson@iee.org>
+
+
+LEGAL STUFF
+===========
+
+    This notice applies to tip810Lib and most of ipacLib, which are
+    Copyright (C) 1995-2000 Andrew Johnson.  The source files concerned
+    all contain a copy of the following information.  Other source files
+    are distributed with the permission of their authors, but are not
+    necessarily licensed for free use outside of members of the EPICS
+    consortium.
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
