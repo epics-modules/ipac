@@ -1,0 +1,125 @@
+<HTML>
+<HEAD>
+<TITLE>CANbus and IPAC Driver Release Notes</TITLE>
+<META NAME="Author" CONTENT="Andrew Johnson">
+<META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
+<META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.1 1998-08-28 11:35:12 anj Exp $">
+</HEAD>
+<BODY>
+
+<CENTER>
+<H2>CANbus and IPAC Driver Release Notes</H2>
+<P><I>Andrew Johnson</I></P>
+</CENTER>
+
+<P>This document describes the changes which have been made to my vxWorks/EPICS
+CANbus and IndustryPack drivers as they have evolved since first release.  The
+earliest version appears at the bottom, with more recent releases above it. 
+These release notes first appeared in version 1.1b, but I have attempted to
+describe the differences in previous releases where I can remember or discover
+what they were by examining the source code. </P><HR>
+
+
+<H2>Version 1.1b</H2>
+
+<P>Added:<UL>
+
+<LI>Carl Lionberger's code to <TT>canIoParse</TT> which allows message IDs to
+be calculated as the sum of several numbers.  This makes it possible to use
+templates and text substitution to generate IDs for many device types.</LI>
+
+<LI>These release notes.</LI>
+
+</UL></P>
+
+<P>Bugs fixed:<UL>
+
+<LI>Changed the alarm severities for Bus Off events and Timeouts to use the
+EPICS standard <TT>INVALID_ALARM</TT> severity.  A Bus Error now does not affect record
+alarm state or severities at all, but now all Bus Status transitions cause a
+message to be logged giving the bus name and the new status.</LI>
+
+<LI>ao, bo, mbbo and mbboDirect records which have a constant value in their
+DOL field will now initialise properly to this value - the DOL values copied
+into the VAL field by the record initialisation routines were being overwritten
+as the CAN device support <TT>init_record</TT> routine was returning
+<TT>OK&nbsp;=>&nbsp;0&nbsp;=>&nbsp;CONVERT</TT>, rather than the correct
+<TT>DO_NOT_CONVERT&nbsp;=>&nbsp;2</TT>.</LI>
+
+</UL></P><HR>
+
+
+<H2>Version 1.1a</H2>
+
+<P>Bugs fixed:<UL>
+
+<LI>Removed a change introduced in V1.1 to when input records are processed on
+the receipt of interrupts.  Carl Lionberger discovered this change had been a
+mistake...</LI>
+
+<LI>VIPC616 carrier driver address parameter handling fixed, changes courtesy
+of Christoper Estes.</LI>
+
+</UL></P><HR>
+
+
+<H2>Version 1.1</H2>
+
+<P>Added:<UL>
+
+<LI>devBoTip810 device support to allow CANbus status bits to be tested from
+within the EPICS database.</LI>
+
+<LI>Support files for EPICS R3.13 (.dbd, LIBOBJS).  Not tested though.</LI>
+
+<LI><TT>canMsgDelete</TT> routine which allows message callbacks to be
+unregistered.</LI>
+
+<LI><TT>canBusReset</TT>, <TT>canBusStop</TT> and <TT>canBusRestart</TT>
+routines to allow resetting and halting bus operations.</LI>
+
+<LI>Usage instructions output by <TT>canTest</TT> if no bus name given.</LI>
+
+<LI>IPAC Prom structure declared volatile to prevent gcc optimiser from
+generating long word accesses to it.  Only affected some carrier boards.</LI>
+
+<LI>Separate support for both the GreenSpring VIPC610 and VIPC610-01 carrier
+boards, which have different interrupt levels for the different slot
+interrupts.  From now on the correct carrier table <TT>vipc610</TT> or
+<TT>vipc610_01</TT> should be used. </LI>
+
+<LI>Support for the the GreenSpring VIPC616 carrier board, table name
+<TT>vipc616</TT>.</LI>
+
+<LI>HTML Documentation distributed in the release.</LI>
+
+</UL></P>
+
+<P>Bugs fixed:<UL>
+
+<LI>Significantly reduced the number of callbacks used in the event of a Bus
+Error or Bus Off event, by only using one per device support type rather than
+one per record.  This solves the large number of "callback ring buffer full"
+messages which would occur whenever a CANbus with a lot of I/O on it was
+disconnected.</LI>
+
+<LI>RTR messages are now sent with length 8 rather than 0 as some CAN devices
+use the RTR length field to indicate how long a message to return.</LI>
+
+<LI>Tip810 Interrupt was not enabled using correct drvIpac call and would not
+work on some carrier boards.</LI>
+
+<LI>A Bus-Off event sometimes caused all further transmissions to be disabled
+forever because transmit semaphore was not released when resetting the error.
+</LI>
+
+</UL></P><HR>
+
+
+<H2>Version 1.0</H2>
+
+<P>First full release.</P>
+
+</BODY>
+</HTML>
