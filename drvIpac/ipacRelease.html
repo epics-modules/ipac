@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.6 2000-02-21 21:35:33 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.7 2001-02-14 20:37:35 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -15,12 +15,47 @@
 
 <P>This document describes the changes which have been made to my vxWorks/EPICS
 IndustryPack driver as it has evolved since first release.  The earliest
-version appears at the bottom, with more recent releases above it.  These
-release notes first appeared in version 1.1b, but I have attempted to describe
-the differences in previous releases where I can remember or discover what they
-were by examining the source code.  After version 1.1c the CANbus driver was
-split off as a separate package, hence the CANbus related comments up to and
-including this release. </P><HR>
+version appears at the bottom, with more recent releases above it.</P>
+
+<HR>
+
+<H2>Version 2.3</H2>
+
+<P>Added:<UL>
+
+<LI>Recognition of high-speed (32&nbsp;MHz) IP modules in ipmCheck; these have
+an ID prom that starts 'IPAH' rather than the usual 'IPAC'.  Carrier drivers
+that can change a slot's clock speed in software must scan the ID proms for
+their slots at 8MHz and then switch any that can run at 32&nbsp;MHz.
+
+<BR><B>NB:</B> I don't actually know of any carriers that can do this; the IPIC
+chip on the MVME162/172 has an IP Clock Register, but this only controls cycle
+synchronization logic - the IP clock rate is set using jumpers on the CPU
+board (and appears to affect all the IP slots together).</LI>
+
+<LI>Added warning message to VIPC610 and VIPC616 drivers whenever a Level 7
+interrupt is enabled, as the connected ISR should not call <I>any</I> vxWorks
+routines.  Usually it is a mistake to use this, but unfortunately the boards
+are delivered with slot D IRQ0 wired for this level.  Also put an explanatory
+note in the carrier board documentation.</LI>
+
+<LI>Brought the index.html file for the ipac module home page into the software
+distribution and reorganized the links so they work even when viewed from the
+a local <TT>&lt;ipac&gt;/html</TT> install directory.</LI>
+
+<LI>New 'R' configuration parameter to the ipMv162 carrier driver which gives
+all slots a hardware reset pulse on startup.  If used, this must be the first
+character of the string.</LI>
+
+</UL></P>
+
+<P>Changed:<UL>
+
+<LI>Removed CANbus-specific comments from the IPAC Release Notes.</LI>
+
+</UL></P>
+
+<HR>
 
 
 <H2>Version 2.2</H2>
@@ -47,6 +82,9 @@ EPICS Release 3.13.2.</LI>
 
 </UL></P>
 
+<HR>
+
+
 <H2>Version 2.1</H2>
 
 <P>Added:<UL>
@@ -54,18 +92,20 @@ EPICS Release 3.13.2.</LI>
 <LI>Jeff Hill's driver for the GreenSpring ATC40 ISAbus carrier board,
 including the changes to the main drvIpac software and the other carrier
 drivers which are necessary to support little-endian architectures.  These
-were:<UL>
+were:
 
+<UL>
 <LI>Make all accesses to the IP module registers &amp; ID-Prom use short
 (16-bit) read/writes, so the endian problem disappears.  Adjust various
 internal routines to allow for this.</LI>
 
-<LI>Provide a new function pointer (optional may be NULL) in the carrier table
+<LI>Provide a new function pointer (optional, may be NULL) in the carrier table
 which is called by ipmIntConnect.  Module drivers should use ipmIntConnect
 instead of vxWorks' intConnect routine to attach their interrupt routine.  This
 makes it possible to use identical module driver code on both VME and ISA bus,
-although the module driver may have to be modified as discussed above to resolve
-the endian issue.</LI></UL></LI>
+although the module driver may have to be modified as discussed above to
+resolve the endian issue.</LI>
+</UL></LI>
 
 <LI>Some <TT>printf()</TT>s in ipacAddCarrier so failures can be seen without
 having to look at the return value.</LI>
@@ -77,16 +117,19 @@ having to look at the return value.</LI>
 <P>Bug fixed:<UL>
 
 <LI>Finally tested the MVME162 carrier driver myself - this also works on the
-MVME172.  Changed the checking of m= addresses to use unsigned arithmetic.</LI>
+MVME172.  Changed the checking of <TT>m=</TT> addresses to use unsigned
+arithmetic.</LI>
 
-</UL></P><HR>
+</UL></P>
+
+<HR>
 
 
 <H2>Version 2.0</H2>
 
-<P>First version since I joined APS, now restructured as an EPICS R3.13.1
-&lt;supporttop&gt; application.  CANbus (drvTip810) and other drivers can be
-built in separate application directories inside this &lt;supporttop&gt;. </P>
+<P>The software is now restructured as an EPICS R3.13.1 &lt;supporttop&gt;
+application.  CANbus (drvTip810) and other drivers can be built in separate
+application directories inside this &lt;supporttop&gt;.</P>
 
 <P>Added:<UL>
 
@@ -103,76 +146,39 @@ built in separate application directories inside this &lt;supporttop&gt;. </P>
 
 <H2>Version 1.1c</H2>
 
-<P>Final release from the RGO.  CVS repository transferred to APS. </P>
+<P>Final release from the RGO.  CVS repository transferred to APS.</P>
 
-<P>Bugs fixed, courtesy Carl Lionberger at LBL:<UL>
+<P>No changes to drvIpac</P>
 
-<LI>Reinstated Bus Errors causing records to go into alarm state with an
-<TT>INVALID_ALARM</TT> severity.  A Bus Off transition is very rarely if ever
-seen, even pulling the cable only causes a Bus Error.</LI>
-
-</UL></P><HR>
+<HR>
 
 
 <H2>Version 1.1b</H2>
 
 <P>Added:<UL>
 
-<LI>Carl Lionberger's code to <TT>canIoParse</TT> which allows message IDs to
-be calculated as the sum of several numbers.  This makes it possible to use
-templates and text substitution to generate IDs for many device types.</LI>
-
 <LI>These release notes.</LI>
 
 </UL></P>
 
-<P>Bugs fixed:<UL>
-
-<LI>Changed the alarm severities for Bus Off events and Timeouts to use the
-EPICS standard <TT>INVALID_ALARM</TT> severity.  A Bus Error now does not affect record
-alarm state or severities at all, but now all Bus Status transitions cause a
-message to be logged giving the bus name and the new status.</LI>
-
-<LI>ao, bo, mbbo and mbboDirect records which have a constant value in their
-DOL field will now initialise properly to this value - the DOL values copied
-into the VAL field by the record initialisation routines were being overwritten
-as the CAN device support <TT>init_record</TT> routine was returning
-<TT>OK&nbsp;=>&nbsp;0&nbsp;=>&nbsp;CONVERT</TT>, rather than the correct
-<TT>DO_NOT_CONVERT&nbsp;=>&nbsp;2</TT>.</LI>
-
-</UL></P><HR>
+<HR>
 
 
 <H2>Version 1.1a</H2>
 
 <P>Bugs fixed:<UL>
 
-<LI>Removed a change introduced in V1.1 to when input records are processed on
-the receipt of interrupts.  Carl Lionberger discovered this change had been a
-mistake...</LI>
-
 <LI>VIPC616 carrier driver address parameter handling fixed, changes courtesy
 of Christoper Estes.</LI>
 
-</UL></P><HR>
+</UL></P>
+
+<HR>
 
 
 <H2>Version 1.1</H2>
 
 <P>Added:<UL>
-
-<LI>devBoTip810 device support to allow CANbus status bits to be tested from
-within the EPICS database.</LI>
-
-<LI>Support files for EPICS R3.13 (.dbd, LIBOBJS).  Not tested though.</LI>
-
-<LI><TT>canMsgDelete</TT> routine which allows message callbacks to be
-unregistered.</LI>
-
-<LI><TT>canBusReset</TT>, <TT>canBusStop</TT> and <TT>canBusRestart</TT>
-routines to allow resetting and halting bus operations.</LI>
-
-<LI>Usage instructions output by <TT>canTest</TT> if no bus name given.</LI>
 
 <LI>IPAC Prom structure declared volatile to prevent gcc optimiser from
 generating long word accesses to it.  Only affected some carrier boards.</LI>
@@ -189,25 +195,7 @@ interrupts.  From now on the correct carrier table <TT>vipc610</TT> or
 
 </UL></P>
 
-<P>Bugs fixed:<UL>
-
-<LI>Significantly reduced the number of callbacks used in the event of a Bus
-Error or Bus Off event, by only using one per device support type rather than
-one per record.  This solves the large number of "callback ring buffer full"
-messages which would occur whenever a CANbus with a lot of I/O on it was
-disconnected.</LI>
-
-<LI>RTR messages are now sent with length 8 rather than 0 as some CAN devices
-use the RTR length field to indicate how long a message to return.</LI>
-
-<LI>Tip810 Interrupt was not enabled using correct drvIpac call and would not
-work on some carrier boards.</LI>
-
-<LI>A Bus-Off event sometimes caused all further transmissions to be disabled
-forever because transmit semaphore was not released when resetting the error.
-</LI>
-
-</UL></P><HR>
+<HR>
 
 
 <H2>Version 1.0</H2>
