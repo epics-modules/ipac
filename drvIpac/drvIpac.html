@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.6 2001-02-14 20:35:37 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.7 2001-03-08 20:14:36 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -287,6 +287,14 @@ the following structures which can be used here:
 <td>drvVipc616</td>
 
 <td><tt>&amp;vipc616</tt></td>
+</tr>
+
+<tr>
+<td><b>GreenSpring VIPC616-01</b></td>
+
+<td>drvVipc616_01</td>
+
+<td><tt>&amp;vipc616_01</tt></td>
 </tr>
 
 <tr>
@@ -1432,6 +1440,15 @@ should also be used for the VIPC618 carrier which is schematically identical to
 the VIPC616 but uses different I/O connectors for the IP module signals.</p>
 
 <p>
+There is a separate driver provided in the file <i>drvVipc616_01.c</i> for the
+VIPC616-01 board option which differs from the basic VIPC616 driver in the IRQ
+levels it assumes, and the carrier table name <tt>vipc616_01</tt>.  Because of
+the problems described in the following paragraph it is recommended that the
+-01 version board be bought rather than the basic VIPC610.  The interrupt
+levels used with this option are IRQ1, 2, 4 and 5, with slots C and D repeating
+the levels of A and B.</p>
+
+<p>
 <b>Warning:</b> As delivered by SBS/GreenSpring the VIPC616 has IRQ0 of slot D
 connected to the VMEbus level 7 interrupt.  Under vxWorks on the MC680x0 family
 this interrupt level may only be connected to a service routine that does not
@@ -1481,7 +1498,7 @@ result in an error. I don't have a VIPC616 to check this out with, so the
 driver is untested.]</i></dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc616, "1000,8000000")</tt></dt>
+<tt>ipacAddCarrier(&amp;vipc616_01, "1000,8000000")</tt></dt>
 
 <dd>
 Here the I/O base is set to 0x1000, and each module is allocated 8Mb of

@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.7 2001-02-14 20:37:35 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.8 2001-03-08 20:14:36 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -38,6 +38,9 @@ interrupt is enabled, as the connected ISR should not call <I>any</I> vxWorks
 routines.  Usually it is a mistake to use this, but unfortunately the boards
 are delivered with slot D IRQ0 wired for this level.  Also put an explanatory
 note in the carrier board documentation.</LI>
+
+<LI>Added a driver for the VIPC616-01 option, which isn't subject the the
+problems in the previous bullet point.</LI>
 
 <LI>Brought the index.html file for the ipac module home page into the software
 distribution and reorganized the links so they work even when viewed from the

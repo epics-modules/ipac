@@ -12,6 +12,7 @@ SRCS.c += ../drvVipc310.c
 SRCS.c += ../drvVipc610.c
 SRCS.c += ../drvVipc610_01.c
 SRCS.c += ../drvVipc616.c
+SRCS.c += ../drvVipc616_01.c
 SRCS.c += ../drvIpMv162.c
 SRCS.c += ../drvAtc40.c
 
@@ -22,6 +23,7 @@ LIBOBJS += drvVipc310.o
 LIBOBJS += drvVipc610.o
 LIBOBJS += drvVipc610_01.o
 LIBOBJS += drvVipc616.o
+LIBOBJS += drvVipc616_01.o
 
 # GreenSpring ATC40 Carrier driver: for ISA bus systems only.
 #LIBOBJS += drvAtc40.o
