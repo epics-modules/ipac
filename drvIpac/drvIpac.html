@@ -4,8 +4,8 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
-   <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.11 2004-01-26 23:55:33 anj Exp $">
+   <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.12 2004-02-24 00:21:04 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -14,7 +14,7 @@
 <h1>
 drvIpac - Industry Pack Driver</h1>
 
-Version 2.6
+Version 2.7
 
 <address>
 Andrew Johnson</address></center>
@@ -70,16 +70,16 @@ Andrew Johnson</address></center>
 
 <ul>
 <li>
-<a href="#VIPC310">GreenSpring VIPC310</a></li>
+<a href="#VIPC310">SBS VIPC310</a></li>
 
 <li>
-<a href="#VIPC610">GreenSpring VIPC610</a></li>
+<a href="#VIPC610">SBS VIPC610</a></li>
 
 <li>
-<a href="#VIPC616">GreenSpring VIPC616</a></li>
+<a href="#VIPC616">SBS VIPC616</a></li>
 
 <li>
-<a href="#ATC40">GreenSpring ATC40</a></li>
+<a href="#ATC40">SBS ATC40</a></li>
 
 <li>
 <a href="#MVME162">Motorola MVME162/172</a></li>
@@ -92,13 +92,15 @@ Andrew Johnson</address></center>
 See also the following Module Drivers which use drvIpac:
 
 <ul>
+
 <li>
 <a href="drvTip810.html">TEWS Tip810 CANbus IP module</a></li>
 
 <li>
-<a href="tyGSOctal.html">GreenSpring Octal Serial IP module (RS232, RS422,
+<a href="tyGSOctal.html">SBS Octal Serial IP module (RS232, RS422,
 RS485)</a></li>
-</ol>
+
+</ul>
 
 <hr>
 
@@ -126,10 +128,10 @@ IPAC driver which in turn calls the IPAC Carrier driver written for the
 particular type of carrier board. This carrier driver should be simple to
 write, comprising three or four short subroutines and an interface structure.
 On VMEbus, carrier drivers are available for the 
-<a href="http://www.greenspring.com/">GreenSpring</a> VIPC310, 610 and 616
-boards, and a driver for the <a href="http://www.mcg.mot.com/">Motorola</a>
-MVME162 that also works on the MVME172.  On ISAbus the GreenSpring ATC40
-carrier is now supported by a driver from Jeff Hill.</p>
+<a href="http://www.sbs.com/">SBS</a> VIPC310, 610 and 616 boards, and a driver
+for the <a href="http://www.mcg.mot.com/">Motorola</a> MVME162 that also works
+on the MVME172. On ISAbus the SBS ATC40 carrier is now supported by a driver
+from Jeff Hill.</p>
 
 <p>
 At present the IPAC driver is limited (by the size of an internal array) to
@@ -155,18 +157,26 @@ work with EPICS R3.14.3 and later). Two steps are then required to install and
 build the software:</p>
 
 <ol>
+
 <li>
 Edit the configure/RELEASE file and set the correct path for EPICS_BASE at
 your site.</li>
 
 <li>
-Run gnumake in the top level directory.</li>
-</ol>
-
-<p>
 If you don't need all of the module drivers included with the distribution,
-you may wish to edit the top level Makefile and comment out the lines mentioning
-driver directories you don't need.</p>
+edit the top level Makefile and comment out the lines mentioning driver
+directories you don't need.</li>
+
+<li>
+Edit the drvIpac/drvIpac.dbd file to include the set of IPAC Carrier drivers
+that you will be using at your site. This step can also be performed later by
+copying the drvIpac.dbd file to an IOC application and modifying it there
+instead.</li>
+
+<li>
+Run gnumake in the top level directory.</li>
+
+</ol>
 
 <h3>
 <a NAME="Bus Issues"></a>Bus Issues</h3>
@@ -256,15 +266,15 @@ of the same type of carrier board.</dd>
 <tt>const char *cardParams</tt></dt>
 
 <dd>
-String containing board-specific initialisation parameters which is passed
-to the carrier driver. For carrier boards which rely on jumpers to set
-the board address (e.g. the SBS GreenSpring carrier boards), the settings for
-each particular board will be reflected in the parameter settings given
-here when registering that carrier. For boards such as the MVME162 where
-the addresses can be changed by the driver, this string may be used to
-indicate how the board should be initialised. See the specific documentation
-for each carrier driver (<a href="#section4">section 4</a> below) for the
-parameter string syntax.</dd>
+String containing board-specific initialisation parameters which is passed to
+the carrier driver. For carrier boards which rely on jumpers to set the board
+address (e.g. the SBS carrier boards), the settings for each particular board
+will be reflected in the parameter settings given here when registering that
+carrier. For boards such as the MVME162 where the addresses can be changed by
+the driver, this string may be used to indicate how the board should be
+initialised. See the specific documentation for each carrier driver
+(<a href="#section4">section 4</a> below) for the parameter string syntax.</dd>
+
 </dl>
 
 <h4>
@@ -681,9 +691,8 @@ Module identification - see <a href="#carrierSlot">above</a></dd>
 <tt>uchar_t manufacturerId</tt></dt>
 
 <dd>
-IPAC Manufacturer Identification Number, as allocated by GreenSpring. This
-number should be given in the Programmer's Documentation for the IPAC
-module.</dd>
+IPAC Manufacturer Identification Number, as allocated by SBS. This number
+should be given in the Programmer's Documentation for the IPAC module.</dd>
 
 <dt>
 <tt>uchar_t modelId</tt></dt>
@@ -1132,7 +1141,7 @@ returns is appended after the hyphen.</p>
 <a NAME="section4"></a>4. IPAC Carrier Drivers</h2>
 
 <h3>
-<a NAME="VIPC310"></a>GreenSpring VIPC310</h3>
+<a NAME="VIPC310"></a>SBS VIPC310</h3>
 
 <p>
 This board is probably the simplest possible VME-based IPAC Carrier available.
@@ -1252,7 +1261,7 @@ the necessary level.</p>
 
 
 <h3>
-<a NAME="VIPC610"></a>GreenSpring VIPC610</h3>
+<a NAME="VIPC610"></a>SBS VIPC610</h3>
 
 <p>
 This board is a four-slot, 6U carrier, but otherwise very similar to the
@@ -1272,13 +1281,13 @@ executable, for which it must be listed in the IOC's .dbd file thus:</p>
 <blockquote><pre>registrar(vipc610Registrar)</pre></blockquote>
 
 <p>
-<b>Warning:</b> As delivered by SBS/GreenSpring the VIPC610 has IRQ0 of slot D
-connected to the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not
-cause a VMEbus interrupt at all.  Under vxWorks on the MC680x0 family a
-level&nbsp;7 interrupt level may only be connected to a service routine that
-does not make any calls to vxWorks routines.  Thus with a VIPC610 board slot D
-should not be used for modules that generate interrupts.  The VIPC610-01 board
-option is free of this problem.</p>
+<b>Warning:</b> As delivered by SBS the VIPC610 has IRQ0 of slot D connected to
+the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not cause a VMEbus
+interrupt at all.  Under vxWorks on the MC680x0 family a level&nbsp;7 interrupt
+level may only be connected to a service routine that does not make any calls
+to vxWorks routines.  Thus with a VIPC610 board slot D should not be used for
+modules that generate interrupts.  The VIPC610-01 board option is free of this
+problem.</p>
 
 <h4>
 Configuration Commands and Parameter</h4>
@@ -1382,7 +1391,7 @@ to the straight VIPC610, you must use the correct driver!</p>
 
 
 <h3>
-<a NAME="VIPC616"></a>GreenSpring VIPC616</h3>
+<a NAME="VIPC616"></a>SBS VIPC616</h3>
 
 <p>
 This board is a four-slot, 6U carrier, but otherwise very similar to the
@@ -1410,13 +1419,13 @@ for which it must be listed in the IOC's .dbd file thus:</p>
 <blockquote><pre>registrar(vipc616Registrar)</pre></blockquote>
 
 <p>
-<b>Warning:</b> As delivered by SBS/GreenSpring the VIPC616 has IRQ0 of slot D
-connected to the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not
-cause a VMEbus interrupt at all.  Under vxWorks on the MC680x0 family a
-level&nbsp;7 interrupt level may only be connected to a service routine that
-does not make any calls to vxWorks routines.  Thus with a VIPC616 board slot D
-should not be used for modules that generate interrupts.  The VIPC616-01 board
-option is free of this problem.</p>
+<b>Warning:</b> As delivered by SBS the VIPC616 has IRQ0 of slot D connected to
+the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not cause a VMEbus
+interrupt at all.  Under vxWorks on the MC680x0 family a level&nbsp;7 interrupt
+level may only be connected to a service routine that does not make any calls
+to vxWorks routines.  Thus with a VIPC616 board slot D should not be used for
+modules that generate interrupts.  The VIPC616-01 board option is free of this
+problem.</p>
 
 <h4>
 Configuration Commands and Parameter</h4>
@@ -1529,12 +1538,12 @@ to the straight VIPC616, you must use the correct driver!</p>
 
 
 <h3>
-<a NAME="ATC40"></a>GreenSpring ATC40</h3>
+<a NAME="ATC40"></a>SBS ATC40</h3>
 
 <p>
-The GreenSpring ATC40 is an IP carrier board for the ISAbus, which is a
-little-endian architecture unlike the VMEbus. Providing support for this board
-has required some changes to the drvIpac software which are described in the
+The SBS ATC40 is an IP carrier board for the ISAbus, which is a little-endian
+architecture unlike the VMEbus. Providing support for this board has required
+some changes to the drvIpac software which are described in the
 <a href="#Bus Issues">Bus Issues</a> section above. Unless similar precautions
 are taken when writing module drivers these will not be compatible with
 little-endian systems. This carrier driver was written by
