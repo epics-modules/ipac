@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.6 2003-11-04 21:35:11 anj Exp $
+    $Id: drvIpac.h,v 1.7 2004-12-15 23:00:58 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -73,6 +73,11 @@ extern "C" {
 #define S_IPAC_badVector (M_ipac| 10) /*Bad interrupt vector*/
 #define S_IPAC_vectorInUse (M_ipac| 11) /*Interrupt vector in use*/
 #define S_IPAC_badIntLevel (M_ipac| 12) /*Bad interrupt level*/
+
+
+/* Maximum size of IP carrier report string */
+
+#define IPAC_REPORT_LEN	256
 
 
 /* Structure of the IPAC ID Prom, located in the pack ID space. */
@@ -150,7 +155,7 @@ typedef struct {
     int (*initialise)(const char *cardParms, void **cPrivate, ushort_t carrier);
 			/* Initialise carrier and return *cPrivate */
     char *(*report)(void *cPrivate, ushort_t slot);
-			/* Return string with giving status of this slot */
+			/* Return string giving status of this slot */
     void *(*baseAddr)(void *cPrivate, ushort_t slot, ipac_addr_t space);
 			/* Return base addresses for this slot */
     int (*irqCmd)(void *cPrivate, ushort_t slot, 

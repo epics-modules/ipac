@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.11 2004-02-24 00:19:57 anj Exp $
+    $Id: drvIpac.c,v 1.12 2004-12-15 23:00:58 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -44,6 +44,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <vxLib.h>
 #include <intLib.h>
 #include <iv.h>
@@ -61,23 +62,19 @@ struct carrierInfo {
 
 LOCAL struct {
     ushort_t number;
-    struct carrierInfo *info[IPAC_MAX_CARRIERS];
+    ushort_t latest;
+    struct carrierInfo info[IPAC_MAX_CARRIERS];
 } carriers = {
-    0
+    0, USHRT_MAX
 };
 
 
-/* Null carrier stuff */
+/* Null carrier table */
 
 LOCAL ipac_carrier_t nullCarrier = {
     "Null carrier (place holder)",
     0,			/* No slots */
     NULL, NULL, NULL, NULL, NULL
-};
-
-LOCAL struct carrierInfo nullInfo = {
-    &nullCarrier,
-    NULL
 };
 
 
@@ -122,6 +119,12 @@ Description:
     call this routine with a NULL (zero) carrier table address, which 
     switches in the null carrier table instead.
 
+    As long as the carrier table is not full, ipacAddCarrier() will always
+    increment its internal carrier number on every call, thus a carrier
+    driver failure will not cause all subsequent carriers to silently
+    move down by one.  In the event of an error, the null carrier table is
+    used for the current carrier number instead of the requested table.
+
 Returns:
     0 = OK,
     S_IPAC_tooMany = Carrier Info Table full,
@@ -136,17 +139,19 @@ int ipacAddCarrier (
     ipac_carrier_t *pcarrierTable,
     const char *cardParams
 ) {
-    void *cPrivate;
     int status;
 
     if (carriers.number >= IPAC_MAX_CARRIERS) {
 	printf("ipacAddCarrier: Too many carriers registered.\n");
+	carriers.latest = USHRT_MAX;
 	return S_IPAC_tooMany;
     }
 
+    /* Start with Null Carrier table in case of initialization errors */
+    carriers.latest = carriers.number++;
+    carriers.info[carriers.latest].driver = &nullCarrier;
+
     if (pcarrierTable == NULL) {
-	carriers.info[carriers.number] = &nullInfo;
-	carriers.number++;
 	return OK;
     }
 
@@ -158,19 +163,46 @@ int ipacAddCarrier (
 	return S_IPAC_badTable;
     }
 
-    status = pcarrierTable->initialise(cardParams, &cPrivate, carriers.number);
+    status = pcarrierTable->initialise(cardParams,
+	     &carriers.info[carriers.latest].cPrivate, carriers.latest);
     if (status) {
 	printf("ipacAddCarrier: %s driver returned an error.\n", 
 		pcarrierTable->carrierType);
 	return status;
     }
 
-    carriers.info[carriers.number] = malloc(sizeof (struct carrierInfo));
-    carriers.info[carriers.number]->driver = pcarrierTable;
-    carriers.info[carriers.number]->cPrivate = cPrivate;
-    carriers.number++;
+    carriers.info[carriers.latest].driver = pcarrierTable;
 
     return OK;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    ipacLatestCarrier
+
+Function:
+    Get the carrier number of the most recently added carrier board.
+
+Description:
+    Returns the index into the carrier table of the most recently added
+    carrier board, or USHRT_MAX if the most recent call to ipacAddCarrier
+    could not be fulfilled because the carrier table was already full.
+    The value returned can always be used as the carrier argument to any
+    drvIpac routine without checking it first; if the carrier board was
+    not properly initialized for any reason then these routines will fail
+    too.
+
+Returns:
+    The latest assigned carrier number, or
+    USHRT_MAX if carrier table was full before last ipacAddCarrier()
+
+*/
+
+ushort_t ipacLatestCarrier(void)
+{
+    return carriers.latest;
 }
 
 
@@ -203,7 +235,7 @@ int ipmCheck (
     ushort_t dummy;
 
     if (carrier >= carriers.number ||
-	slot >= carriers.info[carrier]->driver->numberSlots) {
+	slot >= carriers.info[carrier].driver->numberSlots) {
 	return S_IPAC_badAddress;
     }
 
@@ -363,7 +395,7 @@ char *ipmReport (
     ushort_t carrier, 
     ushort_t slot
 ) {
-    static char report[80];
+    static char report[IPAC_REPORT_LEN+32];
     int status;
 
     sprintf(report, "C%hd S%hd : ", carrier, slot);
@@ -386,10 +418,11 @@ char *ipmReport (
 	strcat(report, module);
     }
 
-    if (carriers.info[carrier]->driver->report != NULL) {
+    if (carriers.info[carrier].driver->report != NULL) {
 	strcat(report, " - ");
-	strcat(report, carriers.info[carrier]->driver->report(
-			carriers.info[carrier]->cPrivate, slot));
+	strncat(report, carriers.info[carrier].driver->report(
+			carriers.info[carrier].cPrivate, slot),
+		IPAC_REPORT_LEN);
     }
 
     return report;
@@ -427,11 +460,11 @@ void *ipmBaseAddr (
     ipac_addr_t space
 ) {
     if (carrier >= carriers.number ||
-	slot >= carriers.info[carrier]->driver->numberSlots) {
+	slot >= carriers.info[carrier].driver->numberSlots) {
 	return NULL;
     }
-    return carriers.info[carrier]->driver->baseAddr(
-		carriers.info[carrier]->cPrivate, slot, space);
+    return carriers.info[carrier].driver->baseAddr(
+		carriers.info[carrier].cPrivate, slot, space);
 }
 
 
@@ -465,12 +498,12 @@ int ipmIrqCmd (
 ) {
     if (irqNumber > 1 ||
 	carrier >= carriers.number ||
-	slot >= carriers.info[carrier]->driver->numberSlots) {
+	slot >= carriers.info[carrier].driver->numberSlots) {
 	return S_IPAC_badAddress;
     }
 
-    return carriers.info[carrier]->driver->irqCmd(
-		carriers.info[carrier]->cPrivate, slot, irqNumber, cmd);
+    return carriers.info[carrier].driver->irqCmd(
+		carriers.info[carrier].cPrivate, slot, irqNumber, cmd);
 }
 
 
@@ -511,17 +544,17 @@ int ipmIntConnect (
 ) {
     if (vecNum > 0xff ||
     	carrier >= carriers.number ||
-	slot >= carriers.info[carrier]->driver->numberSlots) {
+	slot >= carriers.info[carrier].driver->numberSlots) {
 	return S_IPAC_badAddress;
     }
 
     /* Use intConnect if carrier driver doesn't provide one */
-    if (carriers.info[carrier]->driver->intConnect == NULL) {
+    if (carriers.info[carrier].driver->intConnect == NULL) {
     	return intConnect (INUM_TO_IVEC((int)vecNum), routine, parameter);
     }
 
-    return carriers.info[carrier]->driver->intConnect(
-		carriers.info[carrier]->cPrivate, slot, vecNum, 
+    return carriers.info[carrier].driver->intConnect(
+		carriers.info[carrier].cPrivate, slot, vecNum, 
 		routine, parameter);
 }
 
@@ -553,13 +586,13 @@ int ipacReport (
 
     for (carrier=0; carrier < carriers.number; carrier++) {
 	printf("  IP Carrier %2d: %s, %d slots\n", carrier, 
-		carriers.info[carrier]->driver->carrierType,
-		carriers.info[carrier]->driver->numberSlots);
+		carriers.info[carrier].driver->carrierType,
+		carriers.info[carrier].driver->numberSlots);
 
 	if (interest > 0) {
 	    void *memBase, *io32Base;
 
-	    for (slot=0; slot < carriers.info[carrier]->driver->numberSlots; 
+	    for (slot=0; slot < carriers.info[carrier].driver->numberSlots; 
 		 slot++) {
 		printf("    %s\n", ipmReport(carrier, slot));
 

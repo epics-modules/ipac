@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.12 2004-02-23 22:02:37 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.13 2004-12-15 23:00:58 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,31 @@
 IndustryPack driver as it has evolved since first release.  The earliest
 version appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+<H2>Version 2.8</H2>
+
+<P>Added:</P>
+<UL>
+
+<LI>Added a new routine ipacLatestCarrier which returns the carrier number of
+the most recently added carrier board.  This can be used in the vxWorks startup
+script to avoid any problems that might occur if a call to ipacAddCarrier
+(actually to its new carrier-specific routines) returns with a failure.  Such a
+failure would result in any succeeding carrier board receiving the carrier
+number expected by the failed one.</LI>
+
+</UL>
+
+<P>Changed:</P>
+<UL>
+
+<LI>The behaviour of ipacAddCarrier has been changed so that it always
+increments its internal carrier number even when it returns with an error, and
+in that circumstance the Null carrier driver will be used for all subsequent
+operations on that carrier number.</LI>
+
+</UL>
 <HR>
 
 <H2>Version 2.7</H2>

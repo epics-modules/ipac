@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.12 2004-02-24 00:21:04 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.13 2004-12-15 23:00:58 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -14,7 +14,7 @@
 <h1>
 drvIpac - Industry Pack Driver</h1>
 
-Version 2.7
+Version 2.8
 
 <address>
 Andrew Johnson</address></center>
@@ -34,6 +34,9 @@ Andrew Johnson</address></center>
 <ul>
 <li>
 <a href="#ipacAddCarrier">ipacAddCarrier</a></li>
+
+<li>
+<a href="#ipacLatestCarrier">ipacLatestCarrier</a></li>
 
 <li>
 <a href="#ipacReport">ipacReport</a></li>
@@ -89,7 +92,7 @@ Andrew Johnson</address></center>
 <a href="#section5">Interface to IPAC Carrier Drivers</a></li>
 </ul>
 
-See also the following Module Drivers which use drvIpac:
+See also the following Module Drivers which are included with drvIpac:
 
 <ul>
 
@@ -127,11 +130,7 @@ all control of or requests for information about the carrier board goes via the
 IPAC driver which in turn calls the IPAC Carrier driver written for the
 particular type of carrier board. This carrier driver should be simple to
 write, comprising three or four short subroutines and an interface structure.
-On VMEbus, carrier drivers are available for the 
-<a href="http://www.sbs.com/">SBS</a> VIPC310, 610 and 616 boards, and a driver
-for the <a href="http://www.mcg.mot.com/">Motorola</a> MVME162 that also works
-on the MVME172. On ISAbus the SBS ATC40 carrier is now supported by a driver
-from Jeff Hill.</p>
+Carrier drivers are available for most of the common IP carrier boards.</p>
 
 <p>
 At present the IPAC driver is limited (by the size of an internal array) to
@@ -174,7 +173,7 @@ copying the drvIpac.dbd file to an IOC application and modifying it there
 instead.</li>
 
 <li>
-Run gnumake in the top level directory.</li>
+Run <tt>gnumake</tt> in the top level directory.</li>
 
 </ol>
 
@@ -187,15 +186,13 @@ busses, and provides a means of isolating module drivers from some of the
 differences between interrrupt handling on different busses.</p>
 
 <p>
-The endian problem only exists when accessing I/O registers and the IPAC ID
-PROM using byte addresses. If all accesses occur using 16-bit read/write cycles
-then the problem disappears. This is usually done by changing the structure
-that declares the structure of a module's registers to use <tt>short</tt>
-instead of <tt>char</tt> and removing the `padding' char members that separate
-the registers (this change has been made to the <tt>ipac_idProm_t</tt>
-structure which is declared in <i>drvIpac.h</i>). This done the other changes
-are generally minor, usually consisting of masking off the top 8 bits of every
-value read from the hardware.</p>
+
+The endian problem only exists when accessing I/O registers and the IPAC ID PROM
+using byte addresses. In drvIpac all accesses are made using 16-bit read/write
+cycles, so there are no known issues with endianness.  This is done by declaring
+the structure of a module's registers using <tt>short</tt> variables instead of
+<tt>char</tt>. With this done the only other requirement is to mask off the top
+8 bits of every value read from the hardware.</p>
 
 <p>
 Some busses such as ISAbus do not support interrupt vectors and require a
@@ -305,6 +302,13 @@ instead. When this facility is used any module driver which attempts to access
 a slot on this carrier will be given error status returns by the module
 interface routines.</p>
 
+<p>
+As long as the carrier table is not full, ipacAddCarrier() will always increment
+its internal carrier number on every call, thus a carrier driver failure will
+not cause all subsequent carriers to silently move down by one.  In the event of
+an error, the null carrier table is used for the current carrier number instead
+of the requested table.
+
 <h4>
 Returns</h4>
 
@@ -354,6 +358,57 @@ Examples</h4>
 ipacAddCarrier(NULL, "");
 ipacAddCarrier(&amp;vipc310, "0x6800");</pre>
 </blockquote>
+
+
+<hr>
+<h3>
+<a NAME="ipacLatestCarrier"></a>ipacLatestCarrier</h3>
+
+<p>
+Gets the carrier number of the most recently added carrier board.</p>
+
+<pre>ushort_t ipacLatestCarrier(void);</pre>
+
+<h4>
+Description</h4>
+
+<p>
+Returns the index into the carrier table of the most recently added carrier
+board, or USHRT_MAX if the most recent call to ipacAddCarrier could not be
+fulfilled because the carrier table was already full. The value returned can
+always be used as the carrier argument to any drvIpac routine without checking
+it first; if the carrier board was not properly initialized for any reason then
+these routines will return a failure status of some kind.</p>
+
+<h4>
+Returns</h4>
+
+<dl>
+<dt>
+<tt>ushort_t</tt></dt>
+
+<dd>
+<table BORDER=2>
+<tr>
+<th>Symbol/Value</th>
+
+<th>Meaning</th>
+</tr>
+
+<tr>
+<td>0 thru 20</td>
+
+<td>Carrier number of latest board added</td>
+</tr>
+
+<tr>
+<td>USHRT_MAX</td>
+
+<td>Carrier table was full</td>
+</tr>
+</table></dd>
+</dl>
+
 
 <hr>
 <h3>
@@ -410,9 +465,8 @@ Returns</h4>
 </table></dd>
 </dl>
 
+
 <hr>
-
-
 <h3>
 <a NAME="ipacInitialise"></a>ipacInitialise</h3>
 
@@ -921,6 +975,7 @@ follows:</p>
 
 <td><tt>ipac_statActive</tt></td>
 </tr>
+
 </table>
 </blockquote>
 
@@ -1105,9 +1160,10 @@ Description</h4>
 Generates a report string describing the given IPAC slot. If a module is
 installed, it includes the manufacturer and model ID numbers. If the report
 function is supported by the carrier driver this report string is appended.
-This function is uses a single internal static character array to hold
-the report string, thus the value will be corrupted if two tasks use this
-routine simultaneously.</p>
+This function is uses a static character array to hold the report string, thus
+the value will be corrupted if two tasks use this routine simultaneously. The
+string returned by the carrier driver's report routine will be clipped if
+longer than IPAC_REPORT_LEN characters.</p>
 
 <h4>
 Returns</h4>
@@ -1549,8 +1605,8 @@ are taken when writing module drivers these will not be compatible with
 little-endian systems. This carrier driver was written by
 <a href="mailto:peregrine@lanl.gov">Peregrine McGehee</a> and
 <a href="mailto:johill@lanl.gov">Jeff Hill</a>, who should be approached
-directly for support. Note that the carrier driver source file
-<i>drvIpac/drvAtc40.c</i> will only compile for Pentium CPUs.</p>
+directly for support. Note that the carrier driver will probably only run on an
+Intel CPU, and has not been tested with recent drvIpac releases.</p>
 
 <p>
 The registrar entry for this driver should be:</p>
@@ -1747,9 +1803,15 @@ the commands are:</p>
 </tr>
 
 <tr>
-<td>other calls</td>
+<td>Other ipac_irq commands</td>
 
 <td>0 = OK</td>
+</tr>
+
+<tr>
+<td><tt>Other commands</tt></td>
+
+<td>S_IPAC_notImplemented</td>
 </tr>
 </table>
 </blockquote>
@@ -1831,9 +1893,9 @@ confidence.</p>
 The simplest way to write a carrier driver is to copy the VIPC310 or MVME162
 driver and modify one of these for the new board type. The MVME162 driver
 interfaces to the IPIC chip and can be used as a basis for carrier drivers
-which provide extensive control over the IPAC slots. The VIPC310 board is
-totally dumb, and thus provides the simplest possible example of a carrier
-driver.</p>
+which provide extensive control over the IPAC slots. The VIPC310 and VIPC610
+boards are totally dumb, and thus provide the simplest possible example of a
+carrier driver.</p>
 
 <hr>
 

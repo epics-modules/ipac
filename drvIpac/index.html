@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.8 2004-02-24 00:24:37 anj Exp $">
+   <meta name="Version" content="$Id: index.html,v 1.9 2004-12-15 23:00:58 anj Exp $">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
@@ -43,8 +43,7 @@ Software is included to control the following hardware:</p>
 <ul>
 <li>
 <a href="http://www.sbs.com/">SBS</a> (was GreenSpring)
-<a href="http://www.sbs.com/computer/products/io_carriers.shtml">VIPC310,
-VIPC610, VIPC616</a> and ATC40 dumb carrier boards</li>
+VIPC310, VIPC610, VIPC616, VIPC626 and ATC40 dumb carrier boards</li>
 
 <li>
 <a href="http://mcg.motorola.com">Motorola</a>
@@ -53,7 +52,7 @@ MVME162 and MVME172</a> MC680x0 CPU boards with IP slots</li>
 
 <li>
 <a href="http://www.tews-datentechnik.com">TEWS Datentechnik</a>
-<a href="http://www.tews-datentechnik.com/tip810.htm">Tip810</a>
+<a href="http://www.tews-datentechnik.com/Products/ArticleGroup/TIP/TIP810.html">Tip810</a>
 Basic CANbus interface module</li>
 
 <li>
@@ -193,6 +192,17 @@ R3.14.3 or later</td>
 <a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.7.tar.gz">ipac-2.7.tar.gz</a></td>
 </tr>
 
+<tr>
+<td align=center>
+2.8</td>
+
+<td>
+R3.14.3 or later</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.8.tar.gz">ipac-2.8.tar.gz</a></td>
+</tr>
+
 </table>
 </blockquote></li>
 
@@ -222,7 +232,10 @@ Application Installation</h2>
 
 <p>
 The precise method of using this support software in an &lt;ioctop&gt;
-application depends on the version of EPICS Base you're using:</p>
+application depends on the version of EPICS Base you're using.  All file
+modifications described here are to files in your &lt;ioctop&gt;; you don't
+have to make any more changes to the drvIpac release files, you already made
+those when you followed the instructions in the previous section.</p>
 
 <h3>
 EPICS R3.13.x</h3>
@@ -365,7 +378,7 @@ The following documentation is available:</p>
 <table border=1>
 
 <tr>
-<th>Title</th><th>Version(s)</th></tr>
+<th>Title</th><th>Release Version</th></tr>
 
 <tr>
 <td>drvIpac - Industry Pack Driver</td>
@@ -373,8 +386,9 @@ The following documentation is available:</p>
 <a href="R2.3/drvIpac.html">2.3</a>
 <a href="R2.4/drvIpac.html">2.4</a>
 <a href="R2.5/drvIpac.html">2.5</a>
-<a href="R2.6/drvIpac.html">2.6</a> -->
-<a href="drvIpac.html">2.7</a></td>
+<a href="R2.6/drvIpac.html">2.6</a>
+<a href="R2.7/drvIpac.html">2.7</a> -->
+<a href="drvIpac.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -383,8 +397,9 @@ The following documentation is available:</p>
 <a href="R2.3/ipacRelease.html">2.3</a>
 <a href="R2.4/ipacRelease.html">2.4</a>
 <a href="R2.5/ipacRelease.html">2.5</a>
-<a href="R2.6/ipacRelease.html">2.6</a> -->
-<a href="ipacRelease.html">2.7</a></td>
+<a href="R2.6/ipacRelease.html">2.6</a>
+<a href="R2.7/ipacRelease.html">2.7</a> -->
+<a href="ipacRelease.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -393,8 +408,9 @@ The following documentation is available:</p>
 <a href="R2.3/drvTip810.html">2.3</a>
 <a href="R2.4/drvTip810.html">2.4</a>
 <a href="R2.5/drvTip810.html">2.5</a>
-<a href="R2.6/drvTip810.html">2.6</a> -->
-<a href="drvTip810.html">2.7</a></td>
+<a href="R2.6/drvTip810.html">2.6</a>
+<a href="R2.7/drvTip810.html">2.7</a> -->
+<a href="drvTip810.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -403,8 +419,9 @@ The following documentation is available:</p>
 <a href="R2.3/devCan.html">2.3</a>
 <a href="R2.4/devCan.html">2.4</a>
 <a href="R2.5/devCan.html">2.5</a>
-<a href="R2.6/devCan.html">2.6</a> -->
-<a href="devCan.html">2.7</a></td>
+<a href="R2.6/devCan.html">2.6</a>
+<a href="R2.7/devCan.html">2.7</a> -->
+<a href="devCan.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -413,8 +430,9 @@ The following documentation is available:</p>
 <a href="R2.3/canRelease.html">2.3</a>
 <a href="R2.4/canRelease.html">2.4</a>
 <a href="R2.5/canRelease.html">2.5</a>
-<a href="R2.6/canRelease.html">2.6</a> -->
-<a href="canRelease.html">2.7</a></td>
+<a href="R2.6/canRelease.html">2.6</a>
+<a href="R2.7/canRelease.html">2.7</a> -->
+<a href="canRelease.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -423,8 +441,9 @@ The following documentation is available:</p>
 <a href="R2.3/tyGSOctal.html">2.3</a>
 <a href="R2.4/tyGSOctal.html">2.4</a>
 <a href="R2.5/tyGSOctal.html">2.5</a>
-<a href="R2.6/tyGSOctal.html">2.6</a> -->
-<a href="tyGSOctal.html">2.7</a></td>
+<a href="R2.6/tyGSOctal.html">2.6</a>
+<a href="R2.7/tyGSOctal.html">2.7</a> -->
+<a href="tyGSOctal.html">2.8</a></td>
 </tr>
 
 <tr>
@@ -433,8 +452,9 @@ The following documentation is available:</p>
 <a href="R2.3/tyGSOctalRelease.html">2.3</a>
 <a href="R2.4/tyGSOctalRelease.html">2.4</a>
 <a href="R2.5/tyGSOctalRelease.html">2.5</a>
-<a href="R2.6/tyGSOctalRelease.html">2.6</a> -->
-<a href="tyGSOctalRelease.html">2.7</a></td>
+<a href="R2.6/tyGSOctalRelease.html">2.6</a>
+<a href="R2.7/tyGSOctalRelease.html">2.7</a> -->
+<a href="tyGSOctalRelease.html">2.8</a></td>
 </tr>
 
 </table>
