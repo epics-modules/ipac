@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <logLib.h>
 #include <taskLib.h>
 #include <tyLib.h>
@@ -84,6 +85,7 @@ LOCAL int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
 LOCAL STATUS tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
 LOCAL int    tyGSOctalStartup(TY_GSOCTAL_DEV *);
 LOCAL void   tyGSOctalBaudSet(TY_GSOCTAL_DEV *, int);
+LOCAL void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts);
 LOCAL void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
 
 /******************************************************************************
@@ -467,8 +469,8 @@ LOCAL void tyGSOctalInitChannel
  * Set up the default port configuration:
  * 9600 baud, no parity, 1 stop bit, 8 bits per char, no flow control
  */
-    tyGSOctalSetmr(pTyGSOctalDv, 0x13, 0x07);
     tyGSOctalBaudSet(pTyGSOctalDv, 9600);
+    tyGSOctalOptsSet(pTyGSOctalDv, CS8);
 
 /*
  * enable everything, really only Rx interrupts
@@ -607,6 +609,7 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
     }
 
     tyGSOctalSetmr(pTyGSOctalDv, mr1, mr2);
+    pTyGSOctalDv->opts = opts & (CSIZE|STOPB|PARENB|PARODD|CLOCAL);
 }
 
 /******************************************************************************
@@ -621,14 +624,15 @@ LOCAL void tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     switch(baud)
     {	/* NB: ACR[7]=1 */
-	case 1200: chan->u.w.csr=0x66; break; 
-	case 2400: chan->u.w.csr=0x88; break; 
-	case 4800: chan->u.w.csr=0x99; break; 
-	default:
-	case 9600: chan->u.w.csr=0xbb; break; 
+	case 1200:  chan->u.w.csr=0x66; break; 
+	case 2400:  chan->u.w.csr=0x88; break; 
+	case 4800:  chan->u.w.csr=0x99; break; 
+	default:    baud=9600;
+	case 9600:  chan->u.w.csr=0xbb; break; 
 	case 19200: chan->u.w.csr=0xcc; break; 
 	case 38400: chan->u.w.csr=0x22; break; 
     }
+    pTyGSOctalDv->baud = baud;
 }
 
 /******************************************************************************
@@ -658,10 +662,16 @@ LOCAL STATUS tyGSOctalIoctl
 	    tyGSOctalBaudSet(pTyGSOctalDv, arg);
 	    intUnlock (oldlevel);
 	    break;
+	case SIO_BAUD_GET:
+	    *(int *)arg = pTyGSOctalDv->baud;
+	    break;
 	case SIO_HW_OPTS_SET:
 	    oldlevel = intLock ();
 	    tyGSOctalOptsSet(pTyGSOctalDv, arg);
 	    intUnlock (oldlevel);
+	    break;
+	case SIO_HW_OPTS_GET:
+	    *(int *)arg = pTyGSOctalDv->opts;
 	    break;
 	default:
 	    status = tyIoctl (&pTyGSOctalDv->tyDev, request, arg);
@@ -676,7 +686,7 @@ LOCAL STATUS tyGSOctalIoctl
  * tyGSOctalConfig - special device control (old version)
  *
  * This routine sets the baud rate, parity, stop bits, word size, and
- * flow control for the specified port
+ * flow control for the specified port.
  *
  */
 void tyGSOctalConfig (
@@ -689,51 +699,31 @@ void tyGSOctalConfig (
 ) {
     static  char    *fn_nm = "tyGSOctalConfig";
     
-    int mr1 = 0x00; /*  RxRTS=No, RxINT=RxRDY, Error=char */
-    int mr2 = 0x00; /*  normal, TxRTS=No, CTS=No, stop-bit-length=0.563 */
+    int opts = 0;
     int oldlevel;
     TY_GSOCTAL_DEV *pTyGSOctalDv = (TY_GSOCTAL_DEV *) iosDevFind(name, NULL);
 
-    if (!pTyGSOctalDv)
-    {
+    if (!pTyGSOctalDv) {
 	logMsg("%s: Device %s not found\n",
 	       (int)fn_nm, (int)name, NULL,NULL,NULL,NULL);
 	return;
     }
 
-    switch(parity) /* parity */
-    {
-	case 'E': case 'e': break;            /* even */
-	case 'O': case 'o': mr1|=0x04; break; /* odd  */
-	default: 
-	case 'N': case 'n': mr1|=0x10; break; /* none */
+    switch (bits) {
+	case 5: opts |= CS5; break;
+	case 6: opts |= CS6; break;
+	case 7: opts |= CS7; break;
+	default:
+	case 8: opts |= CS8; break;
     }
 
-    switch(bits) /* per character */
-    {
-	case 5: break;
-	case 6: mr1|=0x01; break;
-	case 7: mr1|=0x02; break;
-	default:
-	case 8:mr1|=0x03; break;
-    }
-
-    switch(stop) /* number of stop bits */
-    {
-	case 2: mr2|=0x0f; break;
-	default:
-	case 1: mr2|=0x07; break;
-    }
-
-    switch(flow) /* set up flow control */
-    {
-	case 'H': case 'h': mr1|=0x80; mr2|=0x10; break;
-	default:
-	case 'N': case 'n': break;
-    }
+    if (stop == 2)                   opts |= STOPB;
+    if (tolower(flow) == 'h')        opts |= CLOCAL;
+    if (tolower(parity) == 'e')      opts |= PARENB;
+    else if (tolower(parity) == 'o') opts |= PARENB | PARODD;
 
     oldlevel = intLock ();
-    tyGSOctalSetmr(pTyGSOctalDv, mr1, mr2);
+    tyGSOctalOptsSet(pTyGSOctalDv, opts);
     tyGSOctalBaudSet(pTyGSOctalDv, baud);
     intUnlock (oldlevel);
 }

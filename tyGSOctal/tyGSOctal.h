@@ -32,6 +32,8 @@ struct ty_gsoctal_dev
     int             block;
     struct quadTable *qt;
     RSmode          mode;
+    int             baud;
+    int             opts;
     UCHAR           imr;
 };
 typedef struct ty_gsoctal_dev TY_GSOCTAL_DEV;
