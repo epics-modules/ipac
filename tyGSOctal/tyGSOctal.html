@@ -42,19 +42,15 @@ tyGSOctalDrv 1
 # Init an RS232 module using IRQ #80 on carrier 0, slot 0
 tyGSOctalModuleInit "RS232", 0x80, 0, 0
 
-# Create devices
-# name, module#, port#, rdBuf, wrBuf
-tyGSOctalDevCreate "/tyGS0/0", 0, 0, 512, 512
-tyGSOctalDevCreate "/tyGS0/2", 0, 2, 512, 512
-tyGSOctalDevCreate "/tyGS0/4", 0, 4, 512, 512
-tyGSOctalDevCreate "/tyGS0/6", 0, 6, 512, 512
+# Create devices: name, module#, port#, rdBuf, wrBuf
+tyGSOctalDevCreate "/tyGS0/0", 0, 0, 2048, 512
+# Other devices: basename, module#, rdBuf, wrBuf
+tyGSOctalDevCreateAll "/tyGS0/", 0, 512, 512
 
 # Configure the ports
 # baud, parity(N/E/O), stop, bits, flow(N/H)
-tyGSOctalConfig "/tyGS0/0", 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig "/tyGS0/2", 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig "/tyGS0/4", 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig "/tyGS0/6", 9600, 'N', 1, 8, 'N'</pre>
+tyGSOctalConfig "/tyGS0/0", 38400, 'N', 1, 8, 'N'
+# Other ports default to 9600, 'N', 1, 8, 'N'</pre>
 </blockquote>
 
 </body>
