@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.4 1998-08-28 08:40:03 anj Exp $
+    $Id: devAoCan.c,v 1.5 1998-09-29 18:56:30 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -353,6 +353,8 @@ LOCAL void busSignal (
 	case CAN_BUS_ERROR:
 	    logMsg("devAoCan: Bus Error event from %s\n",
 	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
+	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
 	case CAN_BUS_OFF:
 	    logMsg("devAoCan: Bus Off event from %s\n",

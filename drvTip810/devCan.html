@@ -4,7 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="User Documentation for the EPICS CANbus device support software">
    <META NAME="KeyWords" CONTENT="CANbus, EPICS, Tip810">
-   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.3 1998-08-20 19:11:07 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.4 1998-09-29 18:57:01 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -185,12 +185,10 @@ waiting on this particular message identifier. </P>
 <H3><A NAME="alarmStatus"></A>Alarm Status</H3>
 
 <P>Records will be placed in an alarm state in the event of the CANbus
-interface signalling a Bus Off event, or if the remote CAN device does not
-respond to an RTR message within the specified timeout interval.  A Bus Error
-event causes a message to be logged for each device type in use, but does not
-change the alarm status or severity of any records to change (this is new in
-Version 1.1b).  The alarm status and severity meanings are given in the
-following table: </P>
+interface signalling a Bus Error or Bus Off event, or if the remote CAN device
+does not respond to an RTR message within the specified timeout interval (Bus
+Error alarms were disabled in Version 1.1b but have been reinstated in V1.1c). 
+The alarm status and severity meanings are given in the following table: </P>
 
 <CENTER><TABLE BORDER=1 >
 <TR BGCOLOR="#FFFFFF">
@@ -202,7 +200,7 @@ following table: </P>
 <TR>
 <TD><TT>COMM_ALARM</TT></TD>
 <TD><TT>INVALID_ALARM</TT></TD>
-<TD>CAN Bus Off event</TD>
+<TD>CAN Bus Error or Bus Off event</TD>
 </TR>
 
 <TR>

@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiCan.c,v 1.6 1998-08-20 19:00:08 anj Exp $
+    $Id: devMbbiCan.c,v 1.7 1998-09-29 18:56:33 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -310,6 +310,8 @@ LOCAL void busSignal (
 	case CAN_BUS_ERROR:
 	    logMsg("devMbbiCan: Bus Error event from %s\n",
 	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
+	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
 	case CAN_BUS_OFF:
 	    logMsg("devMbbiCan: Bus Off event from %s\n",

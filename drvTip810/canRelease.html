@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.1 1998-08-28 11:35:12 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.2 1998-09-29 18:57:02 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -19,6 +19,19 @@ earliest version appears at the bottom, with more recent releases above it.
 These release notes first appeared in version 1.1b, but I have attempted to
 describe the differences in previous releases where I can remember or discover
 what they were by examining the source code. </P><HR>
+
+
+<H2>Version 1.1c</H2>
+
+<P>Final release from the RGO.  CVS repository transferred to APS. </P>
+
+<P>Bugs fixed, courtesy Carl Lionberger at LBL:<UL>
+
+<LI>Reinstated Bus Errors causing records to go into alarm state with an
+<TT>INVALID_ALARM</TT> severity.  A Bus Off transition is very rarely if ever
+seen, even pulling the cable only causes a Bus Error.</LI>
+
+</UL></P><HR>
 
 
 <H2>Version 1.1b</H2>
