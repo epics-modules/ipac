@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.7 2004-01-26 23:56:39 anj Exp $">
+   <meta name="Version" content="$Id: index.html,v 1.8 2004-02-24 00:24:37 anj Exp $">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
@@ -176,10 +176,21 @@ R3.14.2</td>
 2.6</td>
 
 <td>
-R3.14.4</td>
+R3.14.3 or later</td>
 
 <td>
 <a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.7</td>
+
+<td>
+R3.14.3 or later</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.7.tar.gz">ipac-2.7.tar.gz</a></td>
 </tr>
 
 </table>
@@ -301,7 +312,7 @@ Rebuild the application and use the newly installed support as desired.</li>
 </ol>
 
 <h3>
-EPICS R3.14.4</h3>
+EPICS R3.14.3 or later</h3>
 
 <ol>
 <li>
@@ -335,6 +346,12 @@ include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support</pre>
 </blockquote></li>
 
 <li>
+You may also need to make a local copy of the <tt>drvIpac.dbd</tt> file in your
+application's source directory if you need to change the set of carrier drivers
+to be included in the application - these are controlled by the
+<tt>registrar()</tt> statements which are uncommented in that file.</li>
+
+<li>
 Rebuild the application and use the newly installed support as desired.</li>
 </ol>
 
@@ -355,8 +372,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/drvIpac.html">2.3</a>
 <a href="R2.4/drvIpac.html">2.4</a>
-<a href="R2.5/drvIpac.html">2.5</a> -->
-<a href="drvIpac.html">2.6</a></td>
+<a href="R2.5/drvIpac.html">2.5</a>
+<a href="R2.6/drvIpac.html">2.6</a> -->
+<a href="drvIpac.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -364,8 +382,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/ipacRelease.html">2.3</a>
 <a href="R2.4/ipacRelease.html">2.4</a>
-<a href="R2.5/ipacRelease.html">2.5</a> -->
-<a href="ipacRelease.html">2.6</a></td>
+<a href="R2.5/ipacRelease.html">2.5</a>
+<a href="R2.6/ipacRelease.html">2.6</a> -->
+<a href="ipacRelease.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -373,8 +392,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/drvTip810.html">2.3</a>
 <a href="R2.4/drvTip810.html">2.4</a>
-<a href="R2.5/drvTip810.html">2.5</a> -->
-<a href="drvTip810.html">2.6</a></td>
+<a href="R2.5/drvTip810.html">2.5</a>
+<a href="R2.6/drvTip810.html">2.6</a> -->
+<a href="drvTip810.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -382,8 +402,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/devCan.html">2.3</a>
 <a href="R2.4/devCan.html">2.4</a>
-<a href="R2.5/devCan.html">2.5</a> -->
-<a href="devCan.html">2.6</a></td>
+<a href="R2.5/devCan.html">2.5</a>
+<a href="R2.6/devCan.html">2.6</a> -->
+<a href="devCan.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -391,8 +412,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/canRelease.html">2.3</a>
 <a href="R2.4/canRelease.html">2.4</a>
-<a href="R2.5/canRelease.html">2.5</a> -->
-<a href="canRelease.html">2.6</a></td>
+<a href="R2.5/canRelease.html">2.5</a>
+<a href="R2.6/canRelease.html">2.6</a> -->
+<a href="canRelease.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -400,8 +422,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/tyGSOctal.html">2.3</a>
 <a href="R2.4/tyGSOctal.html">2.4</a>
-<a href="R2.5/tyGSOctal.html">2.5</a> -->
-<a href="tyGSOctal.html">2.6</a></td>
+<a href="R2.5/tyGSOctal.html">2.5</a>
+<a href="R2.6/tyGSOctal.html">2.6</a> -->
+<a href="tyGSOctal.html">2.7</a></td>
 </tr>
 
 <tr>
@@ -409,8 +432,9 @@ The following documentation is available:</p>
 <td><!--
 <a href="R2.3/tyGSOctalRelease.html">2.3</a>
 <a href="R2.4/tyGSOctalRelease.html">2.4</a>
-<a href="R2.5/tyGSOctalRelease.html">2.5</a> -->
-<a href="tyGSOctalRelease.html">2.6</a></td>
+<a href="R2.5/tyGSOctalRelease.html">2.5</a>
+<a href="R2.6/tyGSOctalRelease.html">2.6</a> -->
+<a href="tyGSOctalRelease.html">2.7</a></td>
 </tr>
 
 </table>
