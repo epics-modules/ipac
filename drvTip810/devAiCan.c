@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.3 1997-10-17 12:56:58 anj Exp $
+    $Id: devAiCan.c,v 1.4 1997-10-17 13:00:26 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -282,7 +282,7 @@ LOCAL long read_ai (
 
 		message.identifier = pcanAi->inp.identifier;
 		message.rtr = RTR;
-		message.length = 0;
+		message.length = 8;
 
 		#ifdef DEBUG
 		    printf("canAi %s: RTR, id=%#x\n", 

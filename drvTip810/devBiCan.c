@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBiCan.c,v 1.3 1997-10-17 12:56:59 anj Exp $
+    $Id: devBiCan.c,v 1.4 1997-10-17 13:00:27 anj Exp $
 
 (c) 1995,1997 Royal Greenwich Observatory
 
@@ -244,7 +244,7 @@ LOCAL long read_bi (
 
 		message.identifier = pcanBi->inp.identifier;
 		message.rtr = RTR;
-		message.length = 0;
+		message.length = 8;
 
 		#ifdef DEBUG
 		    printf("canBi %s: RTR, id=%#x\n", 

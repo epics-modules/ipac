@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.3 1997-10-17 12:57:01 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.4 1997-10-17 13:00:30 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -245,7 +245,7 @@ LOCAL long read_mbbiDirect (
 
 		message.identifier = pcanMbbiDirect->inp.identifier;
 		message.rtr = RTR;
-		message.length = 0;
+		message.length = 8;
 
 		#ifdef DEBUG
 		    printf("canMbbiDirect %s: RTR, id=%#x\n", 
