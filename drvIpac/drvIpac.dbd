@@ -1,3 +1,14 @@
 # IPAC Driver support
 
 driver(drvIpac)
+
+# Register your carrier driver(s) with these
+#registrar(mv162ipRegistrar)
+#registrar(vipc310Registrar)
+#registrar(vipc610Registrar)
+#registrar(vipc610_01Registrar)
+#registrar(vipc616Registrar)
+#registrar(vipc616_01Registrar)
+
+# The ATC40 carrier builds on ISA-bus (x86) systems only:
+#registrar(atc40Registrar)
