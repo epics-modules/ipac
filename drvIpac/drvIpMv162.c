@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.3 1999-07-28 20:37:50 anj Exp $
+    $Id: drvIpMv162.c,v 1.4 1999-07-29 18:36:39 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -56,7 +56,7 @@ Version:
 
 /* IPIC chip */
 
-ipic_t *ipic = (ipic_t *) IPIC_BASE;
+LOCAL ipic_t *ipic = (ipic_t *) IPIC_BASE;
 
 
 /* IP Recovery Timers */
@@ -116,7 +116,8 @@ LOCAL int initialise (
 ) {
     static int initialised = FALSE;
     ushort_t slot;
-    int count, p1, p2, next;
+    int count, next;
+    long p1, p2;
     char dummy, cmd;
 
     if (initialised) {
@@ -148,13 +149,13 @@ LOCAL int initialise (
 
 	    case 'm':
 		p1 = p2 = 0;
-		count = sscanf(cardParams, "=%p,%d%n", 
+		count = sscanf(cardParams, "=%p,%ld%n", 
 				(void **) &p1, &p2, &next);
 		if (count != 2 ||
-		    p1 < (long) sysMemTop() ||
+		    (unsigned) p1 < (unsigned long) sysMemTop() ||
 		    (p1 & 0xffff) != 0 ||
 		    p2 < 64 || p2 > 16384 ||
-		    p1 + (p2*1024) > 0xfff00000) {
+		    (unsigned) (p1 + (p2*1024)) > 0xfff00000u) {
 		    return S_IPAC_badAddress;
 		}
 
@@ -167,7 +168,7 @@ LOCAL int initialise (
 
 	    case 'l':
 		p1 = p2 = 0;
-		count = sscanf(cardParams, "=%d%n,%d%n", &p1, &next, &p2, &next);
+		count = sscanf(cardParams, "=%ld%n,%ld%n", &p1, &next, &p2, &next);
 		if (count < 1 || count > 2 ||
 		    p1 < 0 || p1 > 7 ||
 		    p2 < 0 || p2 > 7) {
@@ -183,7 +184,7 @@ LOCAL int initialise (
 
 	    case 'r':
 		p1 = 0;
-		count = sscanf(cardParams, "=%d%n", &p1, &next);
+		count = sscanf(cardParams, "=%ld%n", &p1, &next);
 		if (count != 1 ||
 		    p1 < 0 || p1 > 8) {
 		    return S_IPAC_badAddress;
@@ -196,7 +197,7 @@ LOCAL int initialise (
 	    
 	    case 'w':
 		p1 = 0;
-		count = sscanf(cardParams, "=%d%n", &p1, &next);
+		count = sscanf(cardParams, "=%ld%n", &p1, &next);
 		if (count != 1) {
 		    return S_IPAC_badAddress;
 		}
