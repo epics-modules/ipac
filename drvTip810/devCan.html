@@ -4,7 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="User Documentation for the EPICS CANbus device support software">
    <META NAME="KeyWords" CONTENT="CANbus, EPICS, Tip810">
-   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.4 1998-09-29 18:57:01 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.5 2002-04-17 19:30:49 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -140,8 +140,8 @@ found. The offset is a number from zero to seven, and defaults to zero
 if the element is omitted. Note that for output records this offset is
 not used. </P>
 
-<P>The final parameter element is a signed integer introduced by a space
-or tab character, and is used in different ways by the various different
+<P>The final parameter element is usually a signed integer introduced by a
+space or tab character, and is used in different ways by the various different
 record types (see <A HREF="#section3">below</A>). </P>
 
 <H3><A NAME="asynchronousProcessing"></A>Asynchronous Processing</H3>
@@ -226,19 +226,26 @@ message data is interpreted. </P>
 
 <H3><A NAME="analogueRecords"></A>Analogue Records</H3>
 
-<P>For Analogue records, the address parameter is a signed number which
-specifies the maximum value of the raw data within the CANbus message.
-Raw data values with arbitrary widths up to 32 bits can be handled, but
-the data LSB must be aligned to the LSB of a message byte. If the address
-parameter is negative the raw data values are taken to be 2s-complement
-numbers with the given range and centred about zero, otherwise the value
-is taken to be unsigned, ranging from zero up to the value given. In both
-cases if the parameter value is a power of two it will be rounded down
-by one (64 becomes 63, 0x800 becomes 0x7ff etc). The range is not limited
-to just powers of two however - e.g. the value 1999 might be used if the
-data originated from a 3&frac12; digit BCD number (although it must have
-been converted from BCD to 2s-complement binary before being transmitted
-in the CAN message). </P>
+<P>For Analogue records, the address parameter may be a signed number which
+specifies the maximum value of the raw data within the CANbus message, or the
+string &quot;<B><TT>float</TT></B>&quot; or &quot;<B><TT>double</TT></B>&quot;.
+The latter formats imply that the CAN message contains an IEEE floating-point
+number in the same format as that used by the IOC's CPU - no byte swapping or
+other format conversion is provided other than converting a float to the double
+value used by the record.  Note that no engineering units conversion is
+performed when these formats are selected. </P>
+
+<P>A numeric parameter specifies a raw integer value with arbitrary width up to
+32 bits, but note that the data's LSB must be aligned to the LSB of a message
+byte. If the parameter is negative the raw data values are taken to be
+2s-complement numbers with the given range and centred about zero, otherwise
+the value is taken to be unsigned, ranging from zero up to the value given. In
+both cases if the parameter value is a power of two it will be rounded down by
+one (64 becomes 63, 0x800 becomes 0x7ff etc). The range is not limited to just
+powers of two however - e.g. the value 1999 might be used if the data
+originated from a 3&frac12; digit BCD number (although it must have been
+converted from BCD to 2s-complement binary before being transmitted in the CAN
+message). </P>
 
 <P>Analogue records include the ability to perform an automatic engineering
 units conversion, depending on the setting of the record's <B><TT>LINR</TT></B>

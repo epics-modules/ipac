@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.12 2001-02-05 17:19:58 anj Exp $
+    $Id: drvTip810.c,v 1.13 2002-04-17 19:30:51 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -935,7 +935,7 @@ Description:
     	timeout is in milliseconds
 	id and any number of +n components are summed to give the CAN Id
 	offset is the byte offset into the message
-	parameter is available for use by device support
+	parameter is a string or integer for use by device support
 
 Returns:
     OK, or
@@ -1023,7 +1023,7 @@ int canIoParse (
 	separator != '\t') {
 	return S_can_badAddress;
     }
-    pcanIo->parameter = strtol(canString, &canString, 0);
+    pcanIo->parameter = strtol(canString, &pcanIo->paramStr, 0);
 
     /* Ok, finally look up the bus name */
     return canOpen(pcanIo->busName, &pcanIo->canBusID);

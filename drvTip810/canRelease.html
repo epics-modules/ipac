@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.7 2001-02-14 21:12:51 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.8 2002-04-17 19:30:48 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,27 @@
 CANbus driver as it has evolved since first release.  The earliest version
 appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+
+<H2>Version 2.4</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Added <TT>char* paramStr;</TT> to the <TT>canIo_t</TT> structure and
+ammended <tt>canIoParse()</tt> to return any remaining address string in this
+pointer.</LI>
+
+</UL>
+
+<P>Added:</P>
+<UL>
+
+<LI>Support for float and double message values in the ai and ao device support
+layers.</LI>
+
+</UL>
 <HR>
 
 

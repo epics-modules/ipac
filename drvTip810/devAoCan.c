@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.8 2001-02-14 20:50:53 anj Exp $
+    $Id: devAoCan.c,v 1.9 2002-04-17 19:30:49 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -36,7 +36,11 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <float.h>
 #include <wdLib.h>
 #include <logLib.h>
 
@@ -142,14 +146,15 @@ LOCAL long init_ao (
     }
 
     #ifdef DEBUG
-	printf("canAo %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("canAo %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
 		    prec->name, pcanAo->out.busName, pcanAo->out.identifier,
 		    pcanAo->out.offset, pcanAo->out.parameter);
     #endif
 
     /* For ao records, the final parameter specifies the raw output size. 
        eg 0xfff or 0x1000 specify a 12-bit unsigned value.  -ve numbers
-       specify a signed value, eg -256 means an 8-bit signed value. */
+       specify a signed value, eg -256 means an 8-bit signed value.
+       The range does not have to be a power of two, eg 99 is legal. */
     
     fsd = abs(pcanAo->out.parameter);
     if (fsd > 0) {
@@ -178,10 +183,17 @@ LOCAL long init_ao (
 	}
     } else {
 	pcanAo->mask = pcanAo->sign = 0;
+	if (pcanAo->out.paramStr) {
+	    if (strcmp(pcanAo->out.paramStr, "float") == 0) {
+		pcanAo->sign = 4;
+	    } else if (strcmp(pcanAo->out.paramStr, "double") == 0) {
+		pcanAo->sign = 8;
+	    }
+	}
     }
 
     #ifdef DEBUG
-	printf("  fsd=%d, eslo=%g, roff=%d, mask=%#x, sign=%d\n", 
+	printf("  fsd=%ld, eslo=%g, roff=%ld, mask=%#lx, sign=%ld\n", 
 		fsd, prec->eslo, prec->roff, pcanAo->mask, pcanAo->sign);
     #endif
 
@@ -269,7 +281,27 @@ LOCAL long write_ao (
 		pcanAo->data = prec->rval & pcanAo->mask;
 
 		if (pcanAo->mask == 0) {
-		    message.length  = 0;
+		    float oval;
+		    message.length = pcanAo->sign;
+		    switch (message.length) {
+		    case 4:	/* float */
+		        
+			if (fabs(prec->oval) < FLT_MIN) {
+			    oval = 0.0;
+			} else if (fabs (prec->oval) > FLT_MAX) {
+			    recGblSetSevr(prec, WRITE_ALARM, INVALID_ALARM);
+			    return ERROR;
+			} else {
+			    oval = prec->oval;
+			}
+			memcpy((void*) &message.data[0], (void*) &oval, 4);
+			break;
+		    case 8:	/* double */
+		        memcpy((void*) &message.data[0], (void*) &prec->oval, 8);
+			break;
+		    default:	/* length = 0 */
+		        break;
+		    }
 		} else if (pcanAo->mask <= 0xff) {
 		    message.data[0] = (pcanAo->data      ) & 0xff;
 		    message.length  = 1;
@@ -291,7 +323,7 @@ LOCAL long write_ao (
 		}
 
 		#ifdef DEBUG
-		    printf("canAo %s: SEND id=%#x, length=%d, data=%#x\n", 
+		    printf("canAo %s: SEND id=%#x, length=%d, data=%#lx\n", 
 			    prec->name, message.identifier, message.length, 
 			    pcanAo->data);
 		#endif
@@ -300,7 +332,8 @@ LOCAL long write_ao (
 				  pcanAo->out.timeout);
 		if (status) {
 		    #ifdef DEBUG
-			printf("canAo %s: canWrite status=%#x\n", status);
+			printf("canAo %s: canWrite status=%#x\n", 
+				prec->name, status);
 		    #endif
 
 		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);

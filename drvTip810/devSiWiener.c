@@ -16,7 +16,7 @@ Authors:
 Created:
     25 August 1998
 Version:
-    $Id: devSiWiener.c,v 1.1 2001-02-14 21:12:36 anj Exp $
+    $Id: devSiWiener.c,v 1.2 2002-04-17 19:30:50 anj Exp $
 
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
@@ -39,6 +39,7 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <wdLib.h>
 #include <logLib.h>
@@ -140,7 +141,7 @@ LOCAL long init_si (
     }
 
     #ifdef DEBUG
-	printf("siCan %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("siCan %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
 		    prec->name, pcanSi->inp.busName, pcanSi->inp.identifier,
 		    pcanSi->inp.offset, pcanSi->inp.parameter);
     #endif
@@ -232,7 +233,7 @@ LOCAL long read_si (
 	case NO_ALARM:
 	    if (prec->pact || prec->scan == SCAN_IO_EVENT) {
 		#ifdef DEBUG
-		    printf("canSi %s: message id=%#x, data=%#x\n", 
+		    printf("canSi %s: message id=%#x, data=%p\n", 
 			    prec->name, pcanSi->inp.identifier, pcanSi->data);
 		#endif
 

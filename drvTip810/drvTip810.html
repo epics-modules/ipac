@@ -4,7 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
    <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
-   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.5 2001-02-05 17:19:59 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.6 2002-04-17 19:30:51 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -673,7 +673,8 @@ header as follows: </P>
     int timeout;
     ushort_t identifier;
     ushort_t offset;
-    int parameter;
+    long parameter;
+    char *paramStr;
     void *canBusID;
 } canIo_t;</PRE>
 </UL>
@@ -715,9 +716,10 @@ it should be restricted to a maximum value of seven. The converted value
 is placed in <TT>pcanIo-&gt;offset</TT>, which defaults to zero if no offset
 is given. </P>
 
-<P>The final element is a general-purpose signed integer parameter, introduced
-by a space or tab character. The value is converted using <TT>strtol</TT>
-and placed in <TT>pcanIo-&gt;paramter</TT>. </P>
+<P>The final element is a general-purpose parameter, introduced by a space or
+tab character. The value is first converted to a signed long using
+<TT>strtol</TT> which is placed in <TT>pcanIo-&gt;parameter</TT>. A pointer to
+any remaining characters is placed in <TT>pcanIo-&gt;paramStr</TT>.</P>
 
 <P>If the string is successfully converted without errors, canIoParse will
 also call <TT>canOpen</TT> to initialise the <TT>pcanIo-&gt;canBusID</TT>

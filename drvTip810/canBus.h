@@ -14,7 +14,7 @@ Author:
 Created:
     25 July 1995
 Version:
-    $Id: canBus.h,v 1.6 2000-02-21 21:36:08 anj Exp $
+    $Id: canBus.h,v 1.7 2002-04-17 19:30:48 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -70,7 +70,8 @@ typedef struct {
     int timeout;
     ushort_t identifier;
     ushort_t offset;
-    signed int parameter;
+    long parameter;
+    char *paramStr;
     void *canBusID;
 } canIo_t;
 

@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBoCan.c,v 1.8 2001-02-14 20:50:54 anj Exp $
+    $Id: devBoCan.c,v 1.9 2002-04-17 19:30:49 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -36,6 +36,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <wdLib.h>
 #include <logLib.h>
@@ -139,7 +140,7 @@ LOCAL long init_bo (
     }
 
     #ifdef DEBUG
-	printf("canBo %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("canBo %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
 		    prec->name, pcanBo->out.busName, pcanBo->out.identifier,
 		    pcanBo->out.offset, pcanBo->out.parameter);
     #endif
@@ -149,7 +150,7 @@ LOCAL long init_bo (
     prec->mask = 1 << pcanBo->out.parameter;
 
     #ifdef DEBUG
-	printf("  bit=%d, mask=%#x\n", out.parameter, prec->mask);
+	printf("  bit=%ld, mask=%#lx\n", pcanBo->out.parameter, prec->mask);
     #endif
 
     /* Find the bus matching this record */
@@ -239,7 +240,7 @@ LOCAL long write_bo (
 		message.length  = pcanBo->out.offset + 1;
 
 		#ifdef DEBUG
-		    printf("canBo %s: SEND id=%#x, length=%d, data=%#x\n", 
+		    printf("canBo %s: SEND id=%#x, length=%d, data=%#lx\n", 
 			    prec->name, message.identifier, message.length, 
 			    pcanBo->data);
 		#endif
@@ -248,7 +249,8 @@ LOCAL long write_bo (
 				  pcanBo->out.timeout);
 		if (status) {
 		    #ifdef DEBUG
-			printf("canBo %s: canWrite status=%#x\n", status);
+			printf("canBo %s: canWrite status=%#x\n",
+				prec->name, status);
 		    #endif
 
 		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);

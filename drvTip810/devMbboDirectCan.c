@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbboDirectCan.c,v 1.8 2001-02-14 20:50:54 anj Exp $
+    $Id: devMbboDirectCan.c,v 1.9 2002-04-17 19:30:50 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -36,6 +36,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <wdLib.h>
 #include <logLib.h>
@@ -139,7 +140,7 @@ LOCAL long init_mbboDirect (
     }
 
     #ifdef DEBUG
-	printf("canMbboDirect %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("canMbboDirect %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
 		    prec->name, pcanMbboDirect->out.busName, pcanMbboDirect->out.identifier,
 		    pcanMbboDirect->out.offset, pcanMbboDirect->out.parameter);
     #endif
@@ -150,7 +151,7 @@ LOCAL long init_mbboDirect (
     prec->mask <<= pcanMbboDirect->out.parameter;
 
     #ifdef DEBUG
-	printf("  bit=%d, mask=%#x\n", out.parameter, prec->mask);
+	printf("  bit=%ld, mask=%#lx\n", pcanMbboDirect->out.parameter, prec->mask);
     #endif
 
     /* Find the bus matching this record */
@@ -240,7 +241,7 @@ LOCAL long write_mbboDirect (
 		message.length  = pcanMbboDirect->out.offset + 1;
 
 		#ifdef DEBUG
-		    printf("canMbboDirect %s: SEND id=%#x, length=%d, data=%#x\n", 
+		    printf("canMbboDirect %s: SEND id=%#x, length=%d, data=%#lx\n", 
 			    prec->name, message.identifier, message.length, 
 			    pcanMbboDirect->data);
 		#endif
@@ -249,7 +250,8 @@ LOCAL long write_mbboDirect (
 				  pcanMbboDirect->out.timeout);
 		if (status) {
 		    #ifdef DEBUG
-			printf("canMbboDirect %s: canWrite status=%#x\n", status);
+			printf("canMbboDirect %s: canWrite status=%#x\n",
+				prec->name, status);
 		    #endif
 
 		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);

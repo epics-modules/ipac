@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.10 2001-02-14 20:50:53 anj Exp $
+    $Id: devAiCan.c,v 1.11 2002-04-17 19:30:49 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -36,7 +36,9 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wdLib.h>
 #include <logLib.h>
 
@@ -68,6 +70,7 @@ typedef struct aiCanPrivate_s {
     ulong_t mask;
     ulong_t sign;
     long data;
+    double dval;
     int status;
 } aiCanPrivate_t;
 
@@ -146,9 +149,10 @@ LOCAL long init_ai (
     }
 
     #ifdef DEBUG
-	printf("aiCan %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("aiCan %s: Init bus=%s, id=%#x, off=%u, parm=%ld str=%s\n",
 		    prec->name, pcanAi->inp.busName, pcanAi->inp.identifier,
-		    pcanAi->inp.offset, pcanAi->inp.parameter);
+		    pcanAi->inp.offset, pcanAi->inp.parameter,
+		    pcanAi->inp.paramStr);
     #endif
 
     /* For ai records, the final parameter specifies the raw input size.
@@ -185,10 +189,17 @@ LOCAL long init_ai (
 	}
     } else {
 	pcanAi->mask = pcanAi->sign = 0;
+	if (pcanAi->inp.paramStr) {
+	    if (strcmp(pcanAi->inp.paramStr, "float") == 0) {
+		pcanAi->sign = 4;
+	    } else if (strcmp(pcanAi->inp.paramStr, "double") == 0) {
+		pcanAi->sign = 8;
+	    }
+	}
     }
 
     #ifdef DEBUG
-	printf("  fsd=%d, eslo=%g, roff = %d, mask=%#x, sign=%d\n", 
+	printf("  fsd=%ld, eslo=%g, roff = %ld, mask=%#lx, sign=%lu\n", 
 		fsd, prec->eslo, prec->roff, pcanAi->mask, pcanAi->sign);
     #endif
     
@@ -279,10 +290,18 @@ LOCAL long read_ai (
 	case NO_ALARM:
 	    if (prec->pact || prec->scan == SCAN_IO_EVENT) {
 		#ifdef DEBUG
-		    printf("canAi %s: message id=%#x, data=%#x\n", 
+		    printf("canAi %s: message id=%#x, data=%#lx\n", 
 			    prec->name, pcanAi->inp.identifier, pcanAi->data);
 		#endif
-
+		
+		if ((pcanAi->mask == 0) && pcanAi->sign) {
+		    #ifdef DEBUG
+			printf("canAi %s: VAL=%g\n", prec->name, pcanAi->dval);
+		    #endif
+		    prec->val = pcanAi->dval;
+		    prec->udf = FALSE;
+		    return DO_NOT_CONVERT;
+		}
 		prec->rval = pcanAi->data & pcanAi->mask;
 		if (pcanAi->sign & prec->rval) {
 		    prec->rval |= ~pcanAi->mask;
@@ -359,7 +378,18 @@ LOCAL void aiMessage (
     }
 
     if (pcanAi->mask == 0) {
-	pcanAi->data = 0;
+	float ival;
+	switch (pcanAi->sign) {
+	case 4:
+	    memcpy((void*) &ival, (void*) &pmessage->data[pcanAi->inp.offset], 4);
+	    pcanAi->dval = ival;
+	    break;
+	case 8:
+	    memcpy((void*) &pcanAi->dval, (void*) &pmessage->data[0], 8);
+	    break;
+	default:
+	    pcanAi->data = 0;
+	}
     } else if (pcanAi->mask <= 0xff) {
 	pcanAi->data = pmessage->data[pcanAi->inp.offset+0];
     } else if (pcanAi->mask <= 0xffff) {

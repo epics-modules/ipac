@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiCan.c,v 1.10 2001-02-14 20:50:54 anj Exp $
+    $Id: devMbbiCan.c,v 1.11 2002-04-17 19:30:50 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -36,6 +36,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #include <vxWorks.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <wdLib.h>
 #include <logLib.h>
@@ -143,7 +144,7 @@ LOCAL long init_mbbi (
     }
 
     #ifdef DEBUG
-	printf("mbbiCan %s: Init bus=%s, id=%#x, off=%d, parm=%d\n",
+	printf("mbbiCan %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
 		    prec->name, pcanMbbi->inp.busName, pcanMbbi->inp.identifier,
 		    pcanMbbi->inp.offset, pcanMbbi->inp.parameter);
     #endif
@@ -154,7 +155,7 @@ LOCAL long init_mbbi (
     prec->mask <<= pcanMbbi->inp.parameter;
 
     #ifdef DEBUG
-	printf("  shft=%d, mask=%#x\n", 
+	printf("  shft=%ld, mask=%#lx\n", 
 		pcanMbbi->inp.parameter, prec->mask);
     #endif
 
@@ -245,7 +246,7 @@ LOCAL long read_mbbi (
 	case NO_ALARM:
 	    if (prec->pact || prec->scan == SCAN_IO_EVENT) {
 		#ifdef DEBUG
-		    printf("canMbbi %s: message id=%#x, data=%#x\n", 
+		    printf("canMbbi %s: message id=%#x, data=%#lx\n", 
 			    prec->name, pcanMbbi->inp.identifier, pcanMbbi->data);
 		#endif
 
