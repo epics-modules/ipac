@@ -16,20 +16,15 @@ LIBRARY_IOC_vxWorks = Ipac
 
 LIBSRCS += drvIpac.c
 
-# VMEbus: GreenSpring VIPC carrier drivers:
+# Any VMEbus: GreenSpring VIPC carrier drivers
 LIBSRCS += drvVipc310.c
 LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
 
-# MVME162 & MVME172: IPchip carrier driver:
-LIBSRCS_vxWorks-68040 += drvIpMv162.c
-LIBSRCS_vxWorks-68040lc += drvIpMv162.c
+# MVME162 & MVME172: IPchip carrier driver
+LIBSRCS += drvIpMv162.c
 
-# GreenSpring ATC40 Carrier driver: for ISA bus systems only.
-LIBSRCS_vxWorks-pentium += drvAtc40.c
-
-# Normally you add filenames to LIBSRCS_<arch-class>, but this
-# line makes the above LIBSRCS_<target-arch> stuff work:
-LIBSRCS += $(LIBSRCS_$(T_A))
+# ISAbus: GreenSpring ATC40 carrier driver (Intel-based systems only!)
+LIBSRCS += drvAtc40.c
 
 include $(TOP)/configure/RULES
