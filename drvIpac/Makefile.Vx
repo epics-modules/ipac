@@ -2,6 +2,10 @@
 TOP = ../..
 include $(TOP)/config/CONFIG_APP
 
+USR_CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wno-unused
+USR_CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Woverloaded-virtual
+
+
 # Source files (for depends target):
 SRCS.c += ../drvIpac.c
 SRCS.c += ../drvVipc310.c
