@@ -443,6 +443,71 @@ char *tyGSOctalDevCreate
 }
 
 /******************************************************************************
+ * tyGSOctalDevCreateAll - create devices for all ports on a module
+ *
+ * This routine creates up to 8 devices, one for each port that has not
+ * already been created.  Use this after calling tyGSOctalDevCreate to
+ * set up any ports that should not use the standard configuration.
+ * The port names are constructed by appending the digits 0 through 7 to
+ * the base name string given in the first argument.
+ *
+ * For instance, to create devices "/tyGS/0/0" through "/tyGS/0/7", with
+ * buffer sizes of 512 bytes, the proper calls would be:
+ * .CS
+ *    int idx;
+ *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
+ *    tyGSOctalDevCreateAll ("/tyGS/0/", idx, 512, 512);
+ * .CE
+ *
+ * RETURNS: OK, or ERROR if the driver is not installed, or any device
+ * cannot be initialized.
+ *
+ * SEE ALSO: tyGSOctalDrv(), tyGSOctalDevCreate()
+ */
+STATUS tyGSOctalDevCreateAll
+    (
+    char *      base,           /* base name for these devices      */
+    int         idx,            /* index into module table          */
+    int         rdBufSize,      /* read buffer size, in bytes       */
+    int         wrtBufSize      /* write buffer size, in bytes      */
+    )
+{
+    int port, len = strlen(base);
+    char name[len + 2];
+    
+    /* if this doesn't represent a valid module, don't do it */
+    if (idx < 0 || idx > tyGSOctalLastModule)
+        return ERROR;
+    
+    /* copy and terminate the name string */
+    strcpy (name, base);
+    name[len + 1] = 0;
+    
+    for (port=0; port < 8; port++) {
+	QUAD_TABLE *qt = &tyGSOctalModules[idx];
+	TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[port];
+	
+	/* if there is a device already on this channel, ignore it */
+	if (pTyGSOctalDv->created) continue;
+
+	/* initialize the ty descriptor */
+	if (tyDevInit (&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
+		       (FUNCPTR) tyGSOctalStartup) != OK)
+	    return ERROR;
+
+	/* initialize the channel hardware */
+	tyGSOctalInitChannel(qt, port);
+
+	/* mark the device as created, and give it to the I/O system */
+	pTyGSOctalDv->created = TRUE;
+
+	if (iosDevAdd(&pTyGSOctalDv->tyDev.devHdr, name, tyGSOctalDrvNum) != OK)
+            return ERROR;
+    }
+    return OK;
+}
+
+/******************************************************************************
  *
  * tyGSOctalInitChannel - initialize a single channel
  *
