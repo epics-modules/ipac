@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.2 1997-06-19 16:57:25 anj Exp $
+    $Id: drvTip810.c,v 1.3 1997-08-21 16:57:41 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -663,7 +663,7 @@ Example:
 */
 
 int canOpen (
-    char *pbusName,
+    const char *pbusName,
     void **ppdevice
 ) {
     t810Dev_t *pdevice = pt810First;
@@ -931,6 +931,66 @@ int canMessage (
 
     plist->pnext = phandler;
     return OK;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    canMsgDelete
+
+Purpose:
+    Delete registered CAN message callback
+
+Description:
+    Deletes an existing callback routine for the given CAN message ID
+    on the given device.  The first matching callback found in the list
+    is deleted.  To match, the parameters to canMsgDelete must be
+    identical to those given to canMessage.
+
+Returns:
+    OK, 
+    S_can_badMessage for bad identifier or NULL callback routine,
+    S_can_noMessage for no matching message callback,
+    S_can_badDevice for bad device pointer.
+
+Example:
+    
+
+*/
+
+int canMsgDelete (
+    void *canBusID,
+    ushort_t identifier,
+    canMsgCallback_t *pcallback,
+    void *pprivate
+) {
+    t810Dev_t *pdevice = (t810Dev_t *) canBusID;
+    callbackTable_t *phandler, *plist;
+
+    if (pdevice->magicNumber != T810_MAGIC_NUMBER) {
+	return S_t810_badDevice;
+    }
+
+    if (identifier >= CAN_IDENTIFIERS ||
+	pcallback == NULL) {
+	return S_can_badMessage;
+    }
+
+    plist = (callbackTable_t *) (&pdevice->pmsgHandler[identifier]);
+    while (plist->pnext != NULL) {
+    	phandler = plist->pnext;
+    	if (((canMsgCallback_t *)phandler->pcallback == pcallback) &&
+    	    (phandler->pprivate  == pprivate)) {
+    	    plist->pnext = phandler->pnext;
+    	    phandler->pnext = NULL;		/* Just in case... */
+    	    free(phandler);
+    	    return OK;
+    	}
+	plist = phandler;
+    }
+
+    return S_can_noMessage;
 }
 
 

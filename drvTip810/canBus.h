@@ -14,7 +14,7 @@ Author:
 Created:
     25 July 1995
 Version:
-    $Id: canBus.h,v 1.2 1997-06-19 16:57:13 anj Exp $
+    $Id: canBus.h,v 1.3 1997-08-21 16:57:39 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -40,7 +40,7 @@ Version:
 #define S_can_badMessage	(M_can| 1) /*illegal CAN message contents*/
 #define S_can_badAddress	(M_can| 2) /*CAN address syntax error*/
 #define S_can_noDevice		(M_can| 3) /*CAN bus name does not exist*/
-
+#define S_can_noMessage 	(M_can| 4) /*no matching CAN message callback*/
 
 typedef struct {
     ushort_t identifier;	/* 0 .. 2047 with holes! */
@@ -66,11 +66,13 @@ typedef void canSigCallback_t(void *pprivate, int status);
 
 extern int canSilenceErrors;	/* Really meant for EPICS use only */
 
-extern int canOpen(char *busName, void **pcanBusID);
+extern int canOpen(const char *busName, void **pcanBusID);
 extern int canRead(void *canBusID, canMessage_t *pmessage, int timeout);
 extern int canWrite(void *canBusID, canMessage_t *pmessage, int timeout);
 extern int canMessage(void *canBusID, ushort_t identifier, 
 		      canMsgCallback_t callback, void *pprivate);
+extern int canMsgDelete(void *canBusID, ushort_t identifier, 
+			canMsgCallback_t callback, void *pprivate);
 extern int canSignal(void *canBusID, canSigCallback_t callback, void *pprivate);
 extern int canIoParse(char *canString, canIo_t *pcanIo);
 

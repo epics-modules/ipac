@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.1 1997-06-19 16:57:16 anj Exp $
+    $Id: devBiTip810.c,v 1.2 1997-08-21 16:57:40 anj Exp $
 
 (c) 1997 Royal Greenwich Observatory
 
@@ -113,9 +113,15 @@ LOCAL long init_bi(
     return 0;
 
 error:
-    recGblRecordError(S_db_badField,(void *)prec,
-		"devBiTip810: Bad INP field type or value");
-    return S_db_badField;
+    if (canSilenceErrors) {
+    	prec->dpvt = NULL;
+    	prec->pact = TRUE;
+    	return OK;
+    } else {
+    	recGblRecordError(S_db_badField,(void *)prec,
+			  "devBiTip810: Bad INP field type or value");
+    	return S_db_badField;
+    }
 }
 
 LOCAL long read_bi(struct biRecord *prec)
