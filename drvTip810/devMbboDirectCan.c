@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbboDirectCan.c,v 1.3 1998-08-20 19:00:12 anj Exp $
+    $Id: devMbboDirectCan.c,v 1.4 1998-08-28 08:40:07 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -38,6 +38,9 @@ Version:
 #include <dbCommon.h>
 #include <mbboDirectRecord.h>
 #include <canBus.h>
+
+
+#define DO_NOT_CONVERT	2
 
 
 typedef struct mbboDirectCanPrivate_s {
@@ -113,7 +116,7 @@ LOCAL long init_mbboDirect (
 	if (canSilenceErrors) {
 	    pcanMbboDirect->out.canBusID = NULL;
 	    prec->pact = TRUE;
-	    return OK;
+	    return DO_NOT_CONVERT;
 	} else {
 	    recGblRecordError(S_can_badAddress, (void *) prec,
 			      "devMbboDirectCan (init_record) bad CAN address");
@@ -168,7 +171,7 @@ LOCAL long init_mbboDirect (
     canMessage(pcanMbboDirect->out.canBusID, pcanMbboDirect->out.identifier, 
 	       (canMsgCallback_t *) mbboDirectMessage, pcanMbboDirect);
 
-    return OK;
+    return DO_NOT_CONVERT;
 }
 
 LOCAL long get_ioint_info (

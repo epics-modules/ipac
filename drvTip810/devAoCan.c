@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.3 1998-08-20 19:00:05 anj Exp $
+    $Id: devAoCan.c,v 1.4 1998-08-28 08:40:03 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -38,6 +38,8 @@ Version:
 #include <dbCommon.h>
 #include <aoRecord.h>
 #include <canBus.h>
+
+#define DO_NOT_CONVERT	2
 
 
 typedef struct aoCanPrivate_s {
@@ -201,7 +203,7 @@ LOCAL long init_ao (
     canMessage(pcanAo->out.canBusID, pcanAo->out.identifier, 
 	       (canMsgCallback_t *) aoMessage, pcanAo);
 
-    return OK;
+    return DO_NOT_CONVERT;
 }
 
 LOCAL long get_ioint_info (
@@ -290,7 +292,7 @@ LOCAL long write_ao (
 		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);
 		    return ERROR;
 		}
-		return 0;
+		return OK;
 	    }
 	default:
 	    recGblSetSevr(prec, UDF_ALARM, INVALID_ALARM);
