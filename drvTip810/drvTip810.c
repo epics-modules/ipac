@@ -14,9 +14,9 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.15 2003-10-29 20:46:34 anj Exp $
+    $Id: drvTip810.c,v 1.16 2003-11-13 21:16:54 anj Exp $
 
-Copyright (c) 1995-2000 Andrew Johnson
+Copyright (c) 1995-2003 Andrew Johnson
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -66,6 +66,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 #ifndef NO_EPICS
 # include "drvSup.h"
+# include "iocsh.h"
 # include "epicsExport.h"
 
 /* EPICS Driver Support Entry Table */
@@ -1424,3 +1425,44 @@ int canTest (
     }
     return OK;
 }
+
+
+/*******************************************************************************
+* EPICS iocsh Command registry
+*/
+
+#ifndef NO_EPICS
+
+/* t810Report(int interest) */
+static const iocshArg t810ReportArg0 = {"interest", iocshArgInt};
+static const iocshArg * const t810ReportArgs[1] = {&t810ReportArg0};
+static const iocshFuncDef t810ReportFuncDef =
+    {"t810Report",1,t810ReportArgs};
+static void t810ReportCallFunc(const iocshArgBuf *args)
+{
+    t810Report(args[0].ival);
+}
+
+/* t810Create(char *pbusName, int card, int slot, int irqNum, int busRate) */
+static const iocshArg t810CreateArg0 = {"busName",iocshArgString};
+static const iocshArg t810CreateArg1 = {"carrier", iocshArgInt};
+static const iocshArg t810CreateArg2 = {"slot", iocshArgInt};
+static const iocshArg t810CreateArg3 = {"intVector", iocshArgInt};
+static const iocshArg t810CreateArg4 = {"busRate", iocshArgInt};
+static const iocshArg * const t810CreateArgs[5] = {
+    &t810CreateArg0, &t810CreateArg1, &t810CreateArg2, &t810CreateArg3,
+    &t810CreateArg4};
+static const iocshFuncDef t810CreateFuncDef =
+    {"t810Create",5,t810CreateArgs};
+static void t810CreateCallFunc(const iocshArgBuf *arg)
+{
+    t810Create(arg[0].sval, arg[1].ival, arg[2].ival, arg[3].ival, 
+	       arg[4].ival);
+}
+
+LOCAL void drvTip810Registrar(void) {
+    iocshRegister(&t810ReportFuncDef,t810ReportCallFunc);
+    iocshRegister(&t810CreateFuncDef,t810CreateCallFunc);
+}
+
+#endif
