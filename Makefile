@@ -1,4 +1,6 @@
-#Makefile at top of ipac support tree
+# Makefile at top of ipac support tree
+# $Id: Makefile,v 1.2 1999-03-09 16:05:25 anj Exp $
+
 TOP = .
 include $(TOP)/config/CONFIG_APP
 

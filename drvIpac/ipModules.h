@@ -1,8 +1,10 @@
+/* IndustryPack Manufacturer and Model definitions */
+/* $Id: ipModules.h,v 1.2 1999-03-09 16:05:26 anj Exp $ */
 
 #ifndef INCipModulesH
 #define INCipModulesH
 
-
+/*************************************************************/
 #define IP_MANUFACTURER_GREENSPRING	0xf0
 
 #define IP_MODEL_GS_PRECISION_ADC	0x15
@@ -24,10 +26,13 @@
 #define IP_MODEL_GS_488_N		"ip488"
 
 
+/*************************************************************/
 #define IP_MANUFACTURER_TEWS		0xb3 
 
 #define IP_MODEL_TEWS_TIP810		0x01
 
+
+/*************************************************************/
 
 #endif /* INCipModulesH */
 

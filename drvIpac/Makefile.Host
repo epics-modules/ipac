@@ -1,4 +1,4 @@
-# Makefile.Vx
+# Makefile.Host
 TOP = ../..
 include $(TOP)/config/CONFIG_APP
 
