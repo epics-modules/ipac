@@ -718,7 +718,7 @@ void tyGSOctalConfig (
     }
 
     if (stop == 2)                   opts |= STOPB;
-    if (tolower(flow) == 'h')        opts |= CLOCAL;
+    if (tolower(flow) != 'h')        opts |= CLOCAL;
     if (tolower(parity) == 'e')      opts |= PARENB;
     else if (tolower(parity) == 'o') opts |= PARENB | PARODD;
 
