@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.5 1999-07-30 15:50:54 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.6 2000-02-21 21:35:33 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -22,6 +22,30 @@ were by examining the source code.  After version 1.1c the CANbus driver was
 split off as a separate package, hence the CANbus related comments up to and
 including this release. </P><HR>
 
+
+<H2>Version 2.2</H2>
+
+<P>Added:<UL>
+
+<LI>Two new commands <TT>ipac_statActive</TT> and <TT>ipac_statUnused</TT> for
+irqCommand which a module or carrier driver can use to enable and disable LEDs
+showing the activity status of a particular slot.  Only the VIPC664 carrier
+driver (not provided with IPAC) supports these at present, other drivers will
+return the usual S_IPAC_notImplemented response.</LI>
+
+</UL></P>
+
+<P>Changed:<UL>
+
+<LI>Copyright and license terms.  IPAC (and drvTip810) is now licensed under
+the GNU Lesser General Public License (LGPL), which enables it to be used in
+commercial software, although any binary distribution containing it or a
+derivative of it must make the source code available under the LGPL terms.</LI>
+
+<LI>Various other small modifications to fix compiler warnings and such under
+EPICS Release 3.13.2.</LI>
+
+</UL></P>
 
 <H2>Version 2.1</H2>
 
@@ -43,7 +67,7 @@ makes it possible to use identical module driver code on both VME and ISA bus,
 although the module driver may have to be modified as discussed above to resolve
 the endian issue.</LI></UL></LI>
 
-<LI>Some <TT>printf()<.TT>s in ipacAddCarrier so failures can be seen without
+<LI>Some <TT>printf()</TT>s in ipacAddCarrier so failures can be seen without
 having to look at the return value.</LI>
 
 <LI>SRCS.c entries to Makefile.Vx so <TT>gnumake depends</TT> works.</LI>

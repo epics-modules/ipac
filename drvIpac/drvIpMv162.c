@@ -1,7 +1,7 @@
 /*******************************************************************************
 
 Project:
-    Gemini/UKIRT CAN Bus Driver for EPICS
+    CAN Bus Driver for EPICS
 
 File:
     drvIpMv162.c
@@ -12,13 +12,27 @@ Description:
     hardware.
 
 Author:
-    Andrew Johnson
+    Andrew Johnson <anjohnson@iee.org>
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.5 1999-11-09 20:41:00 anj Exp $
+    $Id: drvIpMv162.c,v 1.6 2000-02-21 21:35:33 anj Exp $
 
-(c) 1995 Royal Greenwich Observatory
+Copyright (c) 1995-2000 Andrew Johnson
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 *******************************************************************************/
 
@@ -152,7 +166,7 @@ LOCAL int initialise (
 		count = sscanf(cardParams, "=%p,%ld%n", 
 				(void **) &p1, &p2, &next);
 		if (count != 2 ||
-		    (unsigned) p1 < (unsigned long) sysMemTop() ||
+		    (char *) p1 < sysMemTop() ||
 		    (p1 & 0xffff) != 0 ||
 		    p2 < 64 || p2 > 16384 ||
 		    (unsigned) (p1 + (p2*1024)) > 0xfff00000u) {

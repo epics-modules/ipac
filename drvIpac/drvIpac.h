@@ -1,7 +1,7 @@
 /*******************************************************************************
 
 Project:
-    Gemini/UKIRT CAN Bus Driver for EPICS
+    CAN Bus Driver for EPICS
 
 File:
     drvIpac.h
@@ -12,13 +12,27 @@ Description:
 	2. Downwards to the IPAC Carrier driver
 
 Author:
-    Andrew Johnson
+    Andrew Johnson <anjohnson@iee.org>
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.4 1999-07-28 20:37:52 anj Exp $
+    $Id: drvIpac.h,v 1.5 2000-02-21 21:35:33 anj Exp $
 
-(c) 1995 Royal Greenwich Observatory
+Copyright (c) 1995-2000 Andrew Johnson
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 *******************************************************************************/
 
@@ -94,10 +108,12 @@ typedef enum {
 
 
 /* The following are the possible commands to the carrier driver to 
-   handle interrupts from the IP modules.  Most carriers will only be 
+   handle configuration for the IP modules.  Most carriers will only be 
    able to implement a subset of these commands.  Note that irqEnable 
    should call the vxWorks sysBusEnable routine if this is needed to 
-   pass the carrier interrupts through to the CPU. */
+   pass the carrier interrupts through to the CPU. The ipac_stat commands
+   were added for the VIPC664, and provide a means for showing the current
+   status of each module using LEDs provided for each slot. */
 
 typedef enum {
     ipac_irqLevel0 = 0,	/* Disables interrupts */
@@ -109,12 +125,14 @@ typedef enum {
     ipac_irqLevel6 = 6,	/* Highest priority */
     ipac_irqLevel7 = 7,	/* Non-maskable, don't use */
     ipac_irqGetLevel,	/* Returns level set (or hard-coded) */
-    ipac_irqEnable,	/* Required to use interrupts */
+    ipac_irqEnable,	/* Required to use interrupts, sets statActive */
     ipac_irqDisable,	/* Not necessarily supported */
     ipac_irqPoll,	/* Returns interrupt state */
     ipac_irqSetEdge,	/* Sets edge-triggered interrupts */
     ipac_irqSetLevel,	/* Sets level-triggered (default) */
-    ipac_irqClear	/* Only needed if using edge-triggered */
+    ipac_irqClear,	/* Only needed if using edge-triggered */
+    ipac_statUnused,	/* Empty/uninitialized (Red LED on) */
+    ipac_statActive	/* Slot in use (Green LED on) */
 } ipac_irqCmd_t;
 
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 
 Project:
-    Gemini/UKIRT CAN Bus Driver for EPICS
+    CAN Bus Driver for EPICS
 
 File:
     drvIpac.c
@@ -11,13 +11,27 @@ Description:
     drivers and the IPAC Carrier drivers.
 
 Author:
-    Andrew Johnson
+    Andrew Johnson <anjohnson@iee.org>
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.5 1999-07-29 20:53:49 anj Exp $
+    $Id: drvIpac.c,v 1.6 2000-02-21 21:35:33 anj Exp $
 
-(c) 1995 Royal Greenwich Observatory
+Copyright (c) 1995-2000 Andrew Johnson
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 *******************************************************************************/
 
@@ -71,10 +85,9 @@ LOCAL struct carrierInfo nullInfo = {
 /* EPICS Driver Support Entry Table */
 
 struct drvet drvIpac = {
-    3, 
+    2, 
     (DRVSUPFUN) ipacReport, 
-    (DRVSUPFUN) ipacInitialise,
-    NULL
+    (DRVSUPFUN) ipacInitialise
 };
 
 
