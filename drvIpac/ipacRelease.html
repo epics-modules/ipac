@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.10 2003-06-03 19:38:45 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.11 2003-11-14 00:22:45 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,20 @@
 IndustryPack driver as it has evolved since first release.  The earliest
 version appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+<H2>Version 2.6</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Converted the carrier drivers to register their own ipacAddXXX routines in
+place of using ipacAddCarrier, so this can be done from the iocsh on EPICS Base
+R3.14.3 and higher.  Also added the necessary registrar routines to each
+carrier driver, and generate a proper library file libIpac.a for build
+purposes.</LI>
+
+</UL>
 <HR>
 
 <H2>Version 2.5</H2>

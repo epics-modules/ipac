@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.9 2003-06-03 19:38:44 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.10 2003-11-14 00:22:44 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -14,7 +14,7 @@
 <h1>
 drvIpac - Industry Pack Driver</h1>
 
-Version 2.5
+Version 2.6
 
 <address>
 Andrew Johnson</address></center>
@@ -151,7 +151,7 @@ at APS) export the software from the CVS repository where it resides as
 <tt>epics/modules/bus/ipac</tt> - CVS tags of the form `<b><tt>V2-1</tt></b>'
 mark the particular file versions required for each release. These instructions
 assume you already have EPICS R3.14.x installed and built (this software should
-work with EPICS R3.14.2 and later). Two steps are then required to install and
+work with EPICS R3.14.3 and later). Two steps are then required to install and
 build the software:</p>
 
 <ol>
@@ -230,9 +230,15 @@ compiler switch to disable the EPICS-specific code.</p>
 
 <p>
 Used to register a carrier board and the appropriate carrier driver software
-for it with the IPAC Driver.</p>
+for it with the IPAC Driver.  Up to release 2.5 this call was used directly
+inside IOC startup scripts, but from release 2.6 onwards the carrier drivers
+provided with drvIpac all contain their own routines for use in startup
+scripts, which allows initialization from the EPICS ioc shell as well as from
+the vxWorks shell.  See the documentation for the specific carrier board in
+<a href="#section4">section 4</a> below for the name of the new initialization
+routine.</p>
 
-<pre>int ipacAddCarrier(ipac_carrier_t *pcarrier, char *cardParams);</pre>
+<pre>int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);</pre>
 
 <h4>
 Parameters</h4>
@@ -244,85 +250,15 @@ Parameters</h4>
 <dd>
 Pointer to the carrier driver structure which is the only interface to
 the IPAC Carrier driver. The same structure is used for every instance
-of the same type of carrier board. The carriers already supported provide
-the following structures which can be used here:
-
-<blockquote>
-<table BORDER=2>
-<tr>
-<th>Board Type</th>
-
-<th>Carrier Driver</th>
-
-<th><tt>pcarrier</tt></th>
-</tr>
-
-<tr>
-<td><b>GreenSpring VIPC 310</b></td>
-
-<td>drvVipc310</td>
-
-<td><tt>&amp;vipc310</tt></td>
-</tr>
-
-<tr>
-<td><b>GreenSpring VIPC610</b></td>
-
-<td>drvVipc610</td>
-
-<td><tt>&amp;vipc610</tt></td>
-</tr>
-
-<tr>
-<td><b>GreenSpring VIPC610-01</b></td>
-
-<td>drvVipc610_01</td>
-
-<td><tt>&amp;vipc610_01</tt></td>
-</tr>
-
-<tr>
-<td><b>GreenSpring VIPC616</b></td>
-
-<td>drvVipc616</td>
-
-<td><tt>&amp;vipc616</tt></td>
-</tr>
-
-<tr>
-<td><b>GreenSpring VIPC616-01</b></td>
-
-<td>drvVipc616_01</td>
-
-<td><tt>&amp;vipc616_01</tt></td>
-</tr>
-
-<tr>
-<td><b>GreenSpring ATC40</b></td>
-
-<td>drvAtc40</td>
-
-<td>&amp;atc40</td>
-</tr>
-
-<tr>
-<td NOWRAP><b>Motorola MVME162/172</b></td>
-
-<td>drvIpMv162</td>
-
-<td><tt>&amp;ipmv162</tt></td>
-</tr>
-</table>
-</blockquote>
-</dd>
+of the same type of carrier board.</dd>
 
 <dt>
-<tt>char *cardParams</tt></dt>
+<tt>const char *cardParams</tt></dt>
 
 <dd>
 String containing board-specific initialisation parameters which is passed
 to the carrier driver. For carrier boards which rely on jumpers to set
-the board address (e.g. the GreenSpring carrier boards), the settings for
+the board address (e.g. the SBS GreenSpring carrier boards), the settings for
 each particular board will be reflected in the parameter settings given
 here when registering that carrier. For boards such as the MVME162 where
 the addresses can be changed by the driver, this string may be used to
@@ -1211,11 +1147,17 @@ priority levels fixed by the hardware.</p>
 
 <p>
 The IPAC Carrier Driver for this board is found in the file <i>drvVipc310.c</i>
-which exports only the symbol <tt>vipc310</tt> for use as the carrier
-descriptor table with <tt>ipacAddCarrier</tt>.</p>
+which implements the command <tt>ipacAddVIPC310</tt> to add a VIPC310 board to
+the system, and provides the registrar routine <tt>vipc310Registrar</tt> to add
+the above command to the iocsh and link the driver into a final IOC executable,
+for which it must be listed in the IOC's .dbd file thus:</p>
+
+<blockquote><pre>registrar(vipc310Registrar)</pre></blockquote>
 
 <h4>
-Configuration Parameter String Format</h4>
+Configuration Command and Parameter</h4>
+
+<pre>int ipacAddVIPC310(const char *cardParams);</pre>
 
 <p>
 The parameter string should comprise a hexadecimal number (an 0x or 0X at the
@@ -1244,21 +1186,21 @@ Configuration Examples</h4>
 
 <dl>
 <dt>
-<tt>ipacAddCarrier(&amp;vipc310, "0x6000")</tt></dt>
+<tt>ipacAddVIPC310("0x6000")</tt></dt>
 
 <dd>
 This indicates that the carrier has its I/O base set to 0x6000, and neither
 slot uses any memory space.</dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc310, "1000,512")</tt></dt>
+<tt>ipacAddVIPC310("1000,512")</tt></dt>
 
 <dd>
 Here the I/O base is set to 0x1000, and there is 512 Kbytes of memory on
 each module, with the IP module A memory at 0x100000 and module B at 0x180000.</dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc310, "0xfe00, 128")</tt></dt>
+<tt>ipacAddVIPC310("0xfe00, 128")</tt></dt>
 
 <dd>
 The I/O Base is at 0xfe00, and hence the carrier board Memory Base address
@@ -1314,36 +1256,35 @@ the necessary level.</p>
 
 <p>
 This board is a four-slot, 6U carrier, but otherwise very similar to the
-VIPC310. A seperate driver is also provided for the VIPC610-01 option which
+VIPC310. A seperate driver is also included for the VIPC610-01 option which
 changes the Interrupt Priority levels for the IP slots so they are equivalent
 to a pair of VIPC310 carrier boards, different to the interrupt levels
 for a standard VIPC610 board.</p>
 
 <p>
-The IPAC Carrier Drivers for the two board versions are found in the files
-<i>drvVipc610.c</i> and <i>drvVipc610_01.c</i> which export the symbols
-<tt>vipc610</tt> and <tt>vipc610_01</tt> respectively for use as the carrier
-descriptor tables with <tt>ipacAddCarrier</tt>.</p>
+The IPAC Carrier Drivers for both board versions are found in the file
+<i>drvVipc610.c</i> which implements the commands <tt>ipacAddVIPC610</tt> and
+<tt>ipacAddVIPC610_01</tt> for adding a VIPC610 board of the relevent type to
+the system, and provides the registrar routine <tt>vipc610Registrar</tt> to add
+the above commands to the iocsh and link the driver into a final IOC
+executable, for which it must be listed in the IOC's .dbd file thus:</p>
 
-<p>
-Note that from version 1.1 of this software <tt>vipc610_01</tt> is a new
-name for the original <tt>vipc610</tt> symbol which was changed to allow
-support for the standard board. Use of the wrong symbol may result in
-interrupts from modules in slots B through D being ignored.</p>
+<blockquote><pre>registrar(vipc610Registrar)</pre></blockquote>
 
 <p>
 <b>Warning:</b> As delivered by SBS/GreenSpring the VIPC610 has IRQ0 of slot D
-connected to the VMEbus level&nbsp;7 interrupt.  Under vxWorks on the MC680x0
-family this interrupt level may only be connected to a service routine that
-does not make any calls to vxWorks routines.  To use this slot for normal
-vxWorks ISRs the level must be changed (see the VIPC610 User Manual) and the
-carrier driver <i>drvVipc610.c</i> file edited to match and rebuilt.  The
-VIPC610-01 board option is free of this problem; it may also be possible to
-arrange for the VMEbus interface chip on the MC680x0 CPU board to convert a
-level&nbsp;7 VME interrupt to a level 6 interrupt to the chip.</p>
+connected to the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not
+cause a VMEbus interrupt at all.  Under vxWorks on the MC680x0 family a
+level&nbsp;7 interrupt level may only be connected to a service routine that
+does not make any calls to vxWorks routines.  Thus with a VIPC610 board slot D
+should not be used for modules that generate interrupts.  The VIPC610-01 board
+option is free of this problem.</p>
 
 <h4>
-Configuration Parameter String Format</h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddVIPC610(const char *cardParams);
+int ipacAddVIPC610_01(const char *cardParams);</pre>
 
 <p>
 The parameter string should comprise a hexadecimal number (an 0x or 0X at the
@@ -1373,14 +1314,14 @@ Configuration Examples</h4>
 
 <dl>
 <dt>
-<tt>ipacAddCarrier(&amp;vipc610, "0x6000")</tt></dt>
+<tt>ipacAddVIPC610("0x6000")</tt></dt>
 
 <dd>
 This indicates that the VIPC610 carrier board has its I/O base set to 0x6000,
 and none of the slots provide memory space.</dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc610_01, "1000,128")</tt></dt>
+<tt>ipacAddVIPC610_01("1000,128")</tt></dt>
 
 <dd>
 Here the I/O base is set to 0x1000, and there is 128Kbytes of memory on
@@ -1388,7 +1329,7 @@ each module, with the IP module A memory at 0x100000, module B at 0x120000,
 module C at 0x140000 and D at 0x160000. The board is actually a VIPC610-01.</dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc610, "7000,1024")</tt></dt>
+<tt>ipacAddVIPC610("7000,1024")</tt></dt>
 
 <dd>
 The I/O base is at 0x7000, and hence the carrier memory base is 0x700000.
@@ -1407,7 +1348,7 @@ the interrupt generator. The only commands thus supported are a request of the
 interrupt level associated with a particular slot and interrupt number, or to
 enable interrupts by making sure the CPU's VMEbus interrupter is listening on
 the necessary level. Note that the VIPC610-01 uses different interrupt levels
-to the straight VIPC610.</p>
+to the straight VIPC610, you must use the correct driver!</p>
 
 <blockquote>
 <table BORDER=2>
@@ -1444,32 +1385,44 @@ to the straight VIPC610.</p>
 <a NAME="VIPC616"></a>GreenSpring VIPC616</h3>
 
 <p>
+This board is a four-slot, 6U carrier, but otherwise very similar to the
+VIPC310. A seperate driver is also included for the VIPC616-01 option which
+changes the Interrupt Priority levels for the IP slots so they are equivalent
+to a pair of VIPC310 carrier boards, different to the interrupt levels
+for a standard VIPC616 board.</p>
+
+<p>
 The only differences between this carrier and the VIPC610 relate to the VME
-addressing capabilities of the card which can now support memory IP modules in
+addressing capabilities, the VIPC616 supports access to memory IP modules in
 the VME A32 address space. It is possible to use the VIP610 driver to control a
 VIPC616 board, but the use of this specific driver is recommended. This driver
 should also be used for the VIPC618 carrier which is schematically identical to
 the VIPC616 but uses different I/O connectors for the IP module signals.</p>
 
 <p>
-There is a separate driver provided in the file <i>drvVipc616_01.c</i> for the
-VIPC616-01 board option which differs from the basic VIPC616 driver in the IRQ
-levels it assumes, and the carrier table name <tt>vipc616_01</tt>.  Because of
-the problems described in the following paragraph it is recommended that the
--01 version board be bought rather than the basic VIPC610.  The interrupt
-levels used with this option are IRQ1, 2, 4 and 5, with slots C and D repeating
-the levels of A and B.</p>
+The IPAC Carrier Drivers for both board versions are found in the file
+<i>drvVipc616.c</i> which implements the commands <tt>ipacAddVIPC616</tt> and
+<tt>ipacAddVIPC616_01</tt> to add a VIPC616 board of the relevent type to the
+system, and provides the registrar routine <tt>vipc616Registrar</tt> to add the
+above commands to the iocsh and link the driver into a final IOC executable,
+for which it must be listed in the IOC's .dbd file thus:</p>
+
+<blockquote><pre>registrar(vipc610Registrar)</pre></blockquote>
 
 <p>
 <b>Warning:</b> As delivered by SBS/GreenSpring the VIPC616 has IRQ0 of slot D
-connected to the VMEbus level 7 interrupt.  Under vxWorks on the MC680x0 family
-this interrupt level may only be connected to a service routine that does not
-make any calls to vxWorks routines.  To use this slot for normal vxWorks ISRs
-the level must be changed (see the VIPC616 User Manual) and the carrier driver
-file <i>drvVipc616.c</i> edited and rebuilt to match.</p>
+connected to the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not
+cause a VMEbus interrupt at all.  Under vxWorks on the MC680x0 family a
+level&nbsp;7 interrupt level may only be connected to a service routine that
+does not make any calls to vxWorks routines.  Thus with a VIPC616 board slot D
+should not be used for modules that generate interrupts.  The VIPC616-01 board
+option is free of this problem.</p>
 
 <h4>
-Configuration Parameter String Format</h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddVIPC616(const char *cardParams);
+int ipacAddVIPC616_01(const char *cardParams);</pre>
 
 <p>
 The parameter string should comprise a hexadecimal number (an 0x or 0X at the
@@ -1499,18 +1452,22 @@ Configuration Examples</h4>
 
 <dl>
 <dt>
-<tt>ipacAddCarrier(&amp;vipc616, "0x6000")</tt></dt>
+<tt>ipacAddVIPC616("")</tt></dt>
 
 <dd>
-This indicates that the board has its I/O base set to 0x6000, and none
-of the slots provide memory space.
-
-<br><i>[I'm not sure that this example is correct; ommitting the MBA may
-result in an error. I don't have a VIPC616 to check this out with, so the
-driver is untested.]</i></dd>
+This indicates that the board is configured as delivered by the manufacturer,
+with the I/O base set to 0x6000 and the memory base address to 0xd0000000 in
+the VME A32 space, with 8MB of memory space available for each slot.
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc616_01, "1000,8000000")</tt></dt>
+<tt>ipacAddVIPC616("0x9000")</tt></dt>
+
+<dd>
+This indicates that the board has its I/O base set to 0x9000, and none
+of the slots provide memory space.
+
+<dt>
+<tt>ipacAddVIPC616_01("1000,8000000")</tt></dt>
 
 <dd>
 Here the I/O base is set to 0x1000, and each module is allocated 8Mb of
@@ -1519,7 +1476,7 @@ at 0x80000000, module B at 0x80800000, module C at 0x81000000 and D at
 0x81800000.</dd>
 
 <dt>
-<tt>ipacAddCarrier(&amp;vipc616, "7000,700000,1024")</tt></dt>
+<tt>ipacAddVIPC616("7000,700000,1024")</tt></dt>
 
 <dd>
 The I/O base is at 0x7000 and the carrier memory base is at 0x700000 in
@@ -1537,7 +1494,8 @@ The board uses fixed interrupt levels, and provides no software control over
 the interrupt generator. The only commands thus supported are a request of the
 interrupt level associated with a particular slot and interrupt number, or to
 enable interrupts by making sure the CPU's VMEbus interrupter is listening on
-the necessary level.</p>
+the necessary level. Note that the VIPC616-01 uses different interrupt levels
+to the straight VIPC616, you must use the correct driver!</p>
 
 <blockquote>
 <table BORDER=2>
@@ -1583,8 +1541,18 @@ little-endian systems. This carrier driver was written by
 <a href="mailto:peregrine@lanl.gov">Peregrine McGehee</a> and
 <a href="mailto:johill@lanl.gov">Jeff Hill</a>, who should be approached
 directly for support. Note that the carrier driver source file
-<i>drvIpac/drvAtc40.c</i> will only compile properly for x86 CPUs, and as
-shipped this file is commented out in <i>drvIpac/Makefile.Vx</i>.</p>
+<i>drvIpac/drvAtc40.c</i> will only compile for Pentium CPUs.</p>
+
+<p>
+The registrar entry for this driver should be:</p>
+
+<blockquote><pre>registrar(atc40Registrar)</pre></blockquote>
+
+<p>
+The configuration command is shown below.  See the source code for the format
+of the parameter string.</p>
+
+<blockquote><pre>int ipacAddATC40(const char *cardParams);</pre></blockquote>
 
 <hr>
 
@@ -1593,20 +1561,26 @@ shipped this file is commented out in <i>drvIpac/Makefile.Vx</i>.</p>
 <a NAME="MVME162"></a>Motorola MVME162 and MVME172</h3>
 
 <p>
-The Motorola MVME162 CPU board provides four IP slots in addition to the
-MC68040 CPU, memory and I/O. Slot pairs can be used with 32-bit dual-slot IP
-modules, and the IPIC chip which controls the interface supports all of the
-IPAC Driver interrupter commands. The Motorola MVME172 CPU board uses a similar
-IPIC chip and is compatible with the MVME162, although some versions only have
-two IP slots. This carrier driver can be used with either board, although
-non-existant slots will always appear to be empty.</p>
+The Motorola MVME162 and MVME172 CPU boards provide either two or four IP slots
+in addition to the MC68040 CPU, memory and I/O. Slot pairs can be used with
+32-bit dual-slot IP modules, and the IPIC chip which controls the interface
+supports all of the IPAC Driver interrupter commands. This carrier driver can
+be used with either board; non-existant slots will always appear to be
+empty.</p>
 
 <p>
 When this CPU board is used the IPAC carrier driver <i>drvIpMv162.c</i> can
-control the IP slots on the board. The carrier descriptor table parameter is
-<tt>ipmv162</tt> for this driver. The carrier initialisation routine has the
-following additional return-code meanings (see also
-<a href="#ipacInitialise">ipacInitialise()</a> above):</p>
+control the IP slots on the board. It implements the command
+<tt>ipacAddMVME162</tt> to add the MVME162 or MVME172 carrier to the system,
+and provides the registrar routine <tt>mv162ipRegistrar</tt> to add the above
+command to the iocsh and link the driver into a final IOC executable, for which
+it must be listed in the IOC's .dbd file thus:</p>
+
+<blockquote><pre>registrar(mv162ipRegistrar)</pre></blockquote>
+
+<p>
+The carrier initialisation routine has the following additional return-code
+meanings (see also <a href="#ipacInitialise">ipacInitialise()</a> above):</p>
 
 <blockquote>
 <table BORDER=2>
@@ -1637,7 +1611,9 @@ following additional return-code meanings (see also
 </blockquote>
 
 <h4>
-Configuration Parameter String Format</h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddMVME162(const char *cardParams)</pre>
 
 <p>
 The parameter string is used to initialise the IPIC registers which allow
@@ -1715,7 +1691,7 @@ of the parameter string.</p>
 Configuration Example</h4>
 
 <blockquote>
-<pre>ipacAddCarrier &amp;ipmv162, "A:m=0x80000000,1024 l=5,3 w=8 r=2 B:l=2"</pre>
+<pre>ipacAddMVME162("A:m=0x90000000,1024 l=5,3 w=8 r=2 B:l=2")</pre>
 </blockquote>
 
 <p>
@@ -1725,7 +1701,7 @@ particular application.</p>
 
 <p>
 Slot 0 is set up for a slow (recovery time 2&micro;s) memory board with
-1&nbsp;Mbyte of 8-bit wide RAM, addressed at 0x80000000 and with interrupt
+1&nbsp;Mbyte of 8-bit wide RAM, addressed at 0x90000000 and with interrupt
 priorities set for levels 5 and 3.</p>
 
 <p>

@@ -5,11 +5,11 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.5 2003-06-03 19:38:44 anj Exp $">
+   <meta name="Version" content="$Id: index.html,v 1.6 2003-11-14 00:22:45 anj Exp $">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
-<img src="logo101.gif" alt="EPICS" hspace=5 height=101 width=101 align=right>
+<img src="http://www.aps.anl.gov/epics/icons/logo101.gif" alt="EPICS" hspace=5 height=101 width=101 align=right>
 <h1>
 EPICS ipac Module</h1>
 
@@ -171,6 +171,17 @@ R3.14.2</td>
 <a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
 </tr>
 
+<tr>
+<td align=center>
+2.6</td>
+
+<td>
+R3.14.4</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
+</tr>
+
 </table>
 </blockquote></li>
 
@@ -199,8 +210,8 @@ documentation</a>.</p>
 Application Installation</h2>
 
 <p>
-To use the installed and built support software in an &lt;ioctop&gt;
-application, make the following changes to the IOC application:</p>
+The precise method of using this support software in an &lt;ioctop&gt;
+application depends on the version of EPICS Base you're using:</p>
 
 <h3>
 EPICS R3.13.x</h3>
@@ -253,12 +264,12 @@ Rebuild the application and use the newly installed support as desired.</li>
 </ol>
 
 <h3>
-EPICS R3.14.x</h3>
+EPICS R3.14.2</h3>
 
 <ol>
 <li>
-You must use drvIpac release 2.5 or later. Edit the <tt>configure/RELEASE</tt>
-file and add the line
+You must use drvIpac release 2.5. Edit the <tt>configure/RELEASE</tt> file and
+add the line
 
 <blockquote>
 <pre>IPAC=<i>/path/to/ipac/version</i></pre>
@@ -277,12 +288,50 @@ edit the <tt>Makefile</tt> and add
 
 <li>
 Ensure the following is included in the construction of the application's
-database definition file
+database definition file <tt>appInclude.dbd</tt>.
 
 <blockquote>
 <pre>
-include "drvIpac.dbd"              # if you only want drvIpac, or
+include "drvIpac.dbd"              # if you only want drvIpac,
 include "devTip810.dbd"            # if you want CANbus support too</pre>
+</blockquote></li>
+
+<li>
+Rebuild the application and use the newly installed support as desired.</li>
+</ol>
+
+<h3>
+EPICS R3.14.4</h3>
+
+<ol>
+<li>
+You must use drvIpac release 2.6 or later, see the above table for accurate
+version requirements. Edit the <tt>configure/RELEASE</tt> file and add the line
+
+<blockquote>
+<pre>IPAC=<i>/path/to/ipac/version</i></pre>
+</blockquote></li>
+
+<li>
+In the application source directory where the object files are linked together,
+edit the <tt>Makefile</tt> and add
+
+<blockquote>
+<pre>
+&lt;myapp&gt;_LIBS += Ipac         # for drvIpac,
+&lt;myapp&gt;_LIBS += Tip810       # for CANbus support
+&lt;myapp&gt;_LIBS += TyGSOctal    # for SBS Octal UART</pre>
+</blockquote></li>
+
+<li>
+Ensure one or more of the following lines is included in the construction of
+the application's database definition file <tt>xxxInclude.dbd</tt>:
+
+<blockquote>
+<pre>
+include "drvIpac.dbd"              # if you only want drvIpac,
+include "devTip810.dbd"            # if you want IPAC + CANbus support, or
+include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support</pre>
 </blockquote></li>
 
 <li>
@@ -295,37 +344,77 @@ Rebuild the application and use the newly installed support as desired.</li>
 <p>
 The following documentation is available:</p>
 
-<ul>
-<li>
-drvIpac - Industry Pack Driver (<a href="drvIpac.html">HTML</a>)</li>
+<blockquote>
+<table border=1>
 
-<li>
-IPAC Driver Release Notes (<a href="ipacRelease.html">HTML</a>)
+<tr>
+<th>Title</th><th>Version(s)</th></tr>
 
-<p>
-</p></li>
+<tr>
+<td>drvIpac - Industry Pack Driver</td>
+<td><!--
+<a href="R2.3/drvIpac.html">2.3</a>
+<a href="R2.4/drvIpac.html">2.4</a>
+<a href="R2.5/drvIpac.html">2.5</a> -->
+<a href="drvIpac.html">2.6</a></td>
+</tr>
 
-<li>
-drvTip810 - CAN Bus Driver (<a href="drvTip810.html">HTML</a>)</li>
+<tr>
+<td>IPAC Driver Release Notes</td>
+<td><!--
+<a href="R2.3/ipacRelease.html">2.3</a>
+<a href="R2.4/ipacRelease.html">2.4</a>
+<a href="R2.5/ipacRelease.html">2.5</a> -->
+<a href="ipacRelease.html">2.6</a></td>
+</tr>
 
-<li>
-devCan - CAN Bus Device Support (<a href="devCan.html">HTML</a>)</li>
+<tr>
+<td>drvTip810 - CAN Bus Driver</td>
+<td><!--
+<a href="R2.3/drvTip810.html">2.3</a>
+<a href="R2.4/drvTip810.html">2.4</a>
+<a href="R2.5/drvTip810.html">2.5</a> -->
+<a href="drvTip810.html">2.6</a></td>
+</tr>
 
-<li>
-CANbus Driver Release Notes (<a href="canRelease.html">HTML</a>)
+<tr>
+<td>devCan - CAN Bus Device Support</td>
+<td><!--
+<a href="R2.3/devCan.html">2.3</a>
+<a href="R2.4/devCan.html">2.4</a>
+<a href="R2.5/devCan.html">2.5</a> -->
+<a href="devCan.html">2.6</a></td>
+</tr>
 
-<p>
-</p></li>
+<tr>
+<td>CANbus Driver Release Notes</td>
+<td><!--
+<a href="R2.3/canRelease.html">2.3</a>
+<a href="R2.4/canRelease.html">2.4</a>
+<a href="R2.5/canRelease.html">2.5</a> -->
+<a href="canRelease.html">2.6</a></td>
+</tr>
 
-<li>
-SBS OctalUart IP Module Support
-(<a href="tyGSOctal.html">HTML</a>)</li>
+<tr>
+<td>SBS OctalUart IP Module Support</td>
+<td><!--
+<a href="R2.3/tyGSOctal.html">2.3</a>
+<a href="R2.4/tyGSOctal.html">2.4</a>
+<a href="R2.5/tyGSOctal.html">2.5</a> -->
+<a href="tyGSOctal.html">2.6</a></td>
+</tr>
 
-<li>
-SBS Octal Serial Driver Release Notes
-(<a href="tyGSOctalRelease.html">HTML</a>)</li>
+<tr>
+<td>SBS Octal Serial Driver Release Notes</td>
+<td><!--
+<a href="R2.3/tyGSOctalRelease.html">2.3</a>
+<a href="R2.4/tyGSOctalRelease.html">2.4</a>
+<a href="R2.5/tyGSOctalRelease.html">2.5</a> -->
+<a href="tyGSOctalRelease.html">2.6</a></td>
+</tr>
 
-</ul>
+</table>
+</blockquote>
 
 
 <h2>
