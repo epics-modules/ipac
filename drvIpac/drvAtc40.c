@@ -161,12 +161,15 @@ Description:
     to the base addresses of the various accessible parts of the IP module.
 
 Parameters:
-    The parameter string should comprise a hex number (the 0x or 0X at the
-    start is optional) optionally followed by a comma and a decimal integer.
-    The first number is the I/O base address of the card in the ISA
-    address space (the factory default is 0xfc0000 but the software
-    default is 0x03c000).  If present the second number gives the memory space
-    in Kbytes allocated to each IP module.
+    The parameter string should comprise a integer number in scanf %p format
+    (with GNU a leading 0x or 0X followed by a hexadecimal integer is required),
+    optionally followed by white space and an integer in scanf %i format, optionally 
+    followed by white space and another integer in scanf %i format. The first number 
+    is the I/O base address of the card in the CPU's address space (the factory default 
+    is 0xfc0000 but the software default is 0xa0000).  If present the second number 
+    specifies the memory address space consumption in Kbytes allocated to each IP module. 
+    If present the third number specifies the ISA interrupt request level that will be 
+    used by the card.
 
     The ATC40 must be installed in a 16-bit ISA bus slot. This allows both
     byte and word access to IPs.
@@ -185,9 +188,12 @@ Examples:
     "0x6000"
     This indicates that the carrier has its I/O base set to 0x6000, and
     the slots use 2 Kbytes memory space each.
-    "1000,512"
-    Here the I/O base is set to 0x1000, and there is 512 Kbytes of
+    "0X1000,512"
+    Here the I/O base is set to hex 1000, and there is 512 Kbytes of
     memory on each module.
+    "0x1000,0x200,11"
+    Here the I/O base is set to hex 1000, there is 512 Kbytes of
+    memory on each module, and the ISA interrupt request level is 11.
 
 Returns:
     0 = OK,
