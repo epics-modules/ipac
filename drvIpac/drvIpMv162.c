@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.4 1999-07-29 18:36:39 anj Exp $
+    $Id: drvIpMv162.c,v 1.5 1999-11-09 20:41:00 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -302,6 +302,7 @@ LOCAL int irqCmd (
 	    return ipic->intCtrl[slot][irqNumber] & IPIC_INT_LEVEL;
 
 	case ipac_irqEnable:
+	    ipic->intCtrl[slot][irqNumber] |= IPIC_INT_ICLR;
 	    ipic->intCtrl[slot][irqNumber] |= IPIC_INT_IEN;
 	    return OK;
 
