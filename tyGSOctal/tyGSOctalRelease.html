@@ -1,10 +1,10 @@
 <HTML>
 <HEAD>
-<TITLE>GreenSpring Octal Serial Driver Release Notes</TITLE>
+<TITLE>SBS/GreenSpring Octal Serial Driver Release Notes</TITLE>
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="SBS/GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.9 2005-02-18 22:53:28 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.10 2005-02-19 00:05:25 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -34,6 +34,13 @@ ports are supposed to default to no flow control.  ASYN uses the ioctl
 <tt>SIO_HW_OPTS_GET</tt> to query the port settings, and thus found the problem
 &#8212; presumably everybody else who uses tyGSOctal has been explicitly setting
 up each port.</LI>
+
+<LI>Updated source code comments to match the API changes in recent
+versions.</LI>
+
+<LI>ioctl() now returns an ERROR status if an unsupported baud rate is
+requested; previously it would silently set the rate to 9600 baud instead. More
+error conditions now set errno where appropriate as well.</LI>
 
 </UL>
 
