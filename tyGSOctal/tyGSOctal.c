@@ -41,6 +41,7 @@ History:
  PMM            18/11/96   Original
  PMM            13/10/97   Recast as VxWorks device driver.
  ANJ            09/03/99   Merged into ipac <supporttop>, fixed warnings.
+ BWK		29/08/00   Added rebootHook routine
 **************************************************************************/
 
 /*
@@ -48,6 +49,7 @@ History:
  */ 
 #include <vxWorks.h>
 #include <iv.h>
+#include <rebootLib.h>
 #include <intLib.h>
 #include <errnoLib.h>
 #include <msgQLib.h>
@@ -83,6 +85,7 @@ void         tyGSOctalInt(int);
 LOCAL void   tyGSOctalInitChannel(QUAD_TABLE *, int);
 LOCAL void   tyGSOctalRS232(TY_GSOCTAL_DEV *);
 LOCAL void   tyGSOctalRS485(TY_GSOCTAL_DEV *);
+LOCAL int    tyGSOctalRebootHook(int);
 
 
 /******************************************************************************
@@ -132,7 +135,9 @@ STATUS tyGSOctalDrv
                NULL,NULL,NULL,NULL,NULL);
         return (ERROR);
     }
-  
+    rebootHookAdd(tyGSOctalRebootHook);    
+
+
     tyGSOctalDrvNum = iosDrvInstall (tyGSOctalOpen,
                                 (FUNCPTR) NULL,
                                 tyGSOctalOpen,
@@ -165,6 +170,43 @@ void tyGSOctalReport()
             }
         }
     }
+}
+LOCAL int tyGSOctalRebootHook(int type)
+{
+/*
+ * Something intelligent needs to be done here.
+ * Will just calling ipmIrqCmd(.., ipac_irqDisable) work?
+ *
+*/
+    QUAD_TABLE *qt;
+    int i, n;
+    TY_GSOCTAL_DEV *pty;
+    FAST int oldlevel;
+	
+ /*   printf("tyGSOctalRebootHook\r\n");*/
+    oldlevel = intLock();	/* disable all interrupts */
+
+    for (n = 0; n < tyGSOctalLastModule; n++) {
+        qt = &tyGSOctalModules[n];
+        for (i=0; i < 8; i++) {
+            pty = &qt->port[i];
+            if (pty->created) {
+				
+		pty->regs->u.w.acr = 0x80;
+		pty->regs->u.w.imr = 0;
+		pty->chan->u.w.cr = 0x1a; /* disable trans/recv, reset pointer */
+		pty->chan->u.w.cr = 0x20; /* reset recv */
+		pty->chan->u.w.cr = 0x30; /* reset trans */
+		pty->chan->u.w.cr = 0x40; /* reset error status*/
+				
+            }
+        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
+        ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
+
+        }
+    }
+    intUnlock (oldlevel);
+    return OK;
 }
 
 /******************************************************************************
