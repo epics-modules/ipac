@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.11 2000-02-21 21:36:09 anj Exp $
+    $Id: drvTip810.c,v 1.12 2001-02-05 17:19:58 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -54,7 +54,6 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <ctype.h>
 
 /* Some local magic numbers */
-#define T810_INT_VEC_BASE 0x60
 #define T810_MAGIC_NUMBER 81001
 #define RECV_TASK_PRIO 55	/* vxWorks task priority */
 #define RECV_TASK_STACK 20000	/* task stack size */
@@ -94,9 +93,9 @@ typedef struct t810Dev_s {
     char *pbusName;		/* Bus identification */
     ushort_t card;		/* Industry Pack address */
     ushort_t slot;		/*     "     "      "    */
+    ushort_t irqNum;		/* interrupt vector number */
     uint_t busRate;		/* bit rate of bus in Kbits/sec */
     pca82c200_t *pchip;		/* controller registers */
-    uchar_t *pintVec;		/* interrupt vector register */
     SEM_ID txSem;		/* Transmit buffer protection */
     uint_t txCount;		/* messages transmitted */
     uint_t rxCount;		/* messages received */
@@ -274,7 +273,7 @@ Returns:
     
 
 Example:
-    t810Create "CAN1", 0, 0, 500
+    t810Create "CAN1", 0, 0, 0x60, 500
 
 */
 
@@ -282,6 +281,7 @@ int t810Create (
     char *pbusName,	/* Unique Identifier for this device */
     ushort_t card,	/* Ipac Driver card .. */
     ushort_t slot,	/* .. and slot number */
+    ushort_t irqNum,	/* interrupt vector number */
     uint_t busRate	/* in Kbits/sec */
 ) {
     static const struct {
@@ -346,9 +346,9 @@ int t810Create (
     pdevice->pbusName    = pbusName;
     pdevice->card        = card;
     pdevice->slot        = slot;
+    pdevice->irqNum      = irqNum;
     pdevice->busRate     = busRate;
     pdevice->pchip       = (pca82c200_t *) ipmBaseAddr(card, slot, ipac_addrIO);
-    pdevice->pintVec     = 0x41 + (uchar_t *) pdevice->pchip;
     pdevice->preadBuffer = NULL;
     pdevice->psigHandler = NULL;
 
@@ -691,7 +691,6 @@ Returns:
 int t810Initialise (
     void
 ) {
-    int intVec = T810_INT_VEC_BASE;
     t810Dev_t *pdevice = pt810First;
     int status = OK;
 
@@ -712,10 +711,10 @@ int t810Initialise (
 	pdevice->errorCount  = 0;
 	pdevice->busOffCount = 0;
 
-	if (intConnect(INUM_TO_IVEC(intVec), t810ISR, (int) pdevice)) {
+	if (intConnect(INUM_TO_IVEC((int)pdevice->irqNum), t810ISR, (int)pdevice)) {
 	    status = errno;
 	}
-	*(pdevice->pintVec) = intVec++;
+	*((uchar_t *) pdevice->pchip + 0x41) = pdevice->irqNum;
 
 	ipmIrqCmd(pdevice->card, pdevice->slot, 0, ipac_irqEnable);
 

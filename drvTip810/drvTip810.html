@@ -4,14 +4,14 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
    <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
-   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.4 1999-07-28 21:38:57 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.5 2001-02-05 17:19:59 anj Exp $">
 </HEAD>
 <BODY>
 
 <H1 ALIGN=CENTER>drvTip810 - CAN Bus Driver </H1>
 
 <CENTER><P>TEWS Tip810 Driver for EPICS<BR>
-Version 2.1</P></CENTER>
+Version 2.3</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -148,7 +148,7 @@ the <B><TT>-DNO_EPICS</TT></B> switch to disable the EPICS-specific code. </P>
 <P>Registers a new TIP810 device with the driver. </P>
 
 <PRE>int t810Create (char *pbusName, ushort_t card, ushort_t slot,
-                uint_t busRate);</PRE>
+                ushort_t irqNum, uint_t busRate);</PRE>
 
 <H4>Parameters</H4>
 
@@ -166,6 +166,12 @@ should contain alphanumeric characters only. </DD>
 
 <DD>Ipac Driver carrier and slot numbers which identify the IPAC module,
 for use with drvIpac. </DD>
+
+<DT><TT>ushort_t irqNum</TT> </DT>
+
+<DD>Interrupt vector number. Previous versions of the driver automatically
+allocated vectors numbers starring at 0x60, but these should really be set by
+the user, hence the addition of this parameter. </DD>
 
 <DT><TT>uint_t busRate</TT> </DT>
 

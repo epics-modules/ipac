@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.h,v 1.3 2000-02-21 21:36:09 anj Exp $
+    $Id: drvTip810.h,v 1.4 2001-02-05 17:19:59 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -57,7 +57,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 extern int t810Status(void *canBusID);
 extern int t810Report(int page);
 extern int t810Create(char *busName, ushort_t card, ushort_t slot, 
-		      uint_t busRate);
+		      ushort_t irqNum, uint_t busRate);
 extern int t810Shutdown(int starttype);
 extern int t810Initialise(void);
 
