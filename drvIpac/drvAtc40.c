@@ -7,7 +7,7 @@ File:
     drvAtc40.c
 
 Description:
-    IPAC Carrier Driver for the GreenSpring ATC40 Quad IndustryPack
+    IPAC Carrier Driver for the SBS/GreenSpring ATC40 Quad IndustryPack
     Carrier ISA board, provides the interface between IPAC driver and the
     hardware.
 
@@ -38,6 +38,8 @@ allow the user to configure different memory sizes
 #include <semLib.h>
 
 #include "drvIpac.h"
+#include "epicsExport.h"
+#include "iocsh.h"
 
 
 /*
@@ -201,7 +203,7 @@ Returns:
 
 */
 
-LOCAL int initialize(char *cardParams, void **pprivate, ushort_t carrier)
+LOCAL int initialize(const char *cardParams, void **pprivate, ushort_t carrier)
 {
     static char init = 0;
     int params;
@@ -420,7 +422,7 @@ Purpose:
     Handles interrupter commands and status requests
 
 Description:
-    The GreenSpring board is limited to fixed interrupt levels, and has
+    The carrier board is limited to fixed interrupt levels, and has
     no control over interrupts.  The only commands thus supported are
     a request of the interrupt level associated with a particular slot
     and interrupt number, or to enable interrupts by making sure the
@@ -773,8 +775,8 @@ char *report(void *cPrivate, ushort_t slot)
 
 /* IPAC Carrier Table */
 
-ipac_carrier_t atc40 = {
-    "GreenSpring ATC40",
+static ipac_carrier_t atc40 = {
+    "SBS/GreenSpring ATC40",
     SLOTS,
     initialize,
     report,
@@ -782,3 +784,23 @@ ipac_carrier_t atc40 = {
     irqCmd,
     intVecConnect
 };
+
+int ipacAddATC40(const char *cardParams) {
+    return ipacAddCarrier(&atc40, cardParams);
+}
+
+
+/* iocsh command table and registrar */
+
+static const iocshArg atcArg0 = { "cardParams",iocshArgString};
+static const iocshArg * const atcArgs[1] = {&atcArg0};
+static const iocshFuncDef atcFuncDef = {"ipacAddATC40", 1, atcArgs};
+static void atcCallFunc(const iocshArgBuf *args) {
+    ipacAddATC40(args[0].sval);
+}
+
+static void epicsShareAPI atc40Registrar(void) {
+    iocshRegister(&atcFuncDef, atcCallFunc);
+}
+
+epicsExportRegistrar(atc40Registrar);

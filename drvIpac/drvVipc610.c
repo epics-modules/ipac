@@ -7,19 +7,21 @@ File:
     drvVipc610.c
 
 Description:
-    IPAC Carrier Driver for the GreenSpring VIPC610 Quad IndustryPack 
-    Carrier VME board, provides the interface between IPAC driver and the 
-    hardware.  This carrier is 6U high, but cannot support 32-bit accesses 
-    to dual-slot IP modules, or Extended mode addresses.
+    IPAC Carrier Driver for the SBS/GreenSpring VIPC610 and VIPC610-01 Quad
+    IndustryPack Carrier VME boards, it provides the interface between IPAC
+    driver and the hardware.  This carrier is 6U high, but cannot support
+    32-bit accesses to dual-slot IP modules, or Extended mode addresses.
+    The VIPC610-01 fixes the IRQ levels to be equivalent to two VIPC310
+    carriers, which is different to (and more useful than) the VIPC610.
 
 Author:
     Andrew Johnson <anjohnson@iee.org>
 Created:
     19 July 1995
 Version:
-    $Id: drvVipc610.c,v 1.6 2001-02-14 20:28:09 anj Exp $
+    $Id: drvVipc610.c,v 1.7 2003-11-04 21:38:31 anj Exp $
 
-Copyright (c) 1995-2000 Andrew Johnson
+Copyright (c) 1995-2003 Andrew Johnson
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -43,7 +45,10 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <string.h>
 #include <vme.h>
 #include <sysLib.h>
+
 #include "drvIpac.h"
+#include "epicsExport.h"
+#include "iocsh.h"
 
 
 /* Characteristics of the card */
@@ -75,6 +80,17 @@ Copyright (c) 1995-2000 Andrew Johnson
 #define IRQ_C1 6
 #define IRQ_D0 7
 #define IRQ_D1 0
+
+/* VME Interrupt levels for -01 option */
+
+#define IRQ_A0_01 4
+#define IRQ_A1_01 5
+#define IRQ_B0_01 2
+#define IRQ_B1_01 1
+#define IRQ_C0_01 4
+#define IRQ_C1_01 5
+#define IRQ_D0_01 2
+#define IRQ_D1_01 1
 
 
 /* Carrier Private structure type, one instance per board */
@@ -136,7 +152,7 @@ Returns:
 */
 
 LOCAL int initialise (
-    char *cardParams,
+    const char *cardParams,
     void **pprivate,
     ushort_t carrier
 ) {
@@ -151,6 +167,7 @@ LOCAL int initialise (
 
     if (cardParams == NULL ||
 	strlen(cardParams) == 0) {
+	/* No params or empty string, use manufacturers default settings */
 	ioBase = 0x6000;
     } else {
 	params = sscanf(cardParams, "%p,%i", (void **) &ioBase, &mSize);
@@ -237,7 +254,7 @@ Purpose:
     Handles interrupter commands and status requests
 
 Description:
-    The GreenSpring board is limited to fixed interrupt levels, and has 
+    The carrier board is limited to fixed interrupt levels, and has 
     no control over interrupts.  The only commands thus supported are
     a request of the interrupt level associated with a particular slot 
     and interrupt number, or to enable interrupts by making sure the
@@ -254,15 +271,9 @@ LOCAL int irqCmd (
     void *private,
     ushort_t slot,
     ushort_t irqNumber,
-    ipac_irqCmd_t cmd
+    ipac_irqCmd_t cmd,
+    const int irqLevel[SLOTS][IPAC_IRQS]
 ) {
-    static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	{ IRQ_A0, IRQ_A1 }, 
-	{ IRQ_B0, IRQ_B1 },
-	{ IRQ_C0, IRQ_C1 },
-	{ IRQ_D0, IRQ_D1 }
-    };
-
     switch (cmd) {
 	case ipac_irqGetLevel:
 	    return irqLevel[slot][irqNumber];
@@ -276,18 +287,94 @@ LOCAL int irqCmd (
     }
 }
 
+LOCAL int irqCmd_610 (
+    void *private,
+    ushort_t slot,
+    ushort_t irqNumber,
+    ipac_irqCmd_t cmd
+) {
+    static const int irqLevel[SLOTS][IPAC_IRQS] = {
+	{ IRQ_A0, IRQ_A1 }, 
+	{ IRQ_B0, IRQ_B1 },
+	{ IRQ_C0, IRQ_C1 },
+	{ IRQ_D0, IRQ_D1 }
+    };
+    return irqCmd(private, slot, irqNumber, cmd, irqLevel);
+}
+
+LOCAL int irqCmd_610_01 (
+    void *private,
+    ushort_t slot,
+    ushort_t irqNumber,
+    ipac_irqCmd_t cmd
+) {
+    static const int irqLevel[SLOTS][IPAC_IRQS] = {
+	{ IRQ_A0_01, IRQ_A1_01 }, 
+	{ IRQ_B0_01, IRQ_B1_01 },
+	{ IRQ_C0_01, IRQ_C1_01 },
+	{ IRQ_D0_01, IRQ_D1_01 }
+    };
+    return irqCmd(private, slot, irqNumber, cmd, irqLevel);
+}
+
+
 /******************************************************************************/
 
 
-/* IPAC Carrier Table */
+/* IPAC Carrier Tables */
 
-ipac_carrier_t vipc610 = {
-    "GreenSpring VIPC610",
+static ipac_carrier_t vipc610 = {
+    "SBS/GreenSpring VIPC610",
     SLOTS,
     initialise,
     NULL,
     baseAddr,
-    irqCmd,
+    irqCmd_610,
     NULL
 };
 
+int ipacAddVIPC610(const char *cardParams) {
+    return ipacAddCarrier(&vipc610, cardParams);
+}
+
+static ipac_carrier_t vipc610_01 = {
+    "SBS/GreenSpring VIPC610-01",
+    SLOTS,
+    initialise,
+    NULL,
+    baseAddr,
+    irqCmd_610_01,
+    NULL
+};
+
+int ipacAddVIPC610_01(const char *cardParams) {
+    return ipacAddCarrier(&vipc610_01, cardParams);
+}
+
+
+/* iocsh command table and registrar */
+
+static const iocshArg vipcArg0 =
+    {"cardParams", iocshArgString};
+static const iocshArg * const vipcArgs[1] =
+    {&vipcArg0};
+
+static const iocshFuncDef vipc610FuncDef =
+    {"ipacAddVIPC610", 1, vipcArgs};
+static const iocshFuncDef vipc610_01FuncDef =
+    {"ipacAddVIPC610_01", 1, vipcArgs};
+
+static void vipc610CallFunc(const iocshArgBuf *args) {
+    ipacAddVIPC610(args[0].sval);
+}
+
+static void vipc610_01CallFunc(const iocshArgBuf *args) {
+    ipacAddVIPC610_01(args[0].sval);
+}
+
+static void epicsShareAPI vipc610Registrar(void) {
+    iocshRegister(&vipc610FuncDef, vipc610CallFunc);
+    iocshRegister(&vipc610_01FuncDef, vipc610_01CallFunc);
+}
+
+epicsExportRegistrar(vipc610Registrar);

@@ -7,7 +7,7 @@ File:
     drvVipc310.c
 
 Description:
-    IPAC Carrier Driver for the GreenSpring VIPC310 Dual IndustryPack 
+    IPAC Carrier Driver for the SBS/GreenSpring VIPC310 Dual IndustryPack 
     Carrier VME board, provides the interface between IPAC driver and the 
     hardware.  This carrier is 3U high, and thus cannot support 32-bit 
     accesses to dual-slot IP modules.
@@ -17,9 +17,9 @@ Author:
 Created:
     5 July 1995
 Version:
-    $Id: drvVipc310.c,v 1.4 2000-02-21 21:35:33 anj Exp $
+    $Id: drvVipc310.c,v 1.5 2003-11-04 21:38:30 anj Exp $
 
-Copyright (c) 1995-2000 Andrew Johnson
+Copyright (c) 1995-2003 Andrew Johnson
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,10 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <string.h>
 #include <vme.h>
 #include <sysLib.h>
+
 #include "drvIpac.h"
+#include "epicsExport.h"
+#include "iocsh.h"
 
 
 /* Characteristics of the card */
@@ -127,7 +130,7 @@ Returns:
 */
 
 LOCAL int initialise (
-    char *cardParams,
+    const char *cardParams,
     void **pprivate,
     ushort_t carrier
 ) {
@@ -227,7 +230,7 @@ Purpose:
     Handles interrupter commands and status requests
 
 Description:
-    The GreenSpring board is limited to fixed interrupt levels, and has 
+    The carrier board is limited to fixed interrupt levels, and has 
     no control over interrupts.  The only commands thus supported are
     a request of the interrupt level associated with a particular slot 
     and interrupt number, or to enable interrupts by making sure the
@@ -269,8 +272,8 @@ LOCAL int irqCmd (
 
 /* IPAC Carrier Table */
 
-ipac_carrier_t vipc310 = {
-    "GreenSpring VIPC310",
+static ipac_carrier_t vipc310 = {
+    "SBS/GreenSpring VIPC310",
     SLOTS,
     initialise,
     NULL,
@@ -279,3 +282,22 @@ ipac_carrier_t vipc310 = {
     NULL
 };
 
+int ipacAddVIPC310(const char *cardParams) {
+    return ipacAddCarrier(&vipc310, cardParams);
+}
+
+
+/* iocsh command table and registrar */
+
+static const iocshArg vipcArg0 = { "cardParams",iocshArgString};
+static const iocshArg * const vipcArgs[1] = {&vipcArg0};
+static const iocshFuncDef vipcFuncDef = {"ipacAddVIPC310", 1, vipcArgs};
+static void vipcCallFunc(const iocshArgBuf *args) {
+    ipacAddVIPC310(args[0].sval);
+}
+
+static void epicsShareAPI vipc310Registrar(void) {
+    iocshRegister(&vipcFuncDef, vipcCallFunc);
+}
+
+epicsExportRegistrar(vipc310Registrar);

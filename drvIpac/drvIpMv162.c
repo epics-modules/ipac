@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.7 2001-02-14 20:26:32 anj Exp $
+    $Id: drvIpMv162.c,v 1.8 2003-11-04 21:38:30 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -43,8 +43,11 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <sysLib.h>
 #include <vxLib.h>
 #include <taskLib.h>
+
 #include "drvIpac.h"
 #include "ipic.h"
+#include "epicsExport.h"
+#include "iocsh.h"
 
 
 /* Characteristics of the card */
@@ -125,7 +128,7 @@ Returns:
 */
 
 LOCAL int initialise (
-    char *cardParams,
+    const char *cardParams,
     void **pprivate,
     ushort_t carrier
 ) {
@@ -358,8 +361,8 @@ LOCAL int irqCmd (
 
 /* IPAC Carrier Table */
 
-ipac_carrier_t ipmv162 = {
-    "Motorola MVME162",
+static ipac_carrier_t ipmv162 = {
+    "Motorola MVME162/172",
     SLOTS,
     initialise,
     NULL,
@@ -368,3 +371,22 @@ ipac_carrier_t ipmv162 = {
     NULL
 };
 
+int ipacAddMVME162(const char *cardParams) {
+    return ipacAddCarrier(&ipmv162, cardParams);
+}
+
+
+/* iocsh command table and registrar */
+
+static const iocshArg mvipArg0 = { "cardParams",iocshArgString};
+static const iocshArg * const mvipArgs[1] = {&mvipArg0};
+static const iocshFuncDef mvipFuncDef = {"ipacAddMVME162", 1, mvipArgs};
+static void mvipCallFunc(const iocshArgBuf *args) {
+    ipacAddMVME162(args[0].sval);
+}
+
+static void epicsShareAPI mv162ipRegistrar(void) {
+    iocshRegister(&mvipFuncDef, mvipCallFunc);
+}
+
+epicsExportRegistrar(mv162ipRegistrar);
