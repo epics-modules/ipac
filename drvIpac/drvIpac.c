@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.9 2003-10-29 20:46:28 anj Exp $
+    $Id: drvIpac.c,v 1.10 2003-11-04 21:35:10 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -134,7 +134,7 @@ Example:
 
 int ipacAddCarrier (
     ipac_carrier_t *pcarrierTable,
-    char *cardParams
+    const char *cardParams
 ) {
     void *cPrivate;
     int status;

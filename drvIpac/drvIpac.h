@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.5 2000-02-21 21:35:33 anj Exp $
+    $Id: drvIpac.h,v 1.6 2003-11-04 21:35:11 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -147,7 +147,7 @@ typedef struct {
 			/* String containing carrier board type */
     ushort_t numberSlots;
 			/* Number of IPAC devices this carrier can hold */
-    int (*initialise)(char *cardParams, void **cPrivate, ushort_t carrier);
+    int (*initialise)(const char *cardParms, void **cPrivate, ushort_t carrier);
 			/* Initialise carrier and return *cPrivate */
     char *(*report)(void *cPrivate, ushort_t slot);
 			/* Return string with giving status of this slot */
@@ -164,7 +164,7 @@ typedef struct {
 
 /* Functions for startup and interactive use */
 
-extern int ipacAddCarrier(ipac_carrier_t *pcarrier, char *cardParams);
+extern int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
 extern int ipacReport(int interest);
 extern int ipacInitialise(int after);
 
