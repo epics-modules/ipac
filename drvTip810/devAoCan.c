@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.11 2003-05-28 12:20:21 mrk Exp $
+    $Id: devAoCan.c,v 1.12 2003-05-30 20:56:09 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -58,8 +58,6 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <dbCommon.h>
 #include <aoRecord.h>
 #include <canBus.h>
-#include <alarm.h>
-#include <recGbl.h>
 
 #define DO_NOT_CONVERT	2
 
