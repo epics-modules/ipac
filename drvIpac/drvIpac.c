@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.8 2002-10-24 18:22:51 anj Exp $
+    $Id: drvIpac.c,v 1.9 2003-10-29 20:46:28 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -37,7 +37,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #ifndef NO_EPICS
-#  include <drvSup.h>
+#  include "drvSup.h"
+#  include "epicsExport.h"
 #endif
 
 #include <stdio.h>
@@ -89,7 +90,7 @@ struct drvet drvIpac = {
     (DRVSUPFUN) ipacReport, 
     (DRVSUPFUN) ipacInitialise
 };
-
+epicsExportAddress(drvet, drvIpac);
 
 #endif
 

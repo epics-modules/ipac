@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.7 2003-05-30 20:56:10 anj Exp $
+    $Id: devBiTip810.c,v 1.8 2003-10-29 20:46:30 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -33,21 +33,22 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 *******************************************************************************/
 
-#include	<vxWorks.h>
-#include	<string.h>
-#include	<ctype.h>
+#include <vxWorks.h>
+#include <string.h>
+#include <ctype.h>
 
-#include	<dbDefs.h>
-#include	<dbAccess.h>
-#include        <recSup.h>
-#include	<recGbl.h>
-#include	<alarm.h>
-#include	<devSup.h>
-#include	<devLib.h>
-#include	<biRecord.h>
-#include	"canBus.h"
-#include	"drvTip810.h"
-#include	"pca82c200.h"
+#include "dbDefs.h"
+#include "dbAccess.h"
+#include "recSup.h"
+#include "recGbl.h"
+#include "alarm.h"
+#include "devSup.h"
+#include "devLib.h"
+#include "biRecord.h"
+#include "canBus.h"
+#include "drvTip810.h"
+#include "pca82c200.h"
+#include "epicsExport.h"
 
 
 /* Create the dset for devBiTip810 */
@@ -61,13 +62,15 @@ struct {
 	DEVSUPFUN	init_record;
 	DEVSUPFUN	get_ioint_info;
 	DEVSUPFUN	read_bi;
-}devBiTip810={
+} devBiTip810 = {
 	5,
 	NULL,
 	NULL,
 	init_bi,
 	NULL,
-	read_bi};
+	read_bi
+};
+epicsExportAddress(dset, devBiTip810);
 
 LOCAL long init_bi(
     struct biRecord *prec

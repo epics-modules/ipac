@@ -16,7 +16,7 @@ Authors:
 Created:
     25 August 1998
 Version:
-    $Id: devSiWiener.c,v 1.5 2003-05-30 20:56:12 anj Exp $
+    $Id: devSiWiener.c,v 1.6 2003-10-29 20:46:33 anj Exp $
 
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
@@ -44,21 +44,22 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 #include <wdLib.h>
 #include <logLib.h>
 
-#include <errMdef.h>
-#include <devLib.h>
-#include <dbAccess.h>
-#include <dbScan.h>
-#include <callback.h>
-#include <cvtTable.h>
-#include <link.h>
-#include <alarm.h>
-#include <recGbl.h>
-#include <recSup.h>
-#include <devSup.h>
-#include <dbCommon.h>
-#include <stringinRecord.h>
-#include <canBus.h>
-#include <string.h>
+#include "errMdef.h"
+#include "devLib.h"
+#include "dbAccess.h"
+#include "dbScan.h"
+#include "callback.h"
+#include "cvtTable.h"
+#include "link.h"
+#include "alarm.h"
+#include "recGbl.h"
+#include "recSup.h"
+#include "devSup.h"
+#include "dbCommon.h"
+#include "stringinRecord.h"
+#include "canBus.h"
+#include "string.h"
+#include "epicsExport.h"
 
 
 typedef struct siCanPrivate_s {
@@ -103,8 +104,10 @@ struct {
     get_ioint_info,
     read_si
 };
+epicsExportAddress(dset, devSiWiener);
 
 LOCAL siCanBus_t *firstBus;
+
 
 LOCAL long init_si (
     struct stringinRecord *prec

@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.14 2003-05-30 20:56:11 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.15 2003-10-29 20:46:31 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -41,20 +41,21 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <wdLib.h>
 #include <logLib.h>
 
-#include <errMdef.h>
-#include <devLib.h>
-#include <dbAccess.h>
-#include <dbScan.h>
-#include <callback.h>
-#include <cvtTable.h>
-#include <link.h>
-#include <alarm.h>
-#include <recGbl.h>
-#include <recSup.h>
-#include <devSup.h>
-#include <dbCommon.h>
-#include <mbbiDirectRecord.h>
-#include <canBus.h>
+#include "errMdef.h"
+#include "devLib.h"
+#include "dbAccess.h"
+#include "dbScan.h"
+#include "callback.h"
+#include "cvtTable.h"
+#include "link.h"
+#include "alarm.h"
+#include "recGbl.h"
+#include "recSup.h"
+#include "devSup.h"
+#include "dbCommon.h"
+#include "mbbiDirectRecord.h"
+#include "canBus.h"
+#include "epicsExport.h"
 
 
 #define CONVERT 0
@@ -103,6 +104,7 @@ struct {
     get_ioint_info,
     read_mbbiDirect
 };
+epicsExportAddress(dset, devMbbiDirectCan);
 
 LOCAL mbbiDirectCanBus_t *firstBus;
 

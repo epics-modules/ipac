@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.12 2003-05-30 20:56:09 anj Exp $
+    $Id: devAoCan.c,v 1.13 2003-10-29 20:46:29 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -44,20 +44,21 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <wdLib.h>
 #include <logLib.h>
 
-#include <errMdef.h>
-#include <devLib.h>
-#include <dbAccess.h>
-#include <dbScan.h>
-#include <callback.h>
-#include <cvtTable.h>
-#include <link.h>
-#include <alarm.h>
-#include <recGbl.h>
-#include <recSup.h>
-#include <devSup.h>
-#include <dbCommon.h>
-#include <aoRecord.h>
-#include <canBus.h>
+#include "errMdef.h"
+#include "devLib.h"
+#include "dbAccess.h"
+#include "dbScan.h"
+#include "callback.h"
+#include "cvtTable.h"
+#include "link.h"
+#include "alarm.h"
+#include "recGbl.h"
+#include "recSup.h"
+#include "devSup.h"
+#include "dbCommon.h"
+#include "aoRecord.h"
+#include "canBus.h"
+#include "epicsExport.h"
 
 #define DO_NOT_CONVERT	2
 
@@ -106,6 +107,7 @@ struct {
     write_ao,
     special_linconv
 };
+epicsExportAddress(dset, devAoCan);
 
 LOCAL aoCanBus_t *firstBus;
 

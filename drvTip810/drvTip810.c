@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.14 2003-06-03 19:38:46 anj Exp $
+    $Id: drvTip810.c,v 1.15 2003-10-29 20:46:34 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -65,7 +65,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 #ifndef NO_EPICS
-#include <drvSup.h>
+# include "drvSup.h"
+# include "epicsExport.h"
 
 /* EPICS Driver Support Entry Table */
 
@@ -74,6 +75,7 @@ struct drvet drvTip810 = {
     (DRVSUPFUN) t810Report,
     (DRVSUPFUN) t810Initialise
 };
+epicsExportAddress(drvet, drvTip810);
 
 #endif /* NO_EPICS */
 
