@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.1 1999-03-09 20:27:56 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.2 1999-07-30 16:10:54 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -19,6 +19,27 @@ for the GreenSpring Octal RS232/RS422/RS485 IndustryPack modules  since this
 driver was merged into the unbundled EPICS ipac support area.  Version numbers
 refer to the release of the ipac support software as a whole.  The earliest
 version appears at the bottom, with more recent releases above it. </P><HR>
+
+
+<H2>Version 2.1</H2>
+
+<P>Updated due to changes made to drvIpac, and also actually tried it out for
+myself - got some interrupts but I haven't done a full test.</P>
+
+<P>Changes:<UL>
+
+<LI>Use <TT>ipmIntConnect</TT> to attach the ISR. </LI>
+
+</UL></P>
+
+<P>Bugs fixed:<UL>
+
+<LI>Now works with the ipmv162 carrier driver - the interrupt vector register
+was being accessed at an offset from the I/O space, which works on GreenSpring
+carriers but doesn't meet the IPAC specification.  The register is correctly
+accessed in the IP memory space, which means that this must be mapped in. </LI>
+
+</UL></P><HR>
 
 
 <H2>Version 2.0</H2>
