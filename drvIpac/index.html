@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.1 2001-02-14 20:38:25 anj Exp $">
+   <meta name="Version" content="index.html,v 1.1 2001/02/14 20:38:25 anj Exp">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
@@ -203,7 +203,9 @@ In the application source directory where the base object files are linked
 together, edit <tt>Makefile.Vx</tt> and add</li>
 
 <blockquote>
-<pre>LIBOJBS += $(IPAC_BIN)/ipacLib</pre>
+<pre>
+LIBOBJS += $(IPAC_BIN)/ipacLib     <i>for drvIpac, and</i>
+LIBOBJS += $(IPAC_BIN)/tip810Lib   <i>if you want CANbus support</i></pre>
 </blockquote>
 
 <li>
@@ -211,7 +213,9 @@ Ensure the following is included in the construction of the application's
 database definition file</li>
 
 <blockquote>
-<pre>include "drvIpac.dbd"</pre>
+<pre>
+include "drvIpac.dbd"              <i>if you only want drvIpac, or</i>
+include "devTip810.dbd"            <i>if you want CANbus support too</i></pre>
 </blockquote>
 
 <li>
@@ -242,15 +246,6 @@ devCan - CAN Bus Device Support (<a href="devCan.html">HTML</a>)</li>
 
 <li>
 CANbus Driver Release Notes (<a href="canRelease.html">HTML</a>)
-
-<p>
-</p></li>
-
-<li>
-drvLan100 - LAN-100 Driver (<a href="drvLan100.html">HTML</a>)</li>
-
-<li>
-Actis Driver Release Notes (<a href="actisRelease.html">HTML</a>)
 
 <p>
 </p></li>
