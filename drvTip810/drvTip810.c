@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.5 1998-05-29 14:23:19 anj Exp $
+    $Id: drvTip810.c,v 1.6 1998-08-20 16:53:28 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -837,7 +837,17 @@ Purpose:
     Parse a CAN address string into a canIo_t structure
 
 Description:
+    canString which must match the format below is converted by this routine
+    into the relevent fields of the canIo_t structure pointed to by pcanIo:
+
+    	busname{/timeout}:id{+n}{.offset} parameter
     
+    where
+    	busname is alphanumeric, all other fields are hex, decimal or octal
+    	timeout is in milliseconds
+	id and any number of +n components are summed to give the CAN Id
+	offset is the byte offset into the message
+	parameter is available for use by device support
 
 Returns:
     OK, or
@@ -845,7 +855,7 @@ Returns:
     S_can_noDevice for an unregistered bus name.
 
 Example:
-    canIoParse("CAN1/20:0126.4 0xfff", &myIo);
+    canIoParse("CAN1/20:0126+4+1.4 0xfff", &myIo);
 
 */
 
@@ -901,9 +911,15 @@ int canIoParse (
 	return S_can_badAddress;
     }
     pcanIo->identifier = strtoul(canString, &canString, 0);
+    separator = *canString++;
+    
+    /* Handle any number of optional +<n> additions to the ID */
+    while (separator == '+') {
+    	pcanIo->identifier += strtoul(canString, &canString, 0);
+	separator = *canString++;
+    }
 
     /* Handle .<offset> if present */
-    separator = *canString++;
     if (separator == '.') {
 	pcanIo->offset = strtoul(canString, &canString, 0);
 	if (pcanIo->offset >= CAN_DATA_SIZE) {
@@ -935,10 +951,18 @@ Purpose:
     writes a CAN message to the bus
 
 Description:
-    
+    Sends the message described by pmessage out through the bus identified by
+    canBusID.  After some simple argument checks it obtains exclusive access to
+    the transmit registers, then copies the message to the chip.  The timeout
+    value allows task recovery in the event that exclusive access is not
+    available within a the given number of vxWorks clock ticks.
 
 Returns:
-    
+    OK, 
+    S_can_badMessage for bad identifier, message length or rtr value,
+    S_can_badDevice for bad device pointer,
+    S_objLib_OBJ_TIMEOUT indicates timeout,
+    S_t810_transmitterBusy indicates an internal error.
 
 Example:
     
@@ -1003,7 +1027,7 @@ Description:
 Returns:
     OK, 
     S_can_badMessage for bad identifier or NULL callback routine,
-    S_can_badDevice for bad device pointer.
+    S_t810_badDevice for bad device pointer.
 
 Example:
     
@@ -1066,7 +1090,7 @@ Returns:
     OK, 
     S_can_badMessage for bad identifier or NULL callback routine,
     S_can_noMessage for no matching message callback,
-    S_can_badDevice for bad device pointer.
+    S_t810_badDevice for bad device pointer.
 
 Example:
     
@@ -1135,7 +1159,7 @@ Description:
 
 Returns:
     OK, 
-    S_can_badDevice for bad device pointer.
+    S_t810_badDevice for bad device pointer.
 
 Example:
     
@@ -1193,7 +1217,7 @@ Returns:
     OK, or
     S_t810_badDevice for bad bus ID, 
     S_can_badMessage for bad message Identifier or length,
-    vxWorks errno for semTake failures (timeout etc).
+    S_objLib_OBJ_TIMEOUT for timeout
 
 Example:
     canMessage_t myBuffer = {
@@ -1260,10 +1284,10 @@ Purpose:
     Test routine, sends a single message to the named bus.
 
 Description:
-    
+    This routine is intended for use from the vxWorks shell.
 
 Returns:
-    
+    Ok, or ERROR
 
 Example:
     
