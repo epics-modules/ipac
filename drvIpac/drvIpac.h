@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.2 1997-06-19 16:57:24 anj Exp $
+    $Id: drvIpac.h,v 1.3 1999-03-09 20:24:32 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -27,7 +27,6 @@ Version:
 #define INCdrvIpacH
 
 #include <types.h>
-#include "ipModules.h"
 
 #ifndef NO_EPICS
 #include <errMdef.h>

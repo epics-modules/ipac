@@ -5,7 +5,6 @@ include $(TOP)/config/CONFIG_APP
 DBDINSTALL += drvIpac.dbd
 
 INC += drvIpac.h
-INC += ipModules.h
 
 HTMLS_DIR = .
 HTMLS += drvIpac.html
