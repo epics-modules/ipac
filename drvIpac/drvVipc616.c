@@ -17,7 +17,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.5 2000-02-21 21:35:33 anj Exp $
+    $Id: drvVipc616.c,v 1.6 2001-02-14 20:28:45 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -152,11 +152,8 @@ LOCAL int initialise (
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
-	{
-	    PROM_A, PROM_B, PROM_C, PROM_D
-	}, {
-	    REGS_A, REGS_B, REGS_C, REGS_D
-	}
+	{ PROM_A, PROM_B, PROM_C, PROM_D },
+	{ REGS_A, REGS_B, REGS_C, REGS_D }
     };
 
     if (cardParams == NULL ||
@@ -281,15 +278,10 @@ LOCAL int irqCmd (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	{
-	    IRQ_A0, IRQ_A1
-	}, {
-	    IRQ_B0, IRQ_B1
-	}, {
-	    IRQ_C0, IRQ_C1
-	}, {
-	    IRQ_D0, IRQ_D1
-	}
+	{ IRQ_A0, IRQ_A1 },
+	{ IRQ_B0, IRQ_B1 },
+	{ IRQ_C0, IRQ_C1 },
+	{ IRQ_D0, IRQ_D1 }
     };
 
     switch (cmd) {
