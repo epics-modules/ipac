@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.17 2003-11-13 21:21:18 anj Exp $
+    $Id: drvTip810.c,v 1.18 2004-12-16 18:56:41 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -1460,9 +1460,10 @@ static void t810CreateCallFunc(const iocshArgBuf *arg)
 	       arg[4].ival);
 }
 
-LOCAL void drvTip810Registrar(void) {
+static void drvTip810Registrar(void) {
     iocshRegister(&t810ReportFuncDef,t810ReportCallFunc);
     iocshRegister(&t810CreateFuncDef,t810CreateCallFunc);
 }
+epicsExportRegistrar(drvTip810Registrar);
 
 #endif
