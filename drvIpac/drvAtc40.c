@@ -44,8 +44,8 @@ allow the user to configure different memory sizes
  * Characteristics of the card
  */
 #define SLOTS 4
-#define IO_SPACES 4		/* Address spaces in ISA 16MByte */
-#define IPAC_IRQS 2		/* Interrupts per module */
+#define IO_SPACES 4     /* Address spaces in ISA 16MByte */
+#define IPAC_IRQS 2     /* Interrupts per module */
 
 typedef volatile struct {
     uint16_t io[0x40];
@@ -89,9 +89,9 @@ typedef volatile struct {
 typedef struct {
     NODE node;
     void *baseAddr[IPAC_ADDR_SPACES][SLOTS];
-    atc40Device *pDev;		/* ATC40 device address */
-    ushort_t carrier;		/* IPAC carrier number */
-    unsigned char irq;		/* interrupt request level */
+    atc40Device *pDev;      /* ATC40 device address */
+    ushort_t carrier;       /* IPAC carrier number */
+    unsigned char irq;      /* interrupt request level */
 } atc40Config_t;
 
 /*
@@ -110,10 +110,11 @@ typedef struct {
  */
 typedef struct {
     void (*pISR) (int parameter);
-    int parameter;
     atc40Config_t *pConfig;
-    uchar_t slot;
+    int parameter;
+    unsigned useCount;
     unsigned vecNum;
+    uchar_t slot;
 } atc40IntDispatch_t;
 
 LOCAL atc40IntDispatch_t intDispatchTable[IPAC_N_VECTORS];
@@ -131,7 +132,7 @@ LOCAL void atc40ISR(atc40Device * pDev);
 LOCAL void atc40UnexpectedVecISR(int arg);
 LOCAL SEM_ID atc40Lock;
 LOCAL int intVecConnectLocked(void *cPrivate, ushort_t slot, ushort_t vecNum,
-		    void (*routine) (int parameter), int parameter);
+            void (*routine) (int parameter), int parameter);
 
 /*
  * this is a vxWorks BSP supplied glovbal variable
@@ -182,11 +183,11 @@ Parameters:
 
 Examples:
     "0x6000"
-	This indicates that the carrier has its I/O base set to 0x6000, and
-	the slots use 2 Kbytes memory space each.
+    This indicates that the carrier has its I/O base set to 0x6000, and
+    the slots use 2 Kbytes memory space each.
     "1000,512"
-	Here the I/O base is set to 0x1000, and there is 512 Kbytes of
-	memory on each module.
+    Here the I/O base is set to 0x1000, and there is 512 Kbytes of
+    memory on each module.
 
 Returns:
     0 = OK,
@@ -228,53 +229,54 @@ LOCAL int initialize(char *cardParams, void **pprivate, ushort_t carrier)
      * shut off interrupts when its a soft reboot
      */
     if (!init) {
-	/*
-	 * initialize the global mutex
-	 */
-	atc40Lock = semMCreate(SEM_Q_PRIORITY | SEM_DELETE_SAFE | SEM_INVERSION_SAFE);
-	if (atc40Lock == NULL) {
-	    return errno;
-	}
-	/*
-	 * install a reboot hook
-	 */
-	status = rebootHookAdd(disableAtc40Ints);
-	if (status < 0) {
-	    return errno;
-	}
-	/*
-	 * initialize the int dispatch table
-	 */
-	for (vecNum = 0; vecNum < NELEMENTS(intDispatchTable); vecNum++) {
-	    intDispatchTable[vecNum].pISR = atc40UnexpectedVecISR;
-	    intDispatchTable[vecNum].parameter = vecNum;
-	    intDispatchTable[vecNum].pConfig = NULL;
-	}
+        /*
+         * initialize the global mutex
+         */
+        atc40Lock = semMCreate(SEM_Q_PRIORITY | SEM_DELETE_SAFE | SEM_INVERSION_SAFE);
+        if (atc40Lock == NULL) {
+            return errno;
+        }
+        /*
+         * install a reboot hook
+         */
+        status = rebootHookAdd(disableAtc40Ints);
+        if (status < 0) {
+            return errno;
+        }
+        /*
+         * initialize the int dispatch table
+         */
+        for (vecNum = 0; vecNum < NELEMENTS(intDispatchTable); vecNum++) {
+            intDispatchTable[vecNum].pISR = atc40UnexpectedVecISR;
+            intDispatchTable[vecNum].parameter = vecNum;
+            intDispatchTable[vecNum].pConfig = NULL;
+            intDispatchTable[vecNum].useCount = 0u;
+        }
 
-	init = TRUE;
+        init = TRUE;
     }
     if (cardParams == NULL || strlen(cardParams) == 0) {
-	/*
-	 * beginning of the "no memory" portion of the WRS pc486 address map
-	 */
-	pDev = (atc40Device *) 0xa0000;
+        /*
+         * beginning of the "no memory" portion of the WRS pc486 address map
+         */
+        pDev = (atc40Device *) 0xa0000;
     } else {
-	params = sscanf(cardParams, "%p %i %i", (void **) &pDev, &mSize, &irq);
-	/*
-	 * verify reasonable parameters
-	 */
-	if (params < 1 || params > 3) {
-	    return S_IPAC_badAddress;
-	}
-	/*
-	 * currently only the default memory map is supported
-	 */
-	if (params >= 2 && mSize != sizeof(atc40Device)) {
-	    return S_IPAC_badAddress;
-	}
-	if (params >= 3 && (irq >= ISA_N_IRQS || irq < 0)) {
-	    return S_IPAC_badIntLevel;
-	}
+        params = sscanf(cardParams, "%p %i %i", (void **) &pDev, &mSize, &irq);
+        /*
+         * verify reasonable parameters
+         */
+        if (params < 1 || params > 3) {
+            return S_IPAC_badAddress;
+        }
+        /*
+         * currently only the default memory map is supported
+         */
+        if (params >= 2 && mSize != sizeof(atc40Device)) {
+            return S_IPAC_badAddress;
+        }
+        if (params >= 3 && (irq >= ISA_N_IRQS || irq < 0)) {
+            return S_IPAC_badIntLevel;
+        }
     }
 
     /*
@@ -290,7 +292,7 @@ LOCAL int initialize(char *cardParams, void **pprivate, ushort_t carrier)
      */
     pConfig = calloc(1, sizeof(*pConfig));
     if (pConfig == NULL) {
-	return errno;
+        return errno;
     }
     pConfig->pDev = pDev;
     pConfig->carrier = carrier;
@@ -300,16 +302,16 @@ LOCAL int initialize(char *cardParams, void **pprivate, ushort_t carrier)
      * determine the base addresses of the various IPAC address spaces
      */
     for (slot = 0; slot < SLOTS; slot++) {
-	pConfig->baseAddr[ipac_addrID][slot] = (void *) pDev->ioid[slot].id;
+        pConfig->baseAddr[ipac_addrID][slot] = (void *) pDev->ioid[slot].id;
     }
     for (slot = 0; slot < SLOTS; slot++) {
-	pConfig->baseAddr[ipac_addrIO][slot] = (void *) pDev->ioid[slot].io;
+        pConfig->baseAddr[ipac_addrIO][slot] = (void *) pDev->ioid[slot].io;
     }
     for (slot = 0; slot < SLOTS; slot++) {
-	pConfig->baseAddr[ipac_addrIO32][slot] = NULL;
+        pConfig->baseAddr[ipac_addrIO32][slot] = NULL;
     }
     for (slot = 0; slot < SLOTS; slot++) {
-	pConfig->baseAddr[ipac_addrMem][slot] = (void *) pDev->mem[slot];
+        pConfig->baseAddr[ipac_addrMem][slot] = (void *) pDev->mem[slot];
     }
 
     /*
@@ -322,8 +324,8 @@ LOCAL int initialize(char *cardParams, void **pprivate, ushort_t carrier)
      */
     status = semTake(atc40Lock, 5 * sysClkRateGet());
     if (status != OK) {
-	free(pConfig);
-	return errno;
+        free(pConfig);
+        return errno;
     }
     /*
      * must also lock interrupts when adding to or deleteing from this list
@@ -350,25 +352,25 @@ LOCAL int disableAtc40Ints(int startType)
     unsigned irq;
 
     if (atc40Lock == NULL) {
-	return OK;
+        return OK;
     }
     /*
      * install into the reboot int shutdown list
      */
     status = semTake(atc40Lock, 5 * sysClkRateGet());
     if (status != OK) {
-	return errno;
+    return errno;
     }
     for (irq = 0; irq < NELEMENTS(irqATC40Table); irq++) {
-	for (pConfig = (atc40Config_t *) lstFirst(&irqATC40Table[irq].deviceList);
-	     pConfig; 
-	     pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
-	    /*
-	     * disable interrupts
-	     */
-	    pConfig->pDev->intEnable = 0;
-	    printf("Disabled interrupts on ATC 40 carrier %u\n", pConfig->carrier);
-	}
+        for (pConfig = (atc40Config_t *) lstFirst(&irqATC40Table[irq].deviceList);
+             pConfig; 
+             pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
+            /*
+             * disable interrupts
+             */
+            pConfig->pDev->intEnable = 0;
+            printf("Disabled interrupts on ATC 40 carrier %u\n", pConfig->carrier);
+        }
     }
 
     status = semGive(atc40Lock);
@@ -426,29 +428,29 @@ Returns:
 */
 
 LOCAL int irqCmd(void *private, ushort_t slot, ushort_t irqNumber,
-		 ipac_irqCmd_t cmd)
+         ipac_irqCmd_t cmd)
 {
     atc40Config_t *pConfig = (atc40Config_t *) private;
 
     switch (cmd) {
     case ipac_irqGetLevel:
-	return pConfig->irq;
+        return pConfig->irq;
 
     case ipac_irqEnable:
-	/*
-	 * enable the interrrupt level in the PIC chip
-	 */
-	sysIntEnablePIC(pConfig->irq);
+        /*
+         * enable the interrrupt level in the PIC chip
+         */
+        sysIntEnablePIC(pConfig->irq);
 
-	/*
-	 * Allow the ATC-40 to pass interrupts to the ISA bus.
-	 */
-	pConfig->pDev->intEnable = 1;
+        /*
+         * Allow the ATC-40 to pass interrupts to the ISA bus.
+         */
+        pConfig->pDev->intEnable = 1;
 
-	return OK;
+        return OK;
 
     default:
-	return S_IPAC_notImplemented;
+        return S_IPAC_notImplemented;
     }
 }
 
@@ -475,7 +477,7 @@ Returns:
 */
 
 LOCAL int intVecConnect(void *cPrivate, ushort_t slot, ushort_t vecNum,
-			void (*routine) (int parameter), int parameter)
+            void (*routine) (int parameter), int parameter)
 {
     int status;
     int vxStatus;
@@ -485,7 +487,7 @@ LOCAL int intVecConnect(void *cPrivate, ushort_t slot, ushort_t vecNum,
      */
     vxStatus = semTake(atc40Lock, 5 * sysClkRateGet());
     if (vxStatus != OK) {
-	return errno;
+        return errno;
     }
     status = intVecConnectLocked(cPrivate, slot, vecNum, routine, parameter);
 
@@ -505,42 +507,43 @@ LOCAL int intVecConnect(void *cPrivate, ushort_t slot, ushort_t vecNum,
  * ATC40 devices might be using the same int dispatch table
  */
 LOCAL int intVecConnectLocked(void *cPrivate, ushort_t slot, ushort_t vecNum,
-			      void (*routine) (int parameter), int parameter)
+                  void (*routine) (int parameter), int parameter)
 {
     atc40Config_t *pConfig = (atc40Config_t *) cPrivate;
     int key;
 
     if (vecNum > NELEMENTS(intDispatchTable)) {
-	return S_IPAC_badVector;
+        return S_IPAC_badVector;
     }
     if (intDispatchTable[vecNum].pConfig == NULL) {
-	if (routine == NULL) {
-	    /* disconnect request with nothing connected */
-	    return 0;
-	}
+        if (routine == NULL) {
+            /* disconnect request with nothing connected */
+            return 0;
+        }
     } else {
-	/*
-	 * return an error if they attempt to install on top of some other
-	 * module's vector
-	 */
-	if ((intDispatchTable[vecNum].pConfig != pConfig) ||
-	    (intDispatchTable[vecNum].slot != slot)) {
-	    logMsg("IPAC interrupt vector %#x in use by carrier %u slot %u,\n",
-		   vecNum, intDispatchTable[vecNum].pConfig->carrier, 
-		   intDispatchTable[vecNum].slot, 0, 0, 0);
-	    logMsg("can't reallocate vector to carrier %u slot %u.\n",
-		   pConfig->carrier, slot, 0, 0, 0, 0);
-	    return S_IPAC_vectorInUse;
-	}
-	if (routine == NULL) {
-	    /* disconnect request */
-	    key = intLock();
-	    intDispatchTable[vecNum].pISR = atc40UnexpectedVecISR;
-	    intDispatchTable[vecNum].parameter = vecNum;
-	    intDispatchTable[vecNum].pConfig = NULL;
-	    intUnlock(key);
-	    return 0;
-	}
+        /*
+         * return an error if they attempt to install on top of some other
+         * module's vector
+         */
+        if ((intDispatchTable[vecNum].pConfig != pConfig) ||
+            (intDispatchTable[vecNum].slot != slot)) {
+            logMsg("IPAC interrupt vector %#x in use by carrier %u slot %u,\n",
+               vecNum, intDispatchTable[vecNum].pConfig->carrier, 
+               intDispatchTable[vecNum].slot, 0, 0, 0);
+            logMsg("can't reallocate vector to carrier %u slot %u.\n",
+               pConfig->carrier, slot, 0, 0, 0, 0);
+            return S_IPAC_vectorInUse;
+        }
+        if (routine == NULL) {
+            /* disconnect request */
+            key = intLock();
+            intDispatchTable[vecNum].pISR = atc40UnexpectedVecISR;
+            intDispatchTable[vecNum].parameter = vecNum;
+            intDispatchTable[vecNum].pConfig = NULL;
+            intDispatchTable[vecNum].useCount = 0u;
+            intUnlock(key);
+            return 0;
+        }
     }
 
     /*
@@ -551,23 +554,24 @@ LOCAL int intVecConnectLocked(void *cPrivate, ushort_t slot, ushort_t vecNum,
     intDispatchTable[vecNum].parameter = parameter;
     intDispatchTable[vecNum].pConfig = pConfig;
     intDispatchTable[vecNum].slot = slot;
+    intDispatchTable[vecNum].useCount = 0u;
     intUnlock(key);
 
     /*
      * if not connected, then connect to the interrupt
      */
     if (!irqATC40Table[pConfig->irq].intConnected) {
-	int status;
-	/*
-	 * attach to the IRQ level if its the first ATC40 device installed
-	 */
-	status = intConnect(INUM_TO_IVEC(sysVectorIRQ0 + pConfig->irq), pGlobalATC40ISR, pConfig->irq);
-	if (status == OK) {
-	    irqATC40Table[pConfig->irq].intConnected = TRUE;
-	} else {
-	    logMsg("Unable to connect to ISA interrupt level %u\n", pConfig->irq,
-		   0, 0, 0, 0, 0);
-	}
+        int status;
+        /*
+         * attach to the IRQ level if its the first ATC40 device installed
+         */
+        status = intConnect(INUM_TO_IVEC(sysVectorIRQ0 + pConfig->irq), pGlobalATC40ISR, pConfig->irq);
+        if (status == OK) {
+            irqATC40Table[pConfig->irq].intConnected = TRUE;
+        } else {
+            logMsg("Unable to connect to ISA interrupt level %u\n", pConfig->irq,
+               0, 0, 0, 0, 0);
+        }
     }
     return 0;
 }
@@ -592,12 +596,12 @@ LOCAL void atc40GlobalISR(int irq)
      * level
      */
     for (pConfig = (atc40Config_t *) lstFirst(&irqATC40Table[irq].deviceList);
-	 pConfig; 
-	 pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
-	/*
-	 * dispatch interrupts
-	 */
-	atc40ISR(pConfig->pDev);
+        pConfig; 
+        pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
+        /*
+         * dispatch interrupts
+         */
+        atc40ISR(pConfig->pDev);
     }
 }
 
@@ -622,7 +626,7 @@ LOCAL void atc40ISR(atc40Device * pDev)
      * if interrupts are not enabled then NOOP
      */
     if (!pDev->intEnable) {
-	return;
+        return;
     }
     /*
      * disable ints
@@ -639,16 +643,18 @@ LOCAL void atc40ISR(atc40Device * pDev)
      * check to see which interrupts are active
      */
     for (slot = 0, bit = 1; slot < NELEMENTS(pDev->vec); slot++) {
-	if ((intStatus & bit) == 0) {
-	    pEntry = &intDispatchTable[pDev->vec[slot].vecInt0 & 0xff];
-	    (*pEntry->pISR) (pEntry->parameter);
-	}
-	bit <<= 1;
-	if ((intStatus & bit) == 0) {
-	    pEntry = &intDispatchTable[pDev->vec[slot].vecInt1 & 0xff];
-	    (*pEntry->pISR) (pEntry->parameter);
-	}
-	bit <<= 1;
+        if ((intStatus & bit) == 0) {
+            pEntry = &intDispatchTable[pDev->vec[slot].vecInt0 & 0xff];
+            (*pEntry->pISR) (pEntry->parameter);
+            pEntry->useCount++;
+        }
+        bit <<= 1;
+        if ((intStatus & bit) == 0) {
+            pEntry = &intDispatchTable[pDev->vec[slot].vecInt1 & 0xff];
+            (*pEntry->pISR) (pEntry->parameter);
+            pEntry->useCount++;
+        }
+        bit <<= 1;
     }
 
     /*
@@ -656,34 +662,34 @@ LOCAL void atc40ISR(atc40Device * pDev)
      * "debugAtc40InterruptJam" is set TRUE
      */
     if (debugAtc40InterruptJam) {
-	/*
-	 * check for an interrupt that has not been cleared. note that the
-	 * interrupt may occasionally go active again after it was cleared
-	 * during an ISR in a normal situation
-	 */
-	intStatus = pDev->intStatus;
-	if (intStatus) {
-	    logMsg("atc40ISR carrier device at %p may have a jammed interrupt\n",
-		   (int) pDev, 0, 0, 0, 0, 0);
-	    /*
-	     * check to see which interrupts are active
-	     */
-	    for (slot = 0, bit = 1; slot < 2 * NELEMENTS(pDev->vec); slot++) {
-		if ((intStatus & bit) == 0) {
-		    logMsg("atc40ISR: interrupt jam on slot %u irq 0\n",
-			   slot, 0, 0, 0, 0, 0);
-		}
-		bit <<= 1;
-		if ((intStatus & bit) == 0) {
-		    logMsg("atc40ISR: interrupt jam on slot %u irq 1\n",
-			   slot, 0, 0, 0, 0, 0);
-		}
-		bit <<= 1;
-	    }
-	    logMsg("atc40ISR interrups were disabled on carrier with jammed interrupt\n",
-		   0, 0, 0, 0, 0, 0);
-	    return;
-	}
+        /*
+         * check for an interrupt that has not been cleared. note that the
+         * interrupt may occasionally go active again after it was cleared
+         * during an ISR in a normal situation
+         */
+        intStatus = pDev->intStatus;
+        if (intStatus) {
+            logMsg("atc40ISR carrier device at %p may have a jammed interrupt\n",
+               (int) pDev, 0, 0, 0, 0, 0);
+            /*
+             * check to see which interrupts are active
+             */
+            for (slot = 0, bit = 1; slot < 2 * NELEMENTS(pDev->vec); slot++) {
+                if ((intStatus & bit) == 0) {
+                    logMsg("atc40ISR: interrupt jam on slot %u irq 0\n",
+                       slot, 0, 0, 0, 0, 0);
+                }
+                bit <<= 1;
+                if ((intStatus & bit) == 0) {
+                    logMsg("atc40ISR: interrupt jam on slot %u irq 1\n",
+                       slot, 0, 0, 0, 0, 0);
+                }
+                bit <<= 1;
+            }
+            logMsg("atc40ISR interrups were disabled on carrier with jammed interrupt\n",
+               0, 0, 0, 0, 0, 0);
+            return;
+        }
     }
     /*
      * reenable ints
@@ -694,13 +700,42 @@ LOCAL void atc40ISR(atc40Device * pDev)
 }
 
 /*
+ * quiet unexpected interrupt vector handler
+ */
+LOCAL void atc40QuietUnexpectedVecISR(int vecNum)
+{
+}
+
+/*
  * unexpected interrupt vector handler
  */
 LOCAL void atc40UnexpectedVecISR(int vecNum)
 {
-    logMsg("Unexpect interrupt on vector = %#x from an ATC40?\n",
-	   vecNum, 0, 0, 0, 0, 0);
+    logMsg("Unexpect interrupt on vector = %#x from an ATC40? First and only warning.\n",
+            vecNum, 0, 0, 0, 0, 0);
+    intDispatchTable[vecNum].pISR = atc40QuietUnexpectedVecISR;
 }
+
+/*
+ * reportInterruptStatus ()
+ */
+LOCAL char *reportInterruptStatus (char *pReport, unsigned vecNum, unsigned level, unsigned active)
+{
+    unsigned nChar;
+
+    nChar = sprintf (pReport, " vec%u=%x ISR=%p(%d) use=%u", 
+        level, vecNum, 
+        intDispatchTable[vecNum].pISR, 
+        intDispatchTable[vecNum].parameter, 
+        intDispatchTable[vecNum].useCount);
+    pReport = &pReport[nChar];
+    if ( active ) {
+        nChar = sprintf (pReport, "%c ", '!');
+        pReport = &pReport[nChar];
+    }
+    return pReport;
+}
+
 
 /*
  * IO report routine
@@ -710,26 +745,20 @@ char *report(void *cPrivate, ushort_t slot)
     atc40Config_t *pConfig = (atc40Config_t *) cPrivate;
     unsigned intStatus;
     unsigned bit;
-    unsigned nChar;
-    static char report[80];
+    unsigned vecNum;
+    static char report[256];
     char *pReport = report;
 
     intStatus = pConfig->pDev->intStatus;
 
     bit = 1 << (slot * 2);
-    nChar = sprintf(pReport, " vec0=%x", pConfig->pDev->vec[slot].vecInt0);
-    pReport = &pReport[nChar];
-    if ((intStatus & bit) == 0) {
-	nChar = sprintf(pReport, "%c ", '!');
-	pReport = &pReport[nChar];
-    }
+    vecNum = pConfig->pDev->vec[slot].vecInt0 & 0xff;
+    pReport = reportInterruptStatus (pReport, vecNum, 0u, (intStatus & bit) == 0);
+
     bit <<= 1;
-    nChar = sprintf(pReport, " vec1=%x", pConfig->pDev->vec[slot].vecInt1);
-    pReport = &pReport[nChar];
-    if ((intStatus & bit) == 0) {
-	nChar = sprintf(pReport, "%c", '!');
-	pReport = &pReport[nChar];
-    }
+    vecNum = pConfig->pDev->vec[slot].vecInt1 & 0xff;
+    pReport = reportInterruptStatus (pReport, vecNum, 1u, (intStatus & bit) == 0);
+
     return report;
 }
 
