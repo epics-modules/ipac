@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.7 2001-02-14 20:27:29 anj Exp $
+    $Id: drvIpac.c,v 1.8 2002-10-24 18:22:51 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -517,7 +517,7 @@ int ipmIntConnect (
 
     /* Use intConnect if carrier driver doesn't provide one */
     if (carriers.info[carrier]->driver->intConnect == NULL) {
-    	return intConnect (INUM_TO_IVEC(vecNum), routine, parameter);
+    	return intConnect (INUM_TO_IVEC((int)vecNum), routine, parameter);
     }
 
     return carriers.info[carrier]->driver->intConnect(
