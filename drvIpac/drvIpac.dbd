@@ -7,6 +7,7 @@ driver(drvIpac)
 #registrar(vipc310Registrar)
 #registrar(vipc610Registrar)
 #registrar(vipc616Registrar)
+#registrar(tvme200Registrar)
 
 # The ATC40 carrier builds on ISA-bus (x86) systems only:
 #registrar(atc40Registrar)

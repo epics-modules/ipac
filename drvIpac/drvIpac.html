@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.13 2004-12-15 23:00:58 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.14 2004-12-15 23:19:19 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -80,6 +80,9 @@ Andrew Johnson</address></center>
 
 <li>
 <a href="#VIPC616">SBS VIPC616</a></li>
+
+<li>
+<a href="#TVME200">Tews TVME-200</a></li>
 
 <li>
 <a href="#ATC40">SBS ATC40</a></li>
@@ -976,6 +979,12 @@ follows:</p>
 <td><tt>ipac_statActive</tt></td>
 </tr>
 
+<tr>
+<td>Resets this IP slot only</td>
+
+<td><tt>ipac_slotReset</tt></td>
+</tr>
+
 </table>
 </blockquote>
 
@@ -1000,6 +1009,13 @@ control registers on the IP module itself if this is necessary. A Carrier
 Driver cannot implement the <tt>ipac_irqDisable</tt> command with a call to the
 vxWorks sysIntDisable() routine because this would stop any other devices which
 still need this interrupt level from working.</p>
+
+<p>
+The <tt>ipac_slotReset</tt> command should only be implemented on carrier boards
+that can reset IP slots individually without affecting any IP modules in
+neighboring slots.  This command must not return until the reset process has
+completed, so any driver using this may immediately proceed to reinitialize the
+IP module as required.</p>
 
 <h4>
 Returns</h4>
@@ -1593,6 +1609,138 @@ to the straight VIPC616, you must use the correct driver!</p>
 <hr>
 
 
+<h3>
+<a NAME="TVME200"></a>Tews TVME-200</h3>
+
+<p>
+This board is a four-slot, 6U carrier which is also sold by SBS as the VIPC626
+and was also available from XYCOM VME.  The configuration of the board is much
+simpler than the VIPC boards it replaces as there are only 6 rotary hexadecimal
+switches which completely configure the board.  There are also a pair of
+registers provided for each slot, which allow the interrupt levels to be read
+and configured in software and permit individual slots to be reset.</p>
+
+<p>
+It is possible to use the VIP610 or VIPC616 drivers to control an appropriately
+configured TVME-200 board, but the use of this specific driver is strongly
+recommended if possible.</p>
+
+<p>
+The IPAC Carrier Driver is found in the file <i>drvTvme200.c</i> which
+implements the command <tt>ipacAddTVME200</tt> that registers a TVME-200 board
+with drvIpac. It also exports the registrar routine <tt>tvme200Registrar</tt> to
+add the above command to the iocsh and link the driver into a final IOC
+executable, for which it must be listed in the IOC's .dbd file thus:</p>
+
+<blockquote><pre>registrar(tvme200Registrar)</pre></blockquote>
+
+
+<h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddTVME200(const char *cardParams);</pre>
+
+<p>
+
+The parameter string must contain exactly 6 hexadecimal digits (without any
+leading 0x or 0X) which are the settings of the six rotary switches on the
+board, in order from S1 through S6. The board's silk-screen printing shows the
+possible values and meaning for each switch position. The carrier initialization
+routine checks the switch settings for legality and will return an error if it
+finds an unsupported (undocumented) setting, as there are some combinations
+of switch settings that are reserved or not permitted.</p>
+
+<h4>
+Configuration Examples</h4>
+
+<dl>
+<dt>
+<tt>ipacAddTVME200("6010D0")</tt></dt>
+
+<dd>
+This indicates that the board is configured as delivered by the manufacturer,
+with the I/O base set to 0x6000, interrupt levels matching the VIPC610 or 616,
+and all module memory spaces disabled.
+
+<dt>
+<tt>ipacAddTVME200("100580")</tt></dt>
+
+<dd>
+This indicates that the board has its I/O base address at 0x1000, all interrupts
+are disabled, and each IP module is allocated 2MB of memory space with the
+memory base address in VME A24 space starting at 0x800000.
+
+<dt>
+<tt>ipacAddTVME200("602FB0")</tt></dt>
+
+<dd>
+Here the I/O base address is set to 0x6000, and interrupts are configured to
+match a pair of VIPC310 boards. Each IP module is allocated 8MB of VME A32
+memory space starting at 0xB0000000, which puts IP module A's memory at
+0xB0000000, module B at 0xB0800000, module C at 0xB1000000 and D at
+0xB1800000. This particular setting is commonly used at APS.</dd>
+
+</dl>
+
+<h4>
+Interrupt Commands Supported</h4>
+
+<p>
+The board provides a configuration switch to select from 5 different fixed VME
+interrupt level configurations, but it also provides software control over the
+interrupt generator which allows these levels to be changed under program
+control as needed. The commands supported therefore include the ability to get
+or set the interrupt level, and also to poll whether the interrupt line is
+currenly active or not. A control register bit also permits each slot to be
+reset individually.</p>
+
+<blockquote>
+<table BORDER=2>
+<tr>
+<th><tt>cmd</tt></th>
+
+<th>Value Returned</th>
+</tr>
+
+<tr>
+<td><tt>ipac_irqLevel<i>N</i></tt></td>
+
+<td>0 = OK</td>
+</tr>
+
+<tr>
+<td><tt>ipac_irqGetLevel</tt></td>
+
+<td>slot interrupt level</td>
+</tr>
+
+<tr>
+<td><tt>ipac_irqEnable</tt></td>
+
+<td>0 = OK</td>
+</tr>
+
+<tr>
+<td><tt>ipac_irqPoll</tt></td>
+
+<td>&gt;0 if the interrupt line is active, else 0</td>
+</tr>
+
+<tr>
+<td><tt>ipac_slotReset</tt></td>
+
+<td>0 = OK</td>
+</tr>
+
+<tr>
+<td>(other commands)</td>
+
+<td>S_IPAC_notImplemented</td>
+</tr>
+</table>
+</blockquote>
+
+<hr>
 <h3>
 <a NAME="ATC40"></a>SBS ATC40</h3>
 

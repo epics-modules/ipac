@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.8 2004-12-15 23:15:27 anj Exp $
+    $Id: drvIpac.h,v 1.9 2004-12-15 23:19:19 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -138,7 +138,8 @@ typedef enum {
     ipac_irqSetLevel,	/* Sets level-triggered (default) */
     ipac_irqClear,	/* Only needed if using edge-triggered */
     ipac_statUnused,	/* Empty/uninitialized (Red LED on) */
-    ipac_statActive	/* Slot in use (Green LED on) */
+    ipac_statActive,	/* Slot in use (Green LED on) */
+    ipac_slotReset	/* Reset slot (blocks until complete) */
 } ipac_irqCmd_t;
 
 

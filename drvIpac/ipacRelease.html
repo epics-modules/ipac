@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.13 2004-12-15 23:00:58 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.14 2004-12-15 23:19:19 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -30,6 +30,17 @@ script to avoid any problems that might occur if a call to ipacAddCarrier
 (actually to its new carrier-specific routines) returns with a failure.  Such a
 failure would result in any succeeding carrier board receiving the carrier
 number expected by the failed one.</LI>
+
+<LI>Created a carrier driver for the Tews TVME-200, also sold by SBS as the
+VIPC-626 and possibly by XYCOM VME as the TVME-200; this board can also be used
+with the VIPC610 or VIPC616 drivers if the appropriate switch settings are
+made.  The <A HREF="drvIpac.html">drvIpac documentation</A> describes the
+additional capabilities that this driver provides which the older drivers do
+not.</LI>
+
+<LI>A new irqCmd is available, <TT>ipac_slotReset</TT> for use where a carrier
+board is capable of resetting an individual IP slot.  This command is supported
+by the new TVME-200 carrier driver.</LI>
 
 </UL>
 

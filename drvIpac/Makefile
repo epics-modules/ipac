@@ -20,6 +20,7 @@ LIBSRCS += drvIpac.c
 LIBSRCS += drvVipc310.c
 LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
+LIBSRCS += drvTvme200.c
 
 # MVME162 & MVME172: IPchip carrier driver
 LIBSRCS += drvIpMv162.c
