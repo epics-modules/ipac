@@ -81,7 +81,8 @@ LOCAL int tyGSOctalDrvNum;  /* driver number assigned to this driver */
 void         tyGSOctalInt(int);
 LOCAL void   tyGSOctalInitChannel(QUAD_TABLE *, int);
 LOCAL int    tyGSOctalRebootHook(int);
-LOCAL int    tyGSOctalOpen(TY_GSOCTAL_DEV *, char *, int);
+LOCAL QUAD_TABLE * tyGSOctalFindQT(const char *);
+LOCAL int    tyGSOctalOpen(TY_GSOCTAL_DEV *, const char *, int);
 LOCAL int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
 LOCAL STATUS tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
 LOCAL int    tyGSOctalStartup(TY_GSOCTAL_DEV *);
@@ -125,13 +126,10 @@ STATUS tyGSOctalDrv
     
     tyGSOctalMaxModules = maxModules;
     tyGSOctalLastModule = 0;
+    tyGSOctalModules = (QUAD_TABLE *)calloc(maxModules, sizeof(QUAD_TABLE));
 
-    printf("allocating %d structures of %ld bytes\n", maxModules,
-           (long) sizeof(QUAD_TABLE));
-    
-    if (!(tyGSOctalModules =
-          (QUAD_TABLE *)malloc(maxModules*sizeof(QUAD_TABLE)))) {
-        logMsg("%s: Quad table allocation failed!",
+    if (!tyGSOctalModules) {
+        logMsg("%s: Memory allocation failed!",
                (int)fn_nm,
                NULL,NULL,NULL,NULL,NULL);
         return (ERROR);
@@ -223,10 +221,11 @@ LOCAL int tyGSOctalRebootHook(int type)
 */
 int tyGSOctalModuleInit
     (
-    char *      type,           /* IP module type                   */
-    int         int_num,        /* Interrupt number                 */
-    int         carrier,        /* which carrier board [0-n]         */
-    int         module          /* module number on carrier [0-m]   */
+    const char * moduleID,       /* IP module name           */
+    const char * type,           /* IP module type           */
+    int          int_num,        /* Interrupt number         */
+    int          carrier,        /* which carrier board [0-n]         */
+    int          module          /* module number on carrier [0-m]   */
     )
 {
     static  char    *fn_nm = "tyGSOctalModuleInit";
@@ -242,6 +241,9 @@ int tyGSOctalModuleInit
 	errnoSet (S_ioLib_NO_DRIVER);
 	return (ERROR);
     }
+
+    if (!moduleID || !type)
+	return (ERROR);
 
     /*
      * Check the IP module type.
@@ -264,37 +266,37 @@ int tyGSOctalModuleInit
      */
     if ((status = ipmValidate(carrier, module, GREEN_SPRING_ID, modelID))
         != 0) {
-        logMsg("%s: Unable to validate IP module",
+        logMsg("%s: Unable to validate IP module\n",
                (int)fn_nm,
                NULL,NULL,NULL,NULL,NULL);
-        logMsg("%s: carrier:%d module:%d modelID:%d",
+        logMsg("%s: carrier:%d module:%d modelID:%d\n",
                 (int)fn_nm, carrier, module, modelID,
                 NULL,NULL);
         
         switch(status) {
             case S_IPAC_badAddress:
-                logMsg("%s: Bad carrier or module number",
+                logMsg("%s: Bad carrier or module number\n",
                        (int)fn_nm,
                        NULL,NULL,NULL,NULL,NULL);
                 break;
             case S_IPAC_noModule:
-                logMsg("%s: No module installed",
+                logMsg("%s: No module installed\n",
                        (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
                 break;
             case S_IPAC_noIpacId:
-                logMsg("%s: IPAC identifier not found",
+                logMsg("%s: IPAC identifier not found\n",
                        (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
                 break;
             case S_IPAC_badCRC:
-                logMsg("%s: CRC Check failed",
+                logMsg("%s: CRC Check failed\n",
                        (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
                 break;
             case S_IPAC_badModule:
-                logMsg("%s: Manufacturer or model IDs wrong",
+                logMsg("%s: Manufacturer or model IDs wrong\n",
                       (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
                 break;
             default:
-                logMsg("%s: Bad error code: 0x%x",
+                logMsg("%s: Bad error code: 0x%x\n",
                        (int)fn_nm, status,
                        NULL,NULL,NULL,NULL);
                 break;
@@ -312,6 +314,7 @@ int tyGSOctalModuleInit
     if (i >= tyGSOctalLastModule) {
 	void *addrIO;
 	char *addrMem;
+        char *ID = malloc(strlen(moduleID) + 1);
 	uint16_t intNum = int_num;
 	SCC2698 *r;
 	SCC2698_CHAN *c;
@@ -327,6 +330,8 @@ int tyGSOctalModuleInit
 	qt->modelID = modelID;
         qt->carrier = carrier;
         qt->module = module;
+	strcpy(ID, moduleID);
+	qt->moduleID = ID;
         
         addrIO = ipmBaseAddr(carrier, module, ipac_addrIO);
         r = (SCC2698 *) addrIO;
@@ -393,27 +398,25 @@ int tyGSOctalModuleInit
  *
  * SEE ALSO: tyGSOctalDrv()
 */
-char *tyGSOctalDevCreate
+const char * tyGSOctalDevCreate
     (
-    char *      name,           /* name to use for this device      */
-    int         idx,            /* index into module table          */
-    int         port,           /* port on module for this device [0-7] */
-    int         rdBufSize,      /* read buffer size, in bytes       */
-    int         wrtBufSize      /* write buffer size, in bytes      */
+    char *       name,           /* name to use for this device          */
+    const char * moduleID,       /* IP module name                       */
+    int          port,           /* port on module for this device [0-7] */
+    int          rdBufSize,      /* read buffer size, in bytes           */
+    int          wrtBufSize      /* write buffer size, in bytes          */
     )
 {
     TY_GSOCTAL_DEV *pTyGSOctalDv;
-    QUAD_TABLE *qt;
+    QUAD_TABLE *qt = tyGSOctalFindQT(moduleID);
 
-    /* if this doesn't represent a valid module, don't do it */
-    if (idx < 0 || idx > tyGSOctalLastModule)
+    if (!name || !qt)
         return NULL;
-    
+
     /* if this doesn't represent a valid port, don't do it */
     if (port < 0 || port > 7)
 	return NULL;
-    
-    qt = &tyGSOctalModules[idx];
+
     pTyGSOctalDv = &qt->port[port];
 
     /* if there is a device already on this channel, don't do it */
@@ -423,9 +426,7 @@ char *tyGSOctalDevCreate
     /* initialize the ty descriptor */
     if (tyDevInit (&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
 		   (FUNCPTR) tyGSOctalStartup) != OK)
-    {
 	return NULL;
-    }
     
     /* initialize the channel hardware */
     tyGSOctalInitChannel(qt, port);
@@ -434,10 +435,8 @@ char *tyGSOctalDevCreate
     pTyGSOctalDv->created = TRUE;
 
     if (iosDevAdd(&pTyGSOctalDv->tyDev.devHdr, name,
-                      tyGSOctalDrvNum) != OK)
-    {
+                  tyGSOctalDrvNum) != OK)
         return NULL;
-    }
 
     return name;
 }
@@ -466,25 +465,21 @@ char *tyGSOctalDevCreate
  */
 STATUS tyGSOctalDevCreateAll
     (
-    char *      base,           /* base name for these devices      */
-    int         idx,            /* index into module table          */
-    int         rdBufSize,      /* read buffer size, in bytes       */
-    int         wrtBufSize      /* write buffer size, in bytes      */
+    const char * base,           /* base name for these devices      */
+    const char * moduleID,       /* module identifier from the
+                                 * call to tyGSOctalModuleInit(). */
+    int          rdBufSize,      /* read buffer size, in bytes       */
+    int          wrtBufSize      /* write buffer size, in bytes      */
     )
 {
-    int port, len = strlen(base);
-    char name[len + 2];
-    
-    /* if this doesn't represent a valid module, don't do it */
-    if (idx < 0 || idx > tyGSOctalLastModule)
+    QUAD_TABLE *qt = tyGSOctalFindQT(moduleID);
+    int port;
+    char name[256];
+
+    if (!qt || !base)
         return ERROR;
-    
-    /* copy and terminate the name string */
-    strcpy (name, base);
-    name[len + 1] = 0;
-    
+
     for (port=0; port < 8; port++) {
-	QUAD_TABLE *qt = &tyGSOctalModules[idx];
 	TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[port];
 	
 	/* if there is a device already on this channel, ignore it */
@@ -501,10 +496,36 @@ STATUS tyGSOctalDevCreateAll
 	/* mark the device as created, and give it to the I/O system */
 	pTyGSOctalDv->created = TRUE;
 
+	sprintf(name, "%s%d", base, port);
+
 	if (iosDevAdd(&pTyGSOctalDv->tyDev.devHdr, name, tyGSOctalDrvNum) != OK)
             return ERROR;
     }
     return OK;
+}
+
+
+/******************************************************************************
+ *
+ * tyGSOctalFindQT - Find a named module quadtable
+ *
+ * NOMANUAL
+ */
+LOCAL QUAD_TABLE * tyGSOctalFindQT
+    (
+    const char *      moduleID
+    )
+{
+    int i;
+
+    if (!moduleID)
+	return NULL;
+
+    for (i = 0; i < tyGSOctalLastModule; i++)
+	if (strcmp(moduleID, tyGSOctalModules[i].moduleID) == 0)
+	    return &tyGSOctalModules[i];
+
+    return NULL;
 }
 
 /******************************************************************************
@@ -564,8 +585,8 @@ LOCAL void tyGSOctalInitChannel
 LOCAL int tyGSOctalOpen
     (
 	TY_GSOCTAL_DEV *pTyGSOctalDv,
-	char      *name,
-	int        mode
+	const char * name,
+	int          mode
     )
 {
     return ((int) pTyGSOctalDv);
@@ -579,12 +600,12 @@ LOCAL int tyGSOctalOpen
  */
 LOCAL int tyGSOctalWrite
     (
-	TY_GSOCTAL_DEV *pTyGSOctalDv,	/* device descriptor block */
-	char *write_bfr,		/* ptr to an output buffer */
-	long write_size 		/* # bytes to write */
+	TY_GSOCTAL_DEV * pTyGSOctalDv,	/* device descriptor block */
+	char *     write_bfr,           /* ptr to an output buffer */
+	long             write_size	/* # bytes to write */
     )
 {
-    static  char    *fn_nm = "tyGSOctalWrite";
+    static char  *fn_nm = "tyGSOctalWrite";
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     int nbytes;
     
@@ -821,7 +842,7 @@ void tyGSOctalInt
     QUAD_TABLE *pQt;
     TY_GSOCTAL_DEV *pTyGSOctalDv;
     SCC2698_CHAN *chan;
-    SCC2698 *regs;
+    SCC2698 *regs = NULL;
 
     pQt = &(tyGSOctalModules[idx]);
     
@@ -900,6 +921,8 @@ void tyGSOctalInt
             }
         }
     }
+    if (regs)
+        isr = regs->u.r.isr;    /* Flush last write cycle (PowerPC) */
 }
 
 /******************************************************************************
@@ -959,23 +982,25 @@ static void tyGSOctalReportCallFunc(const iocshArgBuf *args)
 }
 
 /* tyGSOctalModuleInit */
-static const iocshArg tyGSOctalModuleInitArg0 = {"RS<nnn>",iocshArgString};
-static const iocshArg tyGSOctalModuleInitArg1 = {"intVector", iocshArgInt};
-static const iocshArg tyGSOctalModuleInitArg2 = {"carrier", iocshArgInt};
-static const iocshArg tyGSOctalModuleInitArg3 = {"slot", iocshArgInt};
-static const iocshArg * const tyGSOctalModuleInitArgs[4] = {
+static const iocshArg tyGSOctalModuleInitArg0 = {"moduleID",iocshArgString};
+static const iocshArg tyGSOctalModuleInitArg1 = {"RS<nnn>",iocshArgString};
+static const iocshArg tyGSOctalModuleInitArg2 = {"intVector", iocshArgInt};
+static const iocshArg tyGSOctalModuleInitArg3 = {"carrier#", iocshArgInt};
+static const iocshArg tyGSOctalModuleInitArg4 = {"slot", iocshArgInt};
+static const iocshArg * const tyGSOctalModuleInitArgs[5] = {
     &tyGSOctalModuleInitArg0, &tyGSOctalModuleInitArg1,
-    &tyGSOctalModuleInitArg2, &tyGSOctalModuleInitArg3};
+    &tyGSOctalModuleInitArg2, &tyGSOctalModuleInitArg3, &tyGSOctalModuleInitArg4};
 static const iocshFuncDef tyGSOctalModuleInitFuncDef =
-    {"tyGSOctalModuleInit",4,tyGSOctalModuleInitArgs};
+    {"tyGSOctalModuleInit",5,tyGSOctalModuleInitArgs};
 static void tyGSOctalModuleInitCallFunc(const iocshArgBuf *args)
 {
-    tyGSOctalModuleInit(args[0].sval,args[1].ival,args[2].ival,args[3].ival);
+    tyGSOctalModuleInit(args[0].sval,args[1].sval,args[2].ival,args[3].ival,
+			args[4].ival);
 }
 
 /* tyGSOctalDevCreate */
 static const iocshArg tyGSOctalDevCreateArg0 = {"devName",iocshArgString};
-static const iocshArg tyGSOctalDevCreateArg1 = {"index", iocshArgInt};
+static const iocshArg tyGSOctalDevCreateArg1 = {"moduleID", iocshArgString};
 static const iocshArg tyGSOctalDevCreateArg2 = {"port", iocshArgInt};
 static const iocshArg tyGSOctalDevCreateArg3 = {"rdBufSize", iocshArgInt};
 static const iocshArg tyGSOctalDevCreateArg4 = {"wrBufSize", iocshArgInt};
@@ -987,7 +1012,7 @@ static const iocshFuncDef tyGSOctalDevCreateFuncDef =
     {"tyGSOctalDevCreate",5,tyGSOctalDevCreateArgs};
 static void tyGSOctalDevCreateCallFunc(const iocshArgBuf *arg)
 {
-    tyGSOctalDevCreate(arg[0].sval, arg[1].ival, arg[2].ival,
+    tyGSOctalDevCreate(arg[0].sval, arg[1].sval, arg[2].ival,
 		       arg[3].ival, arg[4].ival);
 }
 

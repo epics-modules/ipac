@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="SBS/GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.7 2004-04-08 20:51:16 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.8 2004-12-16 18:58:40 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -38,6 +38,14 @@ buffers respectively.</LI>
 <P>Changed:</P>
 
 <UL>
+
+<LI>Ron Sluiter changed the type of the module identifier from an integer that
+is allocated internally to a string which is provided in the call to
+tyGSOctalModuleInit.  It is easier to read and understand a startup script if
+you can use a name like this rather than just a number.  The example startup
+script in the <A HREF="tyGSOctal.html">documentation</A> has been changed to
+match this, and to use the new ipacLatestCarrier routine to get the drvIpac
+carrier number.</LI>
 
 <LI>The interrupt vector is now written to the vector register using
 <tt>vxMemProbe()</tt>, which will detect any VME Bus Error which a PowerPC CPU

@@ -27,29 +27,92 @@ the vxWorks tyLib system library.</p>
 <h2>
 Configuration Example</h2>
 
-<p>
-The following is an example of setting up the device driver from a vxWorks
-or iocsh startup script:</p>
+<P>
+The following is an example of a startup script (st.cmd) segment that creates 
+and configures IP carriers, OctalUart IP modules, and tty devices.  This example 
+is compatible with both vxWorks and iocsh startup scripts.
+</P>
 
 <blockquote>
 <pre>
-# Initialize our drvIpac carrier
-ipacAddMVME162 "A:m=0xe0000000,64 l=3,2"
+# Initialize the drvIpac carriers.
+# -------------------------------
+# ipacAdd<I>CarrierType</I>(char *cardParams)
+#   <I>CarrierType</I> - VIPC310, VIPC610, VIPC610_01, VIPC616, VIPC616_01,
+#                 MVME162, or ATC40.
+#   cardParams  - carrier-specific init parameters.
 
-# Number of tyGSOctal modules to support:
-tyGSOctalDrv 1
+# carrier#0
+ipacAddMVME162    "A:m=0xe0000000,64 l=3,2"
+# carrier#1
+ipacAddVIPC616_01 "0x6000,0xA00000,128"
+# carrier#2
+ipacAddVIPC616_01 "0x6400,0xA80000,128"
 
-# Init an RS232 module using IRQ #80 on carrier 0, slot 0
-tyGSOctalModuleInit "RS232", 0x80, 0, 0
+# Allocate the number of tyGSOctal modules to support.
+# ----------------------------------------------------
+tyGSOctalDrv 6
 
-# Create devices: name, module#, port#, rdBuf, wrBuf
-tyGSOctalDevCreate "/tyGS0/0", 0, 0, 2048, 512
-# Other devices: basename, module#, rdBuf, wrBuf
-tyGSOctalDevCreateAll "/tyGS0/", 0, 512, 512
+# Initialize IP Octal modules.
+# ----------------------------
+# tyGSOctalModuleInit(char *moduleID, char *ModuleType, int irq_num,
+#                     char *carrier#, int slot#)
+#   moduleID   - assign the IP module a name for future reference. 
+#   ModuleType - "232", "422", or "485".
+#   irq_num    - interrupt request number.
+#   carrier#   - carrier# assigned from the ipacAdd<I>CarrierType</I>() call.
+#   slot#      - slot number on carrier; slot[A,B,C,D] -> slot#[0,1,2,3].
 
-# Configure the ports
-# baud, parity(N/E/O), stop, bits, flow(N/H)
-tyGSOctalConfig "/tyGS0/0", 38400, 'N', 1, 8, 'N'
+# Init two IP-Octal modules from the MVME162 carrier; the 1st module is in
+# slot A, the second module is in slot B.
+tyGSOctalModuleInit "Mod0", "232", 0x80, 0, 0
+tyGSOctalModuleInit "Mod1", "232", 0x90, 0, 1
+
+# Init two IP-Octal modules from the 1st SBS VIPC616_01 carrier; the 1st
+# module is in slot A, the 2nd module is in slot C.
+tyGSOctalModuleInit "Mod2", "232", 0x80, 1, 0
+tyGSOctalModuleInit "Mod3", "232", 0x90, 1, 2
+
+# Init two IP-Octal modules from the 2nd SBS VIPC616_01 carrier; the 1st
+# module is in slot B, the second module is in slot D.
+tyGSOctalModuleInit "Mod4", "485", 0x80, 2, 1
+tyGSOctalModuleInit "Mod5", "485", 0x90, 2, 3
+
+# Create tty devices.
+# ------------------
+# tyGSOctalDevCreate(char *portname, int moduleID, int port#, int rdBufSize,
+#                    int wrtBufSize)
+#   portname   - assign the port a name for future reference.
+#   moduleID   - moduleID from the tyGSOctalModuleInit() call.
+#   port#      - port number for this module [0-7].
+#   rdBufSize  - read buffer size, in bytes.
+#   wrtBufSize - write buffer size, in bytes.
+
+# Create two tty ports on Mod0 with <I>portname</I> based on the convention;
+# "/tyGS<I>carrier#/moduleID/port#</I>".
+tyGSOctalDevCreate    "/tyGS0/Mod0/0",  "Mod0", 0, 512, 512
+tyGSOctalDevCreate    "/tyGS0/Mod0/1",  "Mod0", 1, 512, 512
+
+# Initialze all the remaining uninitialized Mod0 ports; i.e., /tyGS0/0/[2-7].
+tyGSOctalDevCreateAll "/tyGS0/Mod0/",   "Mod0", 512, 512
+
+# Initialize all the Mod1 ports.
+tyGSOctalDevCreateAll "/tyGS0/Mod1/", "Mod1", 512, 512
+# Initialize all the Mod2 ports.
+tyGSOctalDevCreateAll "/tyGS1/Mod2/", "Mod2", 512, 512
+
+# Configure the ports.
+# --------------------
+# void tyGSOctalConfig (char *portname, int baud, char parity, int stop,
+#                       int bits, char flow)
+#   portname - portname from either the tyGSOctalDevCreate() call or
+#              the tyGSOctalDevCreateAll() call.
+#   baud     - baudrate; 1200,2400,4800,9600,19200,38400.
+#   parity   - even - 'E', odd - 'O', or none - 'N'.
+#   stop     - stop bits; 1 or 2.
+#   bits     - data bits; 5,6,7 or 8.
+#   flow     - flow control; hardware - 'H' or none - 'N'.
+tyGSOctalConfig "/tyGS0/Mod0/0", 38400, 'N', 1, 8, 'N'
 # Other ports default to 9600, 'N', 1, 8, 'N'</pre>
 </blockquote>
 

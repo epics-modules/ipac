@@ -22,8 +22,7 @@
 enum { MAX_SPIN_TIME=2 };
 typedef enum { RS485,RS232 } RSmode;
 
-struct ty_gsoctal_dev
-{
+typedef struct ty_gsoctal_dev {
     TY_DEV	    tyDev;
     SCC2698*        regs;
     SCC2698_CHAN*   chan;
@@ -35,22 +34,20 @@ struct ty_gsoctal_dev
     int             baud;
     int             opts;
     UCHAR           imr;
-};
-typedef struct ty_gsoctal_dev TY_GSOCTAL_DEV;
+} TY_GSOCTAL_DEV;
 
-struct quadTable
-{
+typedef struct quadTable {
+    const char *moduleID;
     TY_GSOCTAL_DEV port[8];             /* one per port */
     int modelID;
     ushort_t carrier;
     ushort_t module;
     UCHAR imr[4];			/* one per block */
-};
-typedef struct quadTable QUAD_TABLE;
+} QUAD_TABLE;
 
 STATUS tyGSOctalDrv(int);
-int tyGSOctalModuleInit(char *, int, int, int);
-char *tyGSOctalDevCreate(char *, int, int, int, int);
+int tyGSOctalModuleInit(const char *, const char *, int, int, int);
+const char *tyGSOctalDevCreate(char *, const char *, int, int, int);
 void tyGSOctalConfig(char *, int, char, int, int, char);
 void tyGSOctalReport(void);
 
