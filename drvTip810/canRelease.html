@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.5 2000-02-21 21:36:08 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.6 2001-02-05 17:21:08 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -15,13 +15,25 @@
 
 <P>This document describes the changes which have been made to my vxWorks/EPICS
 CANbus driver as it has evolved since first release.  The earliest version
-appears at the bottom, with more recent releases above it.  These release notes
-first appeared in version 1.1b, but I have attempted to describe the
-differences in previous releases where I can remember or discover what they
-were by examining the source code.  After version 1.1c the IPAC driver was
-split off as a separate package (although this is still required for use by the
-Tip810 driver), hence the IPAC related comments up to and including this
-release.  </P><HR>
+appears at the bottom, with more recent releases above it.</P>
+
+<HR>
+
+
+<H2>Version 2.3</H2>
+
+<P>Changed:<UL>
+
+<LI>Removed IPAC-specific comments from the CANbus Release Notes.</LI>
+
+<LI>Added a new parameter to the t810Create routine to set the interrupt vector
+number to be used.  <B>Existing applications must be changed</B> to add this
+parameter (probably only in the startup script), which appears before the
+busRate parameter.</LI>
+
+</UL></P>
+
+<HR>
 
 
 <H2>Version 2.2</H2>
@@ -37,6 +49,8 @@ derivative of it must make the source code available under the LGPL terms.</LI>
 EPICS Release 3.13.2.</LI>
 
 </UL></P>
+
+<HR>
 
 
 <H2>Version 2.1</H2>
@@ -65,7 +79,9 @@ off into a separate application directory. </P>
 
 <LI>Gcc compilation warnings attended to.</LI>
 
-</UL></P><HR>
+</UL></P>
+
+<HR>
 
 
 <H2>Version 1.1c</H2>
@@ -78,7 +94,9 @@ off into a separate application directory. </P>
 <TT>INVALID_ALARM</TT> severity.  A Bus Off transition is very rarely if ever
 seen, even pulling the cable only causes a Bus Error.</LI>
 
-</UL></P><HR>
+</UL></P>
+
+<HR>
 
 
 <H2>Version 1.1b</H2>
@@ -118,10 +136,9 @@ as the CAN device support <TT>init_record</TT> routine was returning
 the receipt of interrupts.  Carl Lionberger discovered this change had been a
 mistake...</LI>
 
-<LI>VIPC616 carrier driver address parameter handling fixed, changes courtesy
-of Christoper Estes.</LI>
+</UL></P>
 
-</UL></P><HR>
+<HR>
 
 
 <H2>Version 1.1</H2>
@@ -140,17 +157,6 @@ unregistered.</LI>
 routines to allow resetting and halting bus operations.</LI>
 
 <LI>Usage instructions output by <TT>canTest</TT> if no bus name given.</LI>
-
-<LI>IPAC Prom structure declared volatile to prevent gcc optimiser from
-generating long word accesses to it.  Only affected some carrier boards.</LI>
-
-<LI>Separate support for both the GreenSpring VIPC610 and VIPC610-01 carrier
-boards, which have different interrupt levels for the different slot
-interrupts.  From now on the correct carrier table <TT>vipc610</TT> or
-<TT>vipc610_01</TT> should be used. </LI>
-
-<LI>Support for the the GreenSpring VIPC616 carrier board, table name
-<TT>vipc616</TT>.</LI>
 
 <LI>HTML Documentation distributed in the release.</LI>
 
@@ -174,7 +180,9 @@ work on some carrier boards.</LI>
 forever because transmit semaphore was not released when resetting the error.
 </LI>
 
-</UL></P><HR>
+</UL></P>
+
+<HR>
 
 
 <H2>Version 1.0</H2>
