@@ -3,22 +3,42 @@
 <TITLE>GreenSpring Octal Serial Driver Release Notes</TITLE>
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
-<META NAME="KeyWords" CONTENT="GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.5 2003-11-13 21:40:23 anj Exp $">
+<META NAME="KeyWords" CONTENT="SBS/GreenSpring, vxWorks, IPAC, Octal Serial">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.6 2004-02-23 21:41:44 anj Exp $">
 </HEAD>
 <BODY>
 
 <CENTER>
-<H2>GreenSpring Octal Serial Driver Release Notes</H2>
+<H2>SBS/GreenSpring Octal Serial Driver Release Notes</H2>
 <P>Software by <I>Peregrine McGehee</I><BR>
 Release by <I>Andrew Johnson</I></P>
 </CENTER>
 
 <P>This document describes changes made to Peregrine McGehee's vxWorks driver
-for the GreenSpring Octal RS232/RS422/RS485 IndustryPack modules  since this
-driver was merged into the unbundled EPICS ipac support area.  Version numbers
-refer to the release of the ipac support software as a whole.  The earliest
-version appears at the bottom, with more recent releases above it. </P><HR>
+for the SBS/GreenSpring Octal RS232/RS422/RS485 IndustryPack modules since this
+driver was merged into the unbundled EPICS ipac support area. Version numbers
+refer to the release of the ipac support software as a whole. The earliest
+version appears at the bottom, with more recent releases above it.</P><HR>
+
+<H2>Version 2.7</H2>
+
+<P>Added:</P>
+
+<UL>
+
+<LI>Support for the ioctls <tt>SIO_HW_OPTS_GET</tt> and <tt>SIO_BAUD_GET</tt>
+(defined in the vxWorks header file sioLib.h) to provide readback of the
+current settings.</LI>
+
+</UL>
+
+<P>Changed:</P>
+
+<UL>
+
+<LI>Hardware handshaking now works, thanks to much effort put in by Ron Sluiter
+who discovered that it didn't and who spent time testing my fixes and helping
+me to understand the chip documentation properly.</LI>
 
 <H2>Version 2.6</H2>
 
