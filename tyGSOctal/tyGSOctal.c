@@ -199,12 +199,8 @@ int tyGSOctalModuleInit
     static  char    *fn_nm = "tyGSOctalModuleInit";
     int modelID;
     int status;
-    char *addrIO;
     int i;
     QUAD_TABLE *qt;
-    SCC2698 *r;
-    SCC2698_CHAN *c;
-    int block;
     
     /*
      * Check for the driver being installed.
@@ -281,6 +277,12 @@ int tyGSOctalModuleInit
     
     /* Create a new quad table entry if not there */
     if (i >= tyGSOctalLastModule) {
+	void *addrIO;
+	uint16_t *addrMem;
+	SCC2698 *r;
+	SCC2698_CHAN *c;
+	int block;
+	
         if (tyGSOctalLastModule >= tyGSOctalMaxModules) {
             logMsg("%s: Maximum module count exceeded!",
                    (int)fn_nm,
@@ -291,9 +293,9 @@ int tyGSOctalModuleInit
         qt->carrier = carrier;
         qt->module = module;
         
-        r = (SCC2698 *)ipmBaseAddr(qt->carrier, qt->module, ipac_addrIO);
-        c = (SCC2698_CHAN *)ipmBaseAddr(qt->carrier, qt->module,
-                                    ipac_addrIO);
+        addrIO = ipmBaseAddr(carrier, module, ipac_addrIO);
+        r = (SCC2698 *) addrIO;
+        c = (SCC2698_CHAN *) addrIO;
 
         for (i = 0; i < 8; i++) {
             block = i/2;
@@ -306,18 +308,23 @@ int tyGSOctalModuleInit
         for (i = 0; i < 4; i++) qt->imr[i] = 0;
         
         /* set up the single interrupt vector */
-        addrIO = (char *)ipmBaseAddr(carrier, module, ipac_addrIO);
-        addrIO[0xc1] = (UCHAR)int_num;
-        if (intConnect((VOIDFUNCPTR *)INUM_TO_IVEC(int_num),
-                       (VOIDFUNCPTR)tyGSOctalInt,
-                       tyGSOctalLastModule) == ERROR) {
+        addrMem = (uint16_t *) ipmBaseAddr(carrier, module, ipac_addrMem);
+	if (addrMem == NULL) {
+	    logMsg("%s: No memory allocated for carrier %d slot %d",
+		   (int)fn_nm, carrier, module,
+		   NULL,NULL,NULL);
+            return(ERROR);
+	}
+	*addrMem = int_num;
+	
+        if (ipmIntConnect(carrier, module, int_num, 
+	    		  tyGSOctalInt, tyGSOctalLastModule)) {
             logMsg("%s: Unable to connect ISR",
                    (int)fn_nm,
                    NULL,NULL,NULL,NULL,NULL);
             return(ERROR);
         }
         ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
-        ipmIrqCmd(carrier, module, 1, ipac_irqEnable);
     }
   
     return (tyGSOctalLastModule++);
@@ -334,7 +341,7 @@ int tyGSOctalModuleInit
  * sizes of 512 bytes, the proper calls would be:
  * .CS
  *    int idx, dev;
- *    idx = tyGSModuleInit("GSIP_OCTAL232", 0x60, 0, 1);
+ *    idx = tyGSOctalModuleInit("GSIP_OCTAL232", 0x60, 0, 1);
  *    dev = tyGSOctalDevCreate ("/tyGSOctal/0/1/3", idx, 3, 512, 512);
  * .CE
  *

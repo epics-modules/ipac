@@ -91,11 +91,12 @@ a vxWorks startup script:
 
 # Initialize the IP module tasks
 tyGSOctalDrv 4
-ipacAddCarrier &vipc610, "0x6000"
+ipacAddCarrier &amp;vipc610, "0x6000"
 
-# Create devices
+# Init module on carrier 0, slot 0
 MOD0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
 
+# Create devices
 PORT00 = tyGSOctalDevCreate("/tyGS/0/0", MOD0, 0, 512, 512)
 PORT02 = tyGSOctalDevCreate("/tyGS/0/2", MOD0, 2, 512, 512)
 PORT04 = tyGSOctalDevCreate("/tyGS/0/4", MOD0, 4, 512, 512)
