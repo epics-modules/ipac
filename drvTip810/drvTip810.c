@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.16 2003-11-13 21:16:54 anj Exp $
+    $Id: drvTip810.c,v 1.17 2003-11-13 21:21:18 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -1444,7 +1444,7 @@ static void t810ReportCallFunc(const iocshArgBuf *args)
 }
 
 /* t810Create(char *pbusName, int card, int slot, int irqNum, int busRate) */
-static const iocshArg t810CreateArg0 = {"busName",iocshArgString};
+static const iocshArg t810CreateArg0 = {"busName",iocshArgPersistentString};
 static const iocshArg t810CreateArg1 = {"carrier", iocshArgInt};
 static const iocshArg t810CreateArg2 = {"slot", iocshArgInt};
 static const iocshArg t810CreateArg3 = {"intVector", iocshArgInt};
