@@ -2,6 +2,8 @@
 TOP = ../..
 include $(TOP)/config/CONFIG_APP
 
+SRCS.c += ../tyGSOctal.c
+
 PROD += tyGSOctal.o
 
 include $(TOP)/config/RULES.Vx
