@@ -4,14 +4,14 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
    <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
-   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.8 2003-06-03 19:42:54 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.9 2003-11-13 21:41:33 anj Exp $">
 </HEAD>
 <BODY>
 
 <H1 ALIGN=CENTER>drvTip810 - CAN Bus Driver </H1>
 
 <CENTER><P>TEWS Tip810 Driver for EPICS<BR>
-Version 2.5</P></CENTER>
+Version 2.6</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson
 <A HREF="mailto:anj@aps.anl.gov">&lt;anj@aps.anl.gov&gt;</A>
@@ -145,7 +145,8 @@ the <B><TT>-DNO_EPICS</TT></B> switch to disable the EPICS-specific code. </P>
 
 <H3><A NAME="t810Create"></A>t810Create</H3>
 
-<P>Registers a new TIP810 device with the driver. </P>
+<P>Registers a new TIP810 device with the driver.  In EPICS, this is registered
+as an iocsh command.</P>
 
 <PRE>int t810Create (char *pbusName, ushort_t card, ushort_t slot,
                 ushort_t irqNum, uint_t busRate);</PRE>
@@ -423,7 +424,8 @@ running. </P>
 
 <H3><A NAME="t810Report"></A>t810Report</H3>
 
-<P>Display report giving status of all TEWS Tip810 devices </P>
+<P>Display report giving status of all TEWS Tip810 devices.  In EPICS, this is
+registered as an iocsh command.</P>
 
 <PRE>int t810Report(int interest);</PRE>
 

@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.9 2003-06-03 19:38:45 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.10 2003-11-13 21:41:32 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,20 @@
 CANbus driver as it has evolved since first release.  The earliest version
 appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+
+<H2>Version 2.6</H2>
+
+<P>Added:</P>
+<UL>
+
+<LI>A drvTip810Registrar routine and iocsh command tables for use with EPICS
+Base R3.14.4 and higher.  It should be possible to initialize this driver from
+iocsh as well as from the vxWorks shell.  This does not include the OSI
+modifications that would be needed for use with RTEMS though.</LI>
+
+</UL>
 <HR>
 
 
