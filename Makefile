@@ -1,17 +1,17 @@
 # Makefile at top of ipac support tree
-# $Id: Makefile,v 1.3 1999-03-09 20:28:34 anj Exp $
+# $Id: Makefile,v 1.4 2003-06-02 20:12:42 anj Exp $
 
 TOP = .
-include $(TOP)/config/CONFIG_APP
+include $(TOP)/configure/CONFIG
 
-# Note this is different to most Makefiles at this level because 
-# different sites may need to able to select which ipac module drivers
-# are to be included, thus there is no wildcard for DIRS. Sites may
+# Different sites may need to able to select which ipac module drivers
+# are to be built, thus there is no wildcard for DIRS.  Sites may
 # comment out any DIRS lines below which are not required. Additional
 # lines will need to be added as new drivers are installed.
 
+DIRS := configure
 DIRS += drvIpac
 DIRS += drvTip810
 DIRS += tyGSOctal
 
-include $(TOP)/config/RULES_TOP
+include $(TOP)/configure/RULES_TOP

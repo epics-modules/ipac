@@ -126,7 +126,7 @@ STATUS tyGSOctalDrv
     tyGSOctalLastModule = 0;
 
     printf("allocating %d structures of %ld bytes\n", maxModules,
-           sizeof(QUAD_TABLE));
+           (long) sizeof(QUAD_TABLE));
     
     if (!(tyGSOctalModules =
           (QUAD_TABLE *)malloc(maxModules*sizeof(QUAD_TABLE)))) {

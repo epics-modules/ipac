@@ -1,3 +1,0 @@
-#RELEASE Location of external products
-SUPPORT=/usr/local/iocapps/R3.13.6/support
-EPICS_BASE=$(SUPPORT)/base/3-13-6-asd1
