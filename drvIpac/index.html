@@ -1,0 +1,282 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Andrew Johnson">
+   <meta name="Description" content="The drvIpac IndustryPack software">
+   <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
+   <meta name="Version" content="$Id: index.html,v 1.1 2001-02-14 20:38:25 anj Exp $">
+   <title>EPICS ipac Module</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+<img src="logo101.gif" alt="EPICS" hspace=5 height=101 width=101 align=right>
+<h1>
+EPICS ipac Module</h1>
+
+<dl>
+<dt>
+Module Owner:</dt>
+
+<dd>
+<a href="mailto:anj@aps.anl.gov">Andrew Johnson</a></dd>
+</dl>
+
+<p>
+This page is the home of the EPICS ipac module, which provides a standard
+interface for Industry Pack carrier boards under vxWorks, and ensures that
+drivers for individual IP modules do not need to understand or control the
+carrier board they are installed in.  Also included with this software are
+several IP module drivers that use the ipac carrier layer.</p>
+
+<p>
+This web-site gives access to the ipac source code, information on other
+modules which are needed to install and run it, and documentation on the how to
+include and use it in your EPICS applications. Please email any comments,
+questions or bug reports <a href="mailto:anj@aps.anl.gov">to me</a>.</p>
+
+<h2>
+Hardware Supported</h2>
+
+<p>
+Software is provided in the module to control the following hardware:</p>
+
+<ul>
+<li>
+<a href="http://www.sbs.com/mio.shtml">SBS</a> (was GreenSpring)
+VIPC310, VIPC610, VIPC616 and ATC40 dumb carrier boards</li>
+
+<li>
+<a href="http://www.mcg.mot.com">Motorola</a>
+<a href="http://www.mcg.mot.com/WebOS/omf/GSS/MCG/products/boards/68k-vme.html">
+MVME162 and MVME172</a> MC680x0 CPU boards with IP slots</li>
+
+<li>
+<a href="http://www.tews-datentechnik.com">TEWS Datentechnik</a>
+<a href="http://www.tews-datentechnik.com/tip810.htm">Tip810</a>
+Basic CANbus interface module</li>
+
+<li>
+<a href="http://www.actis.ch">Actis</a>
+<a href="http://www.actis.ch/asp/lan100.asp">LAN-100</a>
+Fast Ethernet controller module (needs driver from ECRIN/Actis)</li>
+
+<li>
+<a href="http://www.sbs.com/mio_ip_ov.shtml">SBS</a> (was GreenSpring)
+IP-OCTAL-232 serial interface module (<i>not</i> the newer
+IP-OctalPlus-232)</li>
+
+</ul>
+
+<h2>
+Where to Find it</h2>
+
+<ul>
+
+<li>
+The official URL for this home page is
+<a href="http://www.aps.anl.gov/asd/people/anj/ipac">http://www.aps.anl.gov/asd/people/anj/ipac</a>.</li>
+
+<li>
+The software is available for download from the links given in the table
+below:
+
+<blockquote>
+<table border=1>
+<tr>
+<th>
+Version</th>
+
+<th>
+EPICS Release</th>
+
+<th>
+Filename</th>
+</tr>
+
+<tr>
+<td align=center>
+1.1c</td>
+
+<td>
+R3.12.2, UAE</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/can-1.1c.tar.gz">can-1.1c.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.0</td>
+
+<td>
+R3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.0.tar.gz">ipac-2.0.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.1</td>
+
+<td>
+R3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.1.tar.gz">ipac-2.1.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.2</td>
+
+<td>
+R3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.2.tar.gz">ipac-2.2.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.3</td>
+
+<td>
+R3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
+</tr>
+</table>
+</blockquote></li>
+
+<li>
+Information on the difference between releases is given in the various Release
+Notes (see the <a href="#documentation">Documentation</a> section below).</li>
+
+<li>
+From version 2.2 onwards most of the software contained in this distribution is
+licensed under the <a href="http://www.gnu.org/copyleft/lesser.html">GNU Lesser
+General Public License</a>, although some files are not mine to be able to
+change their license conditions.  If this concerns you, check the individual
+source files for information on their status - all LGPL source files include a
+statement to that effect in the file header comments.</li>
+
+</ul>
+
+<h2>
+Site Installation and Building</h2>
+
+<p>
+Installation instructions are given in the <a href="drvIpac.html">drvIpac
+documentation</a>.</p>
+
+<h2>
+Application Installation</h2>
+
+<p>
+To use the installed and built support software in an &lt;ioctop&gt;
+application, make the following changes to the IOC application:</p>
+
+<ol>
+<li>
+Edit the <tt>config/RELEASE</tt> file and add the line</li>
+
+<blockquote>
+<pre>IPAC=<i>/path/to/ipac/version</i></pre>
+</blockquote>
+
+<li>
+Edit the <tt>config/CONFIG_APP</tt> file and add the following lines.  This
+step will not be required from EPICS 3.13.2 onwards.</li>
+
+<blockquote>
+<pre>ifdef IPAC
+USR_INCLUDES += -I$(IPAC)/include
+IPAC_BIN = $(IPAC)/bin/$(T_A)
+USER_DBDFLAGS += -I $(IPAC)/dbd
+endif</pre>
+</blockquote>
+
+<li>
+In the application source directory where the base object files are linked
+together, edit <tt>Makefile.Vx</tt> and add</li>
+
+<blockquote>
+<pre>LIBOJBS += $(IPAC_BIN)/ipacLib</pre>
+</blockquote>
+
+<li>
+Ensure the following is included in the construction of the application's
+database definition file</li>
+
+<blockquote>
+<pre>include "drvIpac.dbd"</pre>
+</blockquote>
+
+<li>
+Rebuild the application and use the newly installed support as desired.</li>
+</ol>
+
+<h2>
+<a name="documentation">Documentation</a></h2>
+
+<p>
+The following documentation is available:</p>
+
+<ul>
+<li>
+drvIpac - Industry Pack Driver (<a href="drvIpac.html">HTML</a>)</li>
+
+<li>
+IPAC Driver Release Notes (<a href="ipacRelease.html">HTML</a>)
+
+<p>
+</p></li>
+
+<li>
+drvTip810 - CAN Bus Driver (<a href="drvTip810.html">HTML</a>)</li>
+
+<li>
+devCan - CAN Bus Device Support (<a href="devCan.html">HTML</a>)</li>
+
+<li>
+CANbus Driver Release Notes (<a href="canRelease.html">HTML</a>)
+
+<p>
+</p></li>
+
+<li>
+drvLan100 - LAN-100 Driver (<a href="drvLan100.html">HTML</a>)</li>
+
+<li>
+Actis Driver Release Notes (<a href="actisRelease.html">HTML</a>)
+
+<p>
+</p></li>
+
+<li>
+SBS OctalUart IP Module Support
+(<a href="tyGSOctal.html">HTML</a>)</li>
+
+<li>
+SBS Octal Serial Driver Release Notes
+(<a href="tyGSOctalRelease.html">HTML</a>)</li>
+
+</ul>
+
+
+<h2>
+In Use</h2>
+
+<p>
+This software was originally developed at the RGO for Gemini and UKIRT, and is
+now being used at <i>many</i> EPICS sites.</p>
+
+<hr>
+
+<address>
+<a href="mailto:anj@aps.anl.gov">Andrew Johnson</a></address>
+
+</body>
+</html>

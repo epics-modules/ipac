@@ -7,6 +7,8 @@ DBDINSTALL += drvIpac.dbd
 INC += drvIpac.h
 
 HTMLS_DIR = .
+HTMLS += index.html
+HTMLS += logo101.gif
 HTMLS += drvIpac.html
 HTMLS += ipacRelease.html
 
