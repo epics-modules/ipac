@@ -16,7 +16,7 @@ LIBRARY_IOC_vxWorks = Ipac
 
 LIBSRCS += drvIpac.c
 
-# Any VMEbus: GreenSpring VIPC carrier drivers
+# Any VMEbus: SBS VIPC carrier drivers
 LIBSRCS += drvVipc310.c
 LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
@@ -24,7 +24,7 @@ LIBSRCS += drvVipc616.c
 # MVME162 & MVME172: IPchip carrier driver
 LIBSRCS += drvIpMv162.c
 
-# ISAbus: GreenSpring ATC40 carrier driver (Intel-based systems only!)
+# ISAbus: SBS ATC40 carrier driver (Intel-based systems only!)
 LIBSRCS += drvAtc40.c
 
 include $(TOP)/configure/RULES

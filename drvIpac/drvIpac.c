@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.10 2003-11-04 21:35:10 anj Exp $
+    $Id: drvIpac.c,v 1.11 2004-02-24 00:19:57 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -249,10 +249,9 @@ Function:
     Calculate the CRC of the IDprom at the given address.
 
 Description:
-    Generates an industry standard CRC of the ID Prom data as described 
-    in the GreenSpring Industry Pack specification.  The CRC byte in the 
-    Prom (at address 0x17) is set to zero for the purpose of calculating 
-    the CRC.
+    Generates an industry standard CRC of the ID Prom data as described  in the
+    Industry Pack specification.  The CRC byte in the  Prom (at address 0x17)
+    is set to zero for the purpose of calculating  the CRC.
 
 Returns:
     The low 8 bits of the calculated CRC value.
