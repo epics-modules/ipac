@@ -4,7 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
    <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
-   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.2 1998-05-29 16:31:45 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.3 1998-08-20 19:11:08 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -12,7 +12,7 @@
 
 <CENTER><P>Developed for Gemini and UKIRT<BR>
 TEWS Tip810 Driver for EPICS<BR>
-Version 1.1</P></CENTER>
+Version 1.1b</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -40,7 +40,7 @@ Version 1.1</P></CENTER>
 <UL>
 <LI><A HREF="#canOpen">canOpen</A> </LI>
 
-<LI><A HREF="#canIoParse">canIoParse</A> </LI>
+<LI><B>ENHANCED:</B> <A HREF="#canIoParse">canIoParse</A> </LI>
 
 <LI><A HREF="#canWrite">canWrite</A> </LI>
 
@@ -677,7 +677,7 @@ header as follows: </P>
 some of which are optional. </P>
 
 <UL>
-<PRE><I>busName</I>[<TT><B>/</B></TT><I>timeout</I>]<TT><B>:</B></TT><I>identifier</I>[<TT><B>.</B></TT><I>offset</I>]<I>parameter</I></PRE>
+<PRE><I>busName</I>[<TT><B>/</B></TT><I>timeout</I>]<TT><B>:</B></TT><I>identifier</I>[<B>+<I>n</I>..][<TT><B>.</B></TT><I>offset</I>]<I>parameter</I></PRE>
 </UL>
 
 <P>The first element is the bus name, which should consist of alphanumeric
@@ -694,10 +694,13 @@ into vxWorks system clock ticks and placed in <TT>pcanIo-&gt;timeout</TT>.
 If no timeout element is included, the timeout is set to <TT>WAIT_FOREVER</TT>
 (-1). </P>
 
-<P>The CANbus message identifier is preceded by a colon (&quot;<TT>:</TT>&quot;),
-and comprises an unsigned short integer. The string can be given in any
-of the standard 'C' formats as converted by <TT>strtoul</TT>, so hex or
-octal numbers may be used for identifiers as desired. </P>
+<P>The CANbus message identifier is preceded by a colon
+(&quot;<TT>:</TT>&quot;), and must result in one of the legal CANbus
+identifiers in the range 0 through 2047 (with holes). The identifier itself can
+be specified as a single number, or in several parts separated by plus signs,
+which are all summed.  The numbers here can be given in any of the standard 'C'
+formats as converted by <TT>strtol</TT>, so negative, hex or octal numbers may
+be used as desired. </P>
 
 <P>If the identifier is followed by a decimal point (&quot;<TT>.</TT>&quot;),
 the following element is an optional byte offset into the CANbus message.

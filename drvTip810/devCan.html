@@ -4,7 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="User Documentation for the EPICS CANbus device support software">
    <META NAME="KeyWords" CONTENT="CANbus, EPICS, Tip810">
-   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.2 1998-05-29 16:31:43 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.3 1998-08-20 19:11:07 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -12,7 +12,7 @@
 
 <CENTER><P>Developed for Gemini and UKIRT <BR>
 CANbus Device Support for EPICS <BR>
-Version 1.1</P></CENTER>
+Version 1.1b</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson 
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -24,13 +24,13 @@ Version 1.1</P></CENTER>
 <LI><A HREF="#section2">Common Issues</A></LI>
 
 <UL>
-<LI><A HREF="#hardwareAddressing">Hardware Addressing</A></LI>
+<LI><B>ENHANCED: </B><A HREF="#hardwareAddressing">Hardware Addressing</A></LI>
 
 <LI><A HREF="#asynchronousProcessing">Asynchronous Processing</A></LI>
 
 <LI><A HREF="#recordScanTypes">Record Scan Types</A></LI>
 
-<LI><A HREF="#alarmStatus">Alarm Status</A></LI>
+<LI><B>CHANGED: </B><A HREF="#alarmStatus">Alarm Status</A></LI>
 </UL>
 
 <LI><A HREF="#section3">Record-Specific Behaviour</A></LI>
@@ -111,7 +111,7 @@ This contains a number of elements, some of which are optional, and is
 formatted as follows: </P>
 
 <UL>
-<PRE><B>@</B><I>busName</I>[<B>/</B><I>timeout</I>]<B>:</B><I>identifier</I>[<B>.</B><I>offset</I>]<I>parameter</I></PRE>
+<PRE><B>@</B><I>busName</I>[<B>/</B><I>timeout</I>]<B>:</B><I>identifier</I>[<B>+</B><I>n</I>..][<B>.</B><I>offset</I>]<I>parameter</I></PRE>
 </UL>
 
 <P>The first element after the &quot;<B><TT>@</TT></B>&quot; is the bus
@@ -128,10 +128,11 @@ a Bus Off state and there are output or RTR records without a timeout specified,
 the scan tasks which process these records will be halted until the bus
 recovers.</P>
 
-<P>The CANbus message identifier is preceded by a colon, and must be one
-of the legal CANbus identifiers in the range 0 through 2047 (with holes).
-The number can be given in decimal, hex or octal as desired using the standard
-'C' syntax. </P>
+<P>The CANbus message identifier is preceded by a colon, and must result in one
+of the legal CANbus identifiers in the range 0 through 2047 (with holes).  The
+identifier itself can be specified as a single number, or in several parts
+separated by plus signs, which are all summed.  The numbers here can be given
+in decimal, hex or octal as desired using the standard 'C' syntax. </P>
 
 <P>If the identifier is followed by a decimal point, the following element
 is an optional byte offset into the CANbus message where the data may be
@@ -153,11 +154,8 @@ activities which do not depend on the results returned to the input record
 (i.e. records in a different lock-set). The timeout address field is used to
 set a watchdog timer, and if no response is received within the given period
 the record is set to the <B><TT>TIMEOUT_ALARM</TT></B> status with a severity
-of <B><TT>MAJOR_ALARM</TT></B>. </P>
+of <B><TT>INVALID_ALARM</TT></B>. </P>
 
-<P><I>[Note: the standard EPICS action in this situation would be to use an
-alarm severity of <B><TT>INVALID_ALARM</TT></B> -- should the CANbus device
-support be changed to match this? Comments welcomed].</I> </P>
 
 <H3><A NAME="recordScanTypes"></A>Record Scan Types</H3>
 
@@ -187,10 +185,12 @@ waiting on this particular message identifier. </P>
 <H3><A NAME="alarmStatus"></A>Alarm Status</H3>
 
 <P>Records will be placed in an alarm state in the event of the CANbus
-interface signalling a Bus Error or Bus Off event, or if the remote CAN
-device does not respond to an RTR message within the specified timeout
-interval. The alarm status and severity meanings are given in the following
-table: </P>
+interface signalling a Bus Off event, or if the remote CAN device does not
+respond to an RTR message within the specified timeout interval.  A Bus Error
+event causes a message to be logged for each device type in use, but does not
+change the alarm status or severity of any records to change (this is new in
+Version 1.1b).  The alarm status and severity meanings are given in the
+following table: </P>
 
 <CENTER><TABLE BORDER=1 >
 <TR BGCOLOR="#FFFFFF">
@@ -201,19 +201,13 @@ table: </P>
 
 <TR>
 <TD><TT>COMM_ALARM</TT></TD>
-<TD><TT>MINOR_ALARM</TT></TD>
-<TD>CAN Bus Error event</TD>
-</TR>
-
-<TR>
-<TD><TT>COMM_ALARM</TT></TD>
-<TD><TT>MAJOR_ALARM</TT></TD>
+<TD><TT>INVALID_ALARM</TT></TD>
 <TD>CAN Bus Off event</TD>
 </TR>
 
 <TR>
 <TD><TT>TIMEOUT_ALARM</TT></TD>
-<TD><TT>MAJOR_ALARM</TT></TD>
+<TD><TT>INVALID_ALARM</TT></TD>
 <TD>Device or RTR Timeout</TD>
 </TR>
 
