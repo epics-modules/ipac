@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.7 2000-02-21 21:36:08 anj Exp $
+    $Id: devAoCan.c,v 1.8 2001-02-14 20:50:53 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -133,7 +133,7 @@ LOCAL long init_ao (
 	if (canSilenceErrors) {
 	    pcanAo->out.canBusID = NULL;
 	    prec->pact = TRUE;
-	    return OK;
+	    return DO_NOT_CONVERT;
 	} else {
 	    recGblRecordError(S_can_badAddress, (void *) prec,
 			      "devAoCan (init_record) bad CAN address");

@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiCan.c,v 1.9 2000-02-21 21:36:09 anj Exp $
+    $Id: devMbbiCan.c,v 1.10 2001-02-14 20:50:54 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -270,7 +270,7 @@ LOCAL long read_mbbi (
 		wdStart(pcanMbbi->wdId, pcanMbbi->inp.timeout, 
 			(FUNCPTR) callbackRequest, (int) pcanMbbi);
 		canWrite(pcanMbbi->inp.canBusID, &message, pcanMbbi->inp.timeout);
-		return 0;
+		return DO_NOT_CONVERT;
 	    }
 	default:
 	    recGblSetSevr(prec, UDF_ALARM, INVALID_ALARM);

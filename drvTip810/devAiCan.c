@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.9 2000-02-21 21:36:08 anj Exp $
+    $Id: devAiCan.c,v 1.10 2001-02-14 20:50:53 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -307,7 +307,7 @@ LOCAL long read_ai (
 		wdStart(pcanAi->wdId, pcanAi->inp.timeout, 
 			(FUNCPTR) callbackRequest, (int) pcanAi);
 		canWrite(pcanAi->inp.canBusID, &message, pcanAi->inp.timeout);
-		return 0;
+		return CONVERT;
 	    }
 	default:
 	    recGblSetSevr(prec, UDF_ALARM, INVALID_ALARM);
