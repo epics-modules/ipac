@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.4 1999-07-28 20:37:51 anj Exp $
+    $Id: drvIpac.c,v 1.5 1999-07-29 20:53:49 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -309,13 +309,13 @@ int ipmValidate (
     }
 
     id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-    crc = checkCRC((uint16_t *) id, id->bytesUsed);
+    crc = checkCRC((uint16_t *) id, id->bytesUsed & 0xff);
     if (crc != (id->CRC & 0xff)) {
 	return S_IPAC_badCRC;
     }
 
-    if (id->manufacturerId != manufacturerId ||
-	id->modelId != modelId) {
+    if ((id->manufacturerId & 0xff)!= manufacturerId ||
+	(id->modelId & 0xff) != modelId) {
 	return S_IPAC_badModule;
     }
 
@@ -367,8 +367,8 @@ char *ipmReport (
 	char module[16];
 
 	id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-	sprintf(module, "0x%02hX/0x%02hX", (short) id->manufacturerId,
-		(short) id->modelId);
+	sprintf(module, "%#2.2hx/%#2.2hx", id->manufacturerId & 0xff,
+		id->modelId & 0xff);
 	strcat(report, module);
     }
 
