@@ -4,15 +4,14 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
    <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
-   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.3 1998-08-20 19:11:08 anj Exp $">
+   <META NAME="Version" CONTENT="$Id: drvTip810.html,v 1.4 1999-07-28 21:38:57 anj Exp $">
 </HEAD>
 <BODY>
 
 <H1 ALIGN=CENTER>drvTip810 - CAN Bus Driver </H1>
 
-<CENTER><P>Developed for Gemini and UKIRT<BR>
-TEWS Tip810 Driver for EPICS<BR>
-Version 1.1b</P></CENTER>
+<CENTER><P>TEWS Tip810 Driver for EPICS<BR>
+Version 2.1</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -40,21 +39,21 @@ Version 1.1b</P></CENTER>
 <UL>
 <LI><A HREF="#canOpen">canOpen</A> </LI>
 
-<LI><B>ENHANCED:</B> <A HREF="#canIoParse">canIoParse</A> </LI>
+<LI><A HREF="#canIoParse">canIoParse</A> </LI>
 
 <LI><A HREF="#canWrite">canWrite</A> </LI>
 
 <LI><A HREF="#canMessage">canMessage</A> </LI>
 
-<LI><B>NEW:</B> <A HREF="#canMsgDelete">canMsgDelete</A> </LI>
+<LI><A HREF="#canMsgDelete">canMsgDelete</A> </LI>
 
 <LI><A HREF="#canSignal">canSignal</A> </LI>
 
-<LI><B>NEW:</B> <A HREF="#canBusReset">canBusReset</A> </LI>
+<LI><A HREF="#canBusReset">canBusReset</A> </LI>
 
-<LI><B>NEW:</B> <A HREF="#canBusStop">canBusStop</A> </LI>
+<LI><A HREF="#canBusStop">canBusStop</A> </LI>
 
-<LI><B>NEW:</B> <A HREF="#canBusRestart">canBusRestart</A> </LI>
+<LI><A HREF="#canBusRestart">canBusRestart</A> </LI>
 
 <LI><A HREF="#canRead">canRead</A> </LI>
 </UL>
@@ -72,8 +71,8 @@ This software is an IPAC Module Driver and uses the services of the drvIpac
 Industry Pack Driver to interface to the IPAC Carrier Board - see the
 accompanying document <A HREF="drvIpac.html">drvIpac - Industry Pack
 Driver</A> for details of this driver software. The device support routines
-provided for use with EPICS are described in the document <A
-HREF="devCan.html">devCan - CAN Bus Device Support</A> which briefly covers
+provided for use with EPICS are described in the document 
+<A HREF="devCan.html">devCan - CAN Bus Device Support</A> which briefly covers
 the use of the various record types supported. </P>
 
 <P>The following routines provided by this driver are described in detail
@@ -149,8 +148,7 @@ the <B><TT>-DNO_EPICS</TT></B> switch to disable the EPICS-specific code. </P>
 <P>Registers a new TIP810 device with the driver. </P>
 
 <PRE>int t810Create (char *pbusName, ushort_t card, ushort_t slot,
-                uint_t busRate);
-</PRE>
+                uint_t busRate);</PRE>
 
 <H4>Parameters</H4>
 
@@ -159,7 +157,7 @@ the <B><TT>-DNO_EPICS</TT></B> switch to disable the EPICS-specific code. </P>
 
 <DD>String which comprises a unique identifier for this particular CAN Bus.
 This must be a static string which should not be changed while the driver is
-loaded and running (vxWorks shell string parameters have this property).
+loaded and running (vxWorks shell string literals have this property).
 While <TT>t810Create</TT> enforces no restrictions on the characters which
 may be used in the name, if the <TT>canIoParse</TT> routine is used the name
 should contain alphanumeric characters only. </DD>
@@ -322,8 +320,7 @@ Value = 0</PRE>
 
 <P>Reboot hook routine, resets all devices to stop interrupts. </P>
 
-<PRE>int t810Shutdown(int startType);
-</PRE>
+<PRE>int t810Shutdown(int startType);</PRE>
 
 <H4>Parameters</H4>
 
@@ -385,10 +382,13 @@ to re-enable them afterwards. </P>
 
 <H4>Description</H4>
 
-<P>Under EPICS this routine is called during <TT>iocInit</TT>, which must
-occur after all <TT>canCreate</TT> calls in the start-up script. It completes
-the initialisation of the CAN controller chip and interrupt vector registers
-for all known TIP810 devices and starts the chip running. </P>
+<P>Under EPICS this routine is called during <TT>iocInit</TT>, which must occur
+after all <TT>canCreate</TT> calls in the start-up script. It creates a message
+queue to hold received messages and starts a task named <TT>canRecvTask</TT> to
+distribute them to the routines that have asked to be informed about them. 
+Finally it completes the initialisation of the CAN controller chip and
+interrupt vector registers for all known TIP810 devices and starts them
+running. </P>
 
 <H4>Returns</H4>
 
@@ -501,8 +501,7 @@ TEWS tip810 CANbus Ip Modules
 <P>Test routine, sends a single test message to the named CANbus. </P>
 
 <PRE>int canTest (char *pbusName, ushort_t identifier, ushort_t rtr,
-             uchar_t length, char *data);
-</PRE>
+             uchar_t length, char *data);</PRE>
 
 <H4>Parameters</H4>
 
@@ -677,7 +676,7 @@ header as follows: </P>
 some of which are optional. </P>
 
 <UL>
-<PRE><I>busName</I>[<TT><B>/</B></TT><I>timeout</I>]<TT><B>:</B></TT><I>identifier</I>[<B>+<I>n</I>..][<TT><B>.</B></TT><I>offset</I>]<I>parameter</I></PRE>
+<I>busName</I>[<TT><B>/</B></TT><I>timeout</I>]<TT><B>:</B></TT><I>identifier</I>[<TT><B>+</B></TT><I>n</I>..][<TT><B>.</B></TT><I>offset</I>]<I>parameter</I>
 </UL>
 
 <P>The first element is the bus name, which should consist of alphanumeric
@@ -874,8 +873,7 @@ if (status == OK) {
 <P>Register CAN message call-back </P>
 
 <PRE>int canMessage(void *canBusID, ushort_t identifier,
-               canMsgCallback_t *pcallback, void *pprivate);
-</PRE>
+               canMsgCallback_t *pcallback, void *pprivate);</PRE>
 
 <H4>Parameters</H4>
 
@@ -901,20 +899,20 @@ its context. </DD>
 
 <H4>Description</H4>
 
-<P>This routine is used to add a call-back routine for a particular CAN
-message identifier on the given CANbus. Call-backs can be registered for
-any CAN message identifier, and there can be more than one call-back using
-the same ID - all routines are called in turn when a message with the relevant
-identifier is received. The call-back routine must not change the message
-at all, and should copy any information it needs from the message buffer
-before returning. The call-back is called from vxWorks' Interrupt Context,
-thus there are restrictions in what vxWorks routines the call-back can
-use (see the vxWorks User Guide for details of these), and processing should
-be kept to an absolute minimum. The call-back routine should be of type
-<TT>canMsgCallback_t</TT>: </P>
+<P>This routine is used to add a call-back routine for a particular CAN message
+identifier on the given CANbus. Call-backs can be registered for any CAN
+message identifier, and there can be more than one call-back using the same ID
+- all routines are called in turn when a message with the relevant identifier
+is received. The call-back routine must not change the message at all, and
+should copy any information it needs from the message buffer before returning.
+The call-back used to be executed from vxWorks' Interrupt Context, thus there
+were restrictions in what vxWorks routines the call-back could use (see the
+vxWorks User Guide for details of these), however from release 2-1 a high
+priority task is used instead.  Processing should still be kept to a minimum
+though as this task is run at a high priority. The call-back routine should be
+of type <TT>canMsgCallback_t</TT>: </P>
 
-<PRE>void callback(void *pprivate, const canMessage_t *pmessage);
-</PRE>
+<PRE>void callback(void *pprivate, const canMessage_t *pmessage);</PRE>
 
 <P>The same <TT>pprivate</TT> value supplied when the call-back was registered
 with <TT>canMessage</TT> is passed to the call-back routine with each message
@@ -976,8 +974,7 @@ status = canMessage(myIo.canBusID, myIo.identifier,
 <P>Delete CAN message call-back</P>
 
 <PRE>int canMsgDelete(void *canBusID, ushort_t identifier,
-               canMsgCallback_t *pcallback, void *pprivate);
-</PRE>
+               canMsgCallback_t *pcallback, void *pprivate);</PRE>
 
 <H4>Parameters</H4>
 
@@ -1059,8 +1056,7 @@ successfully deleted.</P>
 <P>Register CAN error signal call-back </P>
 
 <PRE>int canSignal(void *canBusID, canSigCallback_t *pcallback,
-              void *pprivate);
-</PRE>
+              void *pprivate);</PRE>
 
 <H4>Parameters</H4>
 
@@ -1082,17 +1078,16 @@ its context. </DD>
 
 <H4>Description</H4>
 
-<P>This routine is used to add a new call-back routine for CANbus error
-reports from the given CANbus. There can be any number of error call-backs
-on each device, and all are called in turn when the controller chip reports
-a Bus Error or Bus Off event. The call-back routine is called from vxWorks'
-Interrupt Context, thus there are restrictions in which vxWorks routines
-can be used (see vxWorks User Guide for details of these), and processing
-should be kept to an absolute minimum. The call-back routine should be
-of type <TT>canSigCallback_t</TT>: </P>
+<P>This routine is used to add a new call-back routine for CANbus error reports
+from the given CANbus. There can be any number of error call-backs on each
+device, and all are called in turn when the controller chip reports a Bus Error
+or Bus Off event. The call-back routine is called from vxWorks' Interrupt
+Context (Note this has <I>not</I> changed in release 2-1), thus there are
+restrictions in which vxWorks routines can be used (see vxWorks User Guide for
+details of these), and processing should be kept to an absolute minimum. The
+call-back routine should be of type <TT>canSigCallback_t</TT>: </P>
 
-<PRE>void callback(void *pprivate, ushort_t status);
-</PRE>
+<PRE>void callback(void *pprivate, ushort_t status);</PRE>
 
 <P>The pprivate value supplied to canSignal is passed to the call-back
 routine with the error status to allow it to identify its context. Status
@@ -1312,8 +1307,7 @@ will continue to increment from their previous values. </P>
 
 <P>Send Remote Transmission Request and wait for reply. </P>
 
-<PRE>int canRead(void *canBusID, canMessage_t *pmessage, int timeout);
-</PRE>
+<PRE>int canRead(void *canBusID, canMessage_t *pmessage, int timeout);</PRE>
 
 <H4>Parameters</H4>
 

@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.9 1999-03-09 20:25:28 anj Exp $
+    $Id: drvTip810.c,v 1.10 1999-07-28 21:38:56 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -31,17 +31,22 @@ Version:
 #include <semLib.h>
 #include <logLib.h>
 #include <sysLib.h>
+#include <msgQLib.h>
+#include <taskLib.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-
+/* Some local magic numbers */
 #define T810_INT_VEC_BASE 0x60
 #define T810_MAGIC_NUMBER 81001
+#define RECV_TASK_PRIO 55	/* vxWorks task priority */
+#define RECV_TASK_STACK 20000	/* task stack size */
+#define RECV_Q_SIZE 1000	/* Num messages to buffer */
 
-/* These two numbers are the IPAC IDs */
+/* These are the IPAC IDs for this module */
 #define IP_MANUFACTURER_TEWS 0xb3 
 #define IP_MODEL_TEWS_TIP810 0x01
 
@@ -94,11 +99,18 @@ typedef struct t810Dev_s {
     callbackTable_t *psigHandler;	/* error signal callbacks */
 } t810Dev_t;
 
+typedef struct {
+   t810Dev_t *pdevice;
+   canMessage_t message;
+} t810Receipt_t;
+
 
 LOCAL t810Dev_t *pt810First = NULL;
 
 int canSilenceErrors = FALSE;	/* Really for EPICS device support use */
 
+LOCAL MSG_Q_ID receiptQueue = 0;
+int t810maxQueued = 0;		/* not static so may be reset by operator */
 
 /*******************************************************************************
 
@@ -141,8 +153,7 @@ Purpose:
 Description:
     Prints a list of all the t810 devices created, their IP carrier &
     slot numbers and the bus name string. For interest > 0 it gives
-    some message statistics, and for interest > 1 also lists all CAN
-    IDs for which a callback has been registered.
+    additional information about each device.
 
 Returns:
     OK, or
@@ -156,6 +167,12 @@ int t810Report (
     t810Dev_t *pdevice = pt810First;
     ushort_t id, printed;
     uchar_t status;
+
+    if (interest > 0) {
+	printf("  Receive queue holds %d messages, max %d = %d %% used.\n", 
+		RECV_Q_SIZE, t810maxQueued, 
+		(100 * t810maxQueued) / RECV_Q_SIZE);
+    }
 
     while (pdevice != NULL) {
 	if (pdevice->magicNumber != T810_MAGIC_NUMBER) {
@@ -522,45 +539,25 @@ LOCAL void t810ISR (
 ) {
     uchar_t intSource = pdevice->pchip->interrupt;
 
-    if (intSource & PCA_IR_WUI) {		/* Wake-up Interrupt */
-	logMsg("Wake-up Interrupt from CANbus '%s'\n", 
-	       (int) pdevice->pbusName, 0, 0, 0, 0, 0);
-    }
+    if (intSource & PCA_IR_OI) {		/* Overrun Interrupt */
+        pdevice->overCount++;
+        canBusStop(pdevice->pbusName);		/* Reset the chip but not */
+        canBusRestart(pdevice->pbusName);	/* all the counters */
 
-    if (intSource & PCA_IR_TI) {		/* Transmit Interrupt */
-	pdevice->txCount++;
-	semGive(pdevice->txSem);
+	intSource = pdevice->pchip->interrupt;	/* Rescan interrupts */
     }
 
     if (intSource & PCA_IR_RI) {		/* Receive Interrupt */
-	canMessage_t message;
-	callbackTable_t *phandler;
+        t810Receipt_t qmsg;
 
 	/* Take a local copy of the message */
-	getRxMessage(pdevice->pchip, &message);
-	pdevice->rxCount++;
+        qmsg.pdevice = pdevice;
+	getRxMessage(pdevice->pchip, &qmsg.message);
 
-	/* Look up the message ID and do the message callbacks */
-	phandler = pdevice->pmsgHandler[message.identifier];
-	if (phandler == NULL) {
-	    pdevice->unusedId = message.identifier;
-	    pdevice->unusedCount++;
-	} else {
-	    doCallbacks(phandler, (long) &message);
-	}
-
-	/* If canRead is waiting for this ID, give it the message and kick it */
-	if (pdevice->preadBuffer != NULL &&
-	    pdevice->preadBuffer->identifier == message.identifier) {
-	    memcpy(pdevice->preadBuffer, &message, sizeof(canMessage_t));
-	    pdevice->preadBuffer = NULL;
-	    semGive(pdevice->rxSem);
-	}
-    }
-
-    if (intSource & PCA_IR_OI) {		/* Overrun Interrupt */
-	pdevice->overCount++;
-	pdevice->pchip->command = PCA_CMR_COS;
+        /* Send it to the servicing task */
+        if (msgQSend(receiptQueue, (char *)&qmsg, sizeof(t810Receipt_t), 
+                     NO_WAIT, MSG_PRI_NORMAL) == ERROR)
+           logMsg("Warning: CANbus receive queue overflow\n", 0, 0, 0, 0, 0, 0);
     }
 
     if (intSource & PCA_IR_EI) {		/* Error Interrupt */
@@ -586,8 +583,75 @@ LOCAL void t810ISR (
 
 	doCallbacks(phandler, status);
     }
+
+    if (intSource & PCA_IR_TI) {		/* Transmit Interrupt */
+	pdevice->txCount++;
+	semGive(pdevice->txSem);
+    }
+
+    if (intSource & PCA_IR_WUI) {		/* Wake-up Interrupt */
+	logMsg("Wake-up Interrupt from CANbus '%s'\n", 
+	       (int) pdevice->pbusName, 0, 0, 0, 0, 0);
+    }
 }
 
+
+/*******************************************************************************
+
+Routine:
+    t810RecvTask
+
+Purpose:
+    Receive task
+
+Description:
+    This routine is a background task started by t810Initialise. It
+    takes messages out of the receive queue one by one and runs the
+    callbacks registered against the relevent message ID.
+
+Returns:
+    int
+
+*/
+
+LOCAL int t810RecvTask() {
+   t810Receipt_t rmsg;
+   callbackTable_t *phandler;
+   int numQueued;
+
+   if (receiptQueue == 0) {
+      fprintf(stderr, "CANbus Receive queue does not exist, task exiting.\n");
+      return ERROR;
+   }
+   printf("CANbus receive task started\n");
+
+   while (TRUE) {
+      numQueued = msgQNumMsgs(receiptQueue); 
+      if (numQueued > t810maxQueued) t810maxQueued = numQueued;
+      
+      msgQReceive(receiptQueue, (char *)&rmsg, sizeof(t810Receipt_t), 
+      		  WAIT_FOREVER);
+      rmsg.pdevice->rxCount++;
+      
+      /* Look up the message ID and do the message callbacks */
+      phandler = rmsg.pdevice->pmsgHandler[rmsg.message.identifier];
+      if (phandler == NULL) {
+          rmsg.pdevice->unusedId = rmsg.message.identifier;
+          rmsg.pdevice->unusedCount++;
+      } else {
+          doCallbacks(phandler, (long) &rmsg.message);
+      }
+
+      /* If canRead is waiting for this ID, give it the message and kick it */
+      if (rmsg.pdevice->preadBuffer != NULL &&
+          rmsg.pdevice->preadBuffer->identifier == rmsg.message.identifier) {
+          memcpy(rmsg.pdevice->preadBuffer, &rmsg.message, 
+                 sizeof(canMessage_t));
+          rmsg.pdevice->preadBuffer = NULL;
+          semGive(rmsg.pdevice->rxSem);
+      }
+   }
+}
 
 /*******************************************************************************
 
@@ -599,14 +663,15 @@ Purpose:
 
 Description:
     Under EPICS this routine is called by iocInit, which must occur
-    after all canCreate calls in the startup script.  It completes the
+    after all t810Create calls in the startup script.  It completes the
     initialisation of the CAN controller chip and interrupt vector
-    registers for all known TIP810 devices and starts the chip
-    running.  A reboot hook is used to make sure all interrupts are
-    turned off if the OS is shut down.
+    registers for all known TIP810 devices and starts the chips
+    running.  The receive queue is created and its processing task is
+    started to handle incoming data.  A reboot hook is used to make
+    sure all interrupts are turned off if the OS is shut down.
 
 Returns:
-    
+    int
 
 */
 
@@ -618,6 +683,13 @@ int t810Initialise (
     int status = OK;
 
     rebootHookAdd(t810Shutdown);
+
+    receiptQueue = msgQCreate(RECV_Q_SIZE, sizeof(t810Receipt_t), MSG_Q_FIFO);
+    if ((receiptQueue == NULL) ||
+	taskSpawn("canRecvTask", RECV_TASK_PRIO, VX_FP_TASK, RECV_TASK_STACK, 
+		  t810RecvTask, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
+	return errno;
+    }
 
     while (pdevice != NULL) {
 	pdevice->txCount     = 0;
