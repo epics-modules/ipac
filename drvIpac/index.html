@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="index.html,v 1.1 2001/02/14 20:38:25 anj Exp">
+   <meta name="Version" content="$Id: index.html,v 1.4 2002-04-17 21:25:02 anj Exp $">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
@@ -38,12 +38,13 @@ questions or bug reports <a href="mailto:anj@aps.anl.gov">to me</a>.</p>
 Hardware Supported</h2>
 
 <p>
-Software is provided in the module to control the following hardware:</p>
+Software is included to control the following hardware:</p>
 
 <ul>
 <li>
-<a href="http://www.sbs.com/mio.shtml">SBS</a> (was GreenSpring)
-VIPC310, VIPC610, VIPC616 and ATC40 dumb carrier boards</li>
+<a href="http://www.sbs.com/">SBS</a> (was GreenSpring)
+<a href="http://www.sbs.com/computer/products/io_carriers.shtml">VIPC310,
+VIPC610, VIPC616</a> and ATC40 dumb carrier boards</li>
 
 <li>
 <a href="http://mcg.motorola.com">Motorola</a>
@@ -56,16 +57,16 @@ MVME162 and MVME172</a> MC680x0 CPU boards with IP slots</li>
 Basic CANbus interface module</li>
 
 <li>
-<a href="http://www.actis.ch">Actis</a>
-<a href="http://www.actis.ch/asp/lan100.asp">LAN-100</a>
-Fast Ethernet controller module (needs driver from ECRIN/Actis)</li>
-
-<li>
-<a href="http://www.sbs.com/mio_ip_ov.shtml">SBS</a> (was GreenSpring)
-IP-OCTAL-232 serial interface module (<i>not</i> the newer
-IP-OctalPlus-232)</li>
+<a href="http://www.sbs.com/">SBS</a> (was GreenSpring)
+<a href="http://www.sbs.com/computer/products/product-details.asp?rowid=10000196&Product_Number=IP-OCTAL-232">IP-OCTAL-232
+serial interface module</a> (<i>not</i> the newer IP-OctalPlus-232)</li>
 
 </ul>
+
+<p>
+Other drivers are also available that use drvIpac, see the EPICS
+<a href="http://www.aps.anl.gov/epics/modules/bus.php#IPAC">Hardware Support
+Database</a> for a list.</p>
 
 <h2>
 Where to Find it</h2>
@@ -147,6 +148,17 @@ R3.13.x</td>
 <td>
 <a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
 </tr>
+
+<tr>
+<td align=center>
+2.4</td>
+
+<td>
+R3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
+</tr>
 </table>
 </blockquote></li>
 
@@ -187,8 +199,10 @@ Edit the <tt>config/RELEASE</tt> file and add the line</li>
 </blockquote>
 
 <li>
-Edit the <tt>config/CONFIG_APP</tt> file and add the following lines.  This
-step will not be required from EPICS 3.13.2 onwards.</li>
+If you are still using an EPICS version prior to 3.13.2 (or your &lt;ioctop&gt;
+predates 3.13.2 and you haven't updated the files in config since then), edit
+the <tt>config/CONFIG_APP</tt> file and add the following lines.  This step is
+<b>not</b> required from EPICS 3.13.2 onwards.</li>
 
 <blockquote>
 <pre>ifdef IPAC
