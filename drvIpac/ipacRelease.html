@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.11 2003-11-14 00:22:45 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.12 2004-02-23 22:02:37 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,19 @@
 IndustryPack driver as it has evolved since first release.  The earliest
 version appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+<H2>Version 2.7</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Modified the drvIpac/Makefile to build all carrier drivers on all
+architectures so one set of registrar() entries can be used on all vxWorks
+architectures, although some carrier drivers will only work on certain
+CPUs.</LI>
+
+</UL>
 <HR>
 
 <H2>Version 2.6</H2>
