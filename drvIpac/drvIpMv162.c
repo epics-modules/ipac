@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.6 2000-02-21 21:35:33 anj Exp $
+    $Id: drvIpMv162.c,v 1.7 2001-02-14 20:26:32 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -42,6 +42,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <vme.h>
 #include <sysLib.h>
 #include <vxLib.h>
+#include <taskLib.h>
 #include "drvIpac.h"
 #include "ipic.h"
 
@@ -143,6 +144,14 @@ LOCAL int initialise (
 	return S_IPAC_badDriver;
     }
 
+    if (*cardParams == 'R') {
+	/* Module reset requested */
+	ipic->ipReset = IPIC_IP_RESET;
+	taskDelay(sysClkRateGet() / 16 + 2);
+	ipic->ipReset = 0;
+	cardParams++;
+    }
+    
     /* Initialise the IPIC chip */
     for (slot = 0; slot < SLOTS; slot++) {
 	ipic->intCtrl[slot][0] = IPIC_INT_ICLR;
