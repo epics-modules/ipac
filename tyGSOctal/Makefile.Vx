@@ -1,0 +1,7 @@
+# Makefile.Vx
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+
+PROD += tyGSOctal.o
+
+include $(TOP)/config/RULES.Vx

@@ -1,0 +1,11 @@
+# Makefile.Host
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+
+#INC += tyGSOctal.h
+
+HTMLS_DIR = .
+HTMLS += tyGSOctal.html
+HTMLS += tyGSOctalRelease.html
+
+include $(TOP)/config/RULES.Host

@@ -1,0 +1,135 @@
+<HTML>
+<HEAD>
+<title>GreenSpring OctalUart IP Module Support</title>
+<!-- Changed by: Peregrine McGehee,  2-May-1996 -->
+<!-- Copied from http://www.cfht.hawaii.edu/~tcs/tcsiv/tygsoctal.html 
+	and edited slightly by Andrew Johnson, 9-March-1999 -->
+
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#000080" VLINK="#707070" ALINK="0000080">
+
+<h1>GreenSpring OctalUart IP Module Support</h1>
+
+<h2>Introduction</h2>
+
+This software drives the GreenSpring OctalUart family of Industry Pack modules
+to  communicate with a number of RS-232, RS-422, and RS-485 devices. These  IP
+modules are mounted on a Greenpring VIPC-610 VMEbus carrier board. <p>
+
+The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the
+carrier board plus access routines for the  SCC2698 octalUart used in the IP
+modules. The driver is implemented as  a standard vxWorks terminal driver
+making use of the tyLib() system library. <p>
+
+<h2>Structure</h2>
+
+The software structure used to support EPICS record processing is in three
+layers:
+<ul>
+EPICS device and driver support.
+<br>
+<li>devNode - simple support for stringin/out records with multiple delimiters
+<li>drvNode - driver support called by devNode
+<hr>
+EPICS STDIO support.
+<br>
+<li>drvSerial -  EPICS STDIO Driver Support (for serial devices)
+<hr>
+vxWorks device driver
+<br>
+<li>tyGSOctal - vxWorks device driver for the GreenSpring OctalUART
+<li>drvIpac - IPAC management
+</ul>
+
+<h2>Related Systems</h2>
+
+Other present options for EPICS device/driver support that use drvSerial are:
+<ul>
+<li>devAscii/drvAscii - support for ASCII commands and responses
+<li>devAbDf1/drvAbDf1 - support for the Allen-Bradley DF1 protocol
+</ul>
+<p>
+drvSerial is designed to use any vxWorks serial device driver. Other hardware
+supported includes:
+<ul>
+<li>tyFs2 - vxWorks device driver for the FORCE SIO-2 VME card
+</ul>
+<p>
+
+<h2>Where to Find It!</h2>
+EPICS device and driver support.
+<br>
+<ul>
+<li>devNode - <a href="http://www.cfht.hawaii.edu/~tcs/tcsiv/devNode.html">devNode WWW Page</a>
+<li>drvNode - <a href="http://www.cfht.hawaii.edu/~tcs/tcsiv/drvNode.html">drvNode WWW page</a>
+<li>devAscii/drvAscii - <a href="mailto:ahoney@keck.hawaii.edu">ahoney@keck.hawaii.edu (Allan Honey)</a>
+<li>devAbDf1/drvAbDf1 - <a href="mailto:johill@lanl.gov">johill@lanl.gov (Jeff Hill)</a>
+</ul>
+<hr>
+EPICS STDIO support.
+<br>
+<ul>
+<li>drvSerial -  <a href="mailto:johill@lanl.gov">johill@lanl.gov (Jeff Hill)</a>
+</ul>
+<hr>
+vxWorks device driver
+<br>
+<ul>
+<li>tyGSOctal - <a href="ftp://ftp.cfht.hawaii.edu/pub/tcs/epics/tyGSOctal">ftp://ftp.cfht.hawaii.edu/pub/tcs/epics/tyGSOctal</a>
+<li>drvIpac - <a href="mailto:anj@aps.anl.gov">anj@aps.anl.gov (Andrew Johnson)</a>
+<p>
+<li>tyFs2 -  <a href="mailto:ahoney@keck.hawaii.edu">ahoney@keck.hawaii.edu (Allan Honey)</a>
+</ul>
+<p>
+<h2>Driver Routines</h2>
+The following is an example of setting up the device driver from within
+a vxWorks startup script:
+<pre>
+#####################
+# Configuration Setup
+#####################
+
+# Initialize the IP module tasks
+tyGSOctalDrv 4
+ipacAddCarrier &vipc610, "0x6000"
+
+# Create devices
+MOD0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
+
+PORT00 = tyGSOctalDevCreate("/tyGS/0/0", MOD0, 0, 512, 512)
+PORT02 = tyGSOctalDevCreate("/tyGS/0/2", MOD0, 2, 512, 512)
+PORT04 = tyGSOctalDevCreate("/tyGS/0/4", MOD0, 4, 512, 512)
+PORT06 = tyGSOctalDevCreate("/tyGS/0/6", MOD0, 6, 512, 512)
+
+# Config ports
+# baud, parity(N/E/O), stop, bits, flow(N/H)
+tyGSOctalConfig PORT00, 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig PORT02, 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig PORT04, 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig PORT06, 9600, 'N', 1, 8, 'N'
+
+#
+# The following uses the EPICS drvNode/devNode support
+#
+# Create NODEs - device support uses these names
+COMMON = drvNodeInit("/tyGS/0/0")
+VILINK = drvNodeInit("/tyGS/0/2")
+AOBG   = drvNodeInit("/tyGS/0/4")
+OSIS   = drvNodeInit("/tyGS/0/6")
+
+# Configure NODE delimiters
+drvNodeSetDelim COMMON, 0, 2, "\015\012", 0x00
+drvNodeSetDelim COMMON, 1, 2, "> ", 0x00
+drvNodeSetDelim COMMON, 2, 3, ":  ", 0x00
+drvNodeSetDelim COMMON, 3, 3, ")? ", 0x00
+drvNodeSetDelim COMMON, 4, 3, "): ", 0x00
+#
+drvNodeSetDelim VILINK, 0, 2, "\015\012", 0x00
+#
+drvNodeSetDelim AOBG, 0, 1, "\015", 0x00
+#
+drvNodeSetDelim OSIS, 0, 1, "\015", 0x00
+</PRE>
+
+</BODY>
+</HTML>
