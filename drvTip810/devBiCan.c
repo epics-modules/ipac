@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBiCan.c,v 1.5 1998-08-19 08:36:42 anj Exp $
+    $Id: devBiCan.c,v 1.6 1998-08-20 19:00:06 anj Exp $
 
 (c) 1995,1997 Royal Greenwich Observatory
 
@@ -24,6 +24,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <wdLib.h>
+#include <logLib.h>
 
 #include <errMdef.h>
 #include <devLib.h>
@@ -222,11 +223,7 @@ LOCAL long read_bi (
     switch (pcanBi->status) {
 	case TIMEOUT_ALARM:
 	case COMM_ALARM:
-	    recGblSetSevr(prec, pcanBi->status, MAJOR_ALARM);
-	    pcanBi->status = NO_ALARM;
-	    return DO_NOT_CONVERT;
-	case READ_ALARM:
-	    recGblSetSevr(prec, COMM_ALARM, MINOR_ALARM);
+	    recGblSetSevr(prec, pcanBi->status, INVALID_ALARM);
 	    pcanBi->status = NO_ALARM;
 	    return DO_NOT_CONVERT;
 
@@ -305,16 +302,21 @@ LOCAL void busSignal (
     
     switch(status) {
 	case CAN_BUS_OK:
-	    pbus->status = NO_ALARM;
-	    return;
+	    logMsg("devBiCan: Bus Ok event from %s\n",
+			   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
+		pbus->status = NO_ALARM;
+	    break;
 	case CAN_BUS_ERROR:
-	    pbus->status = READ_ALARM;
+	    logMsg("devBiCan: Bus Error event from %s\n",
+			   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    break;
 	case CAN_BUS_OFF:
+	    logMsg("devBiCan: Bus Off event from %s\n",
+			   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
     }
-    callbackRequest(&pbus->callback);
 }
 
 LOCAL void busCallback (

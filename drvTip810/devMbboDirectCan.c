@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbboDirectCan.c,v 1.2 1997-06-19 16:57:21 anj Exp $
+    $Id: devMbboDirectCan.c,v 1.3 1998-08-20 19:00:12 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -24,6 +24,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <wdLib.h>
+#include <logLib.h>
 
 #include <errMdef.h>
 #include <devLib.h>
@@ -91,7 +92,7 @@ LOCAL long init_mbboDirect (
 
     if (prec->out.type != INST_IO) {
 	recGblRecordError(S_db_badField, (void *) prec,
-			  "devMbboDirectCan (init_record) Illegal INP field");
+			  "devMbboDirectCan (init_record) Illegal OUT field");
 	return S_db_badField;
     }
 
@@ -204,11 +205,7 @@ LOCAL long write_mbboDirect (
 
     switch (pcanMbboDirect->status) {
 	case COMM_ALARM:
-	    recGblSetSevr(prec, pcanMbboDirect->status, MAJOR_ALARM);
-	    pcanMbboDirect->status = NO_ALARM;
-	    return ERROR;
-	case READ_ALARM:
-	    recGblSetSevr(prec, COMM_ALARM, MINOR_ALARM);
+	    recGblSetSevr(prec, pcanMbboDirect->status, INVALID_ALARM);
 	    pcanMbboDirect->status = NO_ALARM;
 	    return ERROR;
 
@@ -238,7 +235,7 @@ LOCAL long write_mbboDirect (
 			printf("canMbboDirect %s: canWrite status=%#x\n", status);
 		    #endif
 
-		    recGblSetSevr(prec, TIMEOUT_ALARM, MINOR_ALARM);
+		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);
 		    return ERROR;
 		}
 		return 0;
@@ -271,16 +268,21 @@ LOCAL void busSignal (
     
     switch(status) {
 	case CAN_BUS_OK:
+	    logMsg("devMbboDirectCan: Bus Ok event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = NO_ALARM;
-	    return;
+	    break;
 	case CAN_BUS_ERROR:
-	    pbus->status = READ_ALARM;
+	    logMsg("devMbboDirectCan: Bus Error event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    break;
 	case CAN_BUS_OFF:
+	    logMsg("devMbboDirectCan: Bus Off event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
     }
-    callbackRequest(&pbus->callback);
 }
 
 LOCAL void busCallback (

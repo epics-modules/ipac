@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.2 1997-06-19 16:57:14 anj Exp $
+    $Id: devAoCan.c,v 1.3 1998-08-20 19:00:05 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -24,6 +24,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <wdLib.h>
+#include <logLib.h>
 
 #include <errMdef.h>
 #include <devLib.h>
@@ -97,7 +98,7 @@ LOCAL long init_ao (
 
     if (prec->out.type != INST_IO) {
 	recGblRecordError(S_db_badField, (void *) prec,
-			  "devAoCan (init_record) Illegal INP field");
+			  "devAoCan (init_record) Illegal OUT field");
 	return S_db_badField;
     }
 
@@ -237,11 +238,7 @@ LOCAL long write_ao (
 
     switch (pcanAo->status) {
 	case COMM_ALARM:
-	    recGblSetSevr(prec, pcanAo->status, MAJOR_ALARM);
-	    pcanAo->status = NO_ALARM;
-	    return ERROR;
-	case READ_ALARM:
-	    recGblSetSevr(prec, COMM_ALARM, MINOR_ALARM);
+	    recGblSetSevr(prec, pcanAo->status, INVALID_ALARM);
 	    pcanAo->status = NO_ALARM;
 	    return ERROR;
 
@@ -290,7 +287,7 @@ LOCAL long write_ao (
 			printf("canAo %s: canWrite status=%#x\n", status);
 		    #endif
 
-		    recGblSetSevr(prec, TIMEOUT_ALARM, MINOR_ALARM);
+		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);
 		    return ERROR;
 		}
 		return 0;
@@ -347,16 +344,21 @@ LOCAL void busSignal (
     
     switch(status) {
 	case CAN_BUS_OK:
-	    pbus->status = NO_ALARM;
-	    return;
+	    logMsg("devAoCan: Bus Ok event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
+		pbus->status = NO_ALARM;
+	    break;
 	case CAN_BUS_ERROR:
-	    pbus->status = READ_ALARM;
+	    logMsg("devAoCan: Bus Error event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    break;
 	case CAN_BUS_OFF:
+	    logMsg("devAoCan: Bus Off event from %s\n",
+	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
     }
-    callbackRequest(&pbus->callback);
 }
 
 LOCAL void busCallback (

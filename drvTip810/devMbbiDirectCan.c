@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.5 1998-08-19 08:36:44 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.6 1998-08-20 19:00:09 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -24,6 +24,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <wdLib.h>
+#include <logLib.h>
 
 #include <errMdef.h>
 #include <devLib.h>
@@ -223,11 +224,7 @@ LOCAL long read_mbbiDirect (
     switch (pcanMbbiDirect->status) {
 	case TIMEOUT_ALARM:
 	case COMM_ALARM:
-	    recGblSetSevr(prec, pcanMbbiDirect->status, MAJOR_ALARM);
-	    pcanMbbiDirect->status = NO_ALARM;
-	    return DO_NOT_CONVERT;
-	case READ_ALARM:
-	    recGblSetSevr(prec, COMM_ALARM, MINOR_ALARM);
+	    recGblSetSevr(prec, pcanMbbiDirect->status, INVALID_ALARM);
 	    pcanMbbiDirect->status = NO_ALARM;
 	    return DO_NOT_CONVERT;
 
@@ -306,16 +303,21 @@ LOCAL void busSignal (
     
     switch(status) {
 	case CAN_BUS_OK:
-	    pbus->status = NO_ALARM;
-	    return;
+	    logMsg("devMbbiDirectCan: Bus Ok event from %s\n",
+		   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
+		pbus->status = NO_ALARM;
+	    break;
 	case CAN_BUS_ERROR:
-	    pbus->status = READ_ALARM;
+	    logMsg("devMbbiDirectCan: Bus Error event from %s\n",
+		   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    break;
 	case CAN_BUS_OFF:
+	    logMsg("devMbbiDirectCan: Bus Off event from %s\n",
+		   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
+	    callbackRequest(&pbus->callback);
 	    break;
     }
-    callbackRequest(&pbus->callback);
 }
 
 LOCAL void busCallback (
