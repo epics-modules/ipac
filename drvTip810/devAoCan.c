@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.9 2002-04-17 19:30:49 anj Exp $
+    $Id: devAoCan.c,v 1.10 2003-03-04 21:06:13 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -51,6 +51,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <callback.h>
 #include <cvtTable.h>
 #include <link.h>
+#include <alarm.h>
+#include <recGbl.h>
 #include <recSup.h>
 #include <devSup.h>
 #include <dbCommon.h>

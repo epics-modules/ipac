@@ -16,7 +16,7 @@ Authors:
 Created:
     25 August 1998
 Version:
-    $Id: devSiWiener.c,v 1.2 2002-04-17 19:30:50 anj Exp $
+    $Id: devSiWiener.c,v 1.3 2003-03-04 21:06:16 anj Exp $
 
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
@@ -51,6 +51,8 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 #include <callback.h>
 #include <cvtTable.h>
 #include <link.h>
+#include <alarm.h>
+#include <recGbl.h>
 #include <recSup.h>
 #include <devSup.h>
 #include <dbCommon.h>

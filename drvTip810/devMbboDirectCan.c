@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbboDirectCan.c,v 1.9 2002-04-17 19:30:50 anj Exp $
+    $Id: devMbboDirectCan.c,v 1.10 2003-03-04 21:06:16 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -47,6 +47,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <dbScan.h>
 #include <callback.h>
 #include <cvtTable.h>
+#include <alarm.h>
+#include <recGbl.h>
 #include <link.h>
 #include <recSup.h>
 #include <devSup.h>

@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.4 2000-02-21 21:36:09 anj Exp $
+    $Id: devBiTip810.c,v 1.5 2003-03-04 21:06:14 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -39,6 +39,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 #include	<dbDefs.h>
 #include	<dbAccess.h>
+#include	<recGbl.h>
 #include        <recSup.h>
 #include	<devSup.h>
 #include	<devLib.h>
