@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.2 1999-03-08 20:00:13 anj Exp $
+    $Id: drvIpMv162.c,v 1.3 1999-07-28 20:37:50 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -111,7 +111,8 @@ Returns:
 
 LOCAL int initialise (
     char *cardParams,
-    void **pprivate
+    void **pprivate,
+    ushort_t carrier
 ) {
     static int initialised = FALSE;
     ushort_t slot;
@@ -338,6 +339,7 @@ ipac_carrier_t ipmv162 = {
     initialise,
     NULL,
     baseAddr,
-    irqCmd
+    irqCmd,
+    NULL
 };
 

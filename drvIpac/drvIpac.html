@@ -5,8 +5,8 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.3 1999-03-09 20:19:10 anj Exp $">
-   <meta name="GENERATOR" content="Mozilla/4.5 [en] (X11; U; SunOS 5.6 sun4u) [Netscape]">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.4 1999-07-28 20:37:53 anj Exp $">
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; SunOS 5.6 sun4u) [Netscape]">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body>
@@ -15,7 +15,8 @@
 <h1>
 drvIpac - Industry Pack Driver</h1></center>
 
-<center>Version 2.0</center>
+<center>Version 2.1<font color="#000000"> </font><b><font color="#FF0000">draft
+A</font></b></center>
 
 <center>
 <address>
@@ -27,7 +28,7 @@ Andrew Johnson</address></center>
 
 <ul>
 <li>
-&nbsp;<a href="#Installation">Installation</a></li>
+<a href="#Installation">Installation</a></li>
 </ul>
 
 <li>
@@ -61,6 +62,9 @@ Andrew Johnson</address></center>
 <a href="#ipmIrqCmd">ipmIrqCmd</a></li>
 
 <li>
+<a href="#ipmIntConnect">ipmIntConnect</a></li>
+
+<li>
 <a href="#ipmReport">ipmReport</a></li>
 </ul>
 
@@ -76,6 +80,9 @@ Andrew Johnson</address></center>
 
 <li>
 <a href="#VIPC616">GreenSpring VIPC616</a></li>
+
+<li>
+<a href="#ATC40">GreenSpring ATC40</a></li>
 
 <li>
 <a href="#MVME162">Motorola MVME162</a></li>
@@ -129,11 +136,11 @@ the CANbus driver but provided within an EPICS &lt;supporttop> application
 which can also be used to build IPAC module drivers. To install and use
 the the ipac support, obtain a copy of the tar file or (if you have remote
 CVS permissions at APS) export the software from the CVS repository where
-it resides as <tt>epics/unbundled/ipac</tt> - a CVS tag `<b><tt>V2-0</tt></b>'
-has been created in the repository for the file versions required for this
-release. These instructions assume you already have EPICS R3.13.x installed
-and built (this software should work with EPICS R3.13.0.beta11 and later).
-Two steps are then required to install and build the software:
+it resides as <tt>epics/unbundled/ipac</tt> - CVS tags of the form `<b><tt>V2-1</tt></b>'
+mark the particular file versions required for each release. These instructions
+assume you already have EPICS R3.13.x installed and built (this software
+should work with EPICS R3.13.0.beta11 and later). Two steps are then required
+to install and build the software:
 <ol>
 <li>
 Edit the config/RELEASE file and set the correct path for EPICS_BASE at
@@ -145,6 +152,30 @@ Run gnumake in the top level directory.</li>
 If you don't need all of the module drivers included with the distribution,
 you may wish to edit the top level Makefile and comment out the lines mentioning
 driver directories you don't need.
+<h3>
+<a NAME="Bus Issues"></a>Bus Issues</h3>
+From version 2-1 this software supports little-endian as well as big-endian
+busses, and provides a means of isolating module drivers from some of the
+differences between interrrupt handling on different busses.
+<p>The endian problem only exists when accessing I/O registers and the
+IPAC ID PROM using byte addresses. If all accesses occur using 16-bit read/write
+cycles then the problem disappears. This is usually done by changing the
+structure that declares the structure of a module's registers to use <tt>short</tt>
+instead of <tt>char</tt> and removing the `padding' char members that separate
+the registers (this change has been made to the <tt>ipac_idProm_t</tt>
+structure which is declared in <i>drvIpac.h</i>). This done the other changes
+are generally minor, usually consisting of masking off the top 8 bits of
+every value read from the hardware.
+<p>Some busses such as ISAbus do not support interrupt vectors and require
+a different approach to connecting Interrupt Service Routines up to the
+relevent hardware interrupts, although the IndustryPack standard does require
+that any IP module that generates interrupts should provide a vector. On
+ISA bus carriers this vector can be read by the carrier driver to work
+out which module caused the interrupt. A module driver should not need
+to know about the particular bus type its carrier is on, thus ipac now
+provides the routine <a href="#ipmIntConnect">ipmIntConnect</a> to allow
+it to pass such issues off to the carrier driver to handle. The interface
+to this is very similar to the standard vxWorks intConnect routine.
 <p>
 <hr>
 <h2>
@@ -223,6 +254,14 @@ the following structures which can be used here:</dd>
 <td>drvVipc616</td>
 
 <td><tt>&amp;vipc616</tt></td>
+</tr>
+
+<tr>
+<td><b>GreenSpring ATC40</b></td>
+
+<td>drvAtc40</td>
+
+<td>&amp;atc40</td>
 </tr>
 
 <tr>
@@ -360,9 +399,9 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>0&nbsp;</td>
+<td>0</td>
 
-<td>OK.&nbsp;</td>
+<td>OK.</td>
 </tr>
 </table></center>
 
@@ -403,9 +442,9 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>0&nbsp;</td>
+<td>0</td>
 
-<td>OK.&nbsp;</td>
+<td>OK.</td>
 </tr>
 </table></center>
 
@@ -559,7 +598,7 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>S_IPAC_badAddress&nbsp;</td>
+<td>S_IPAC_badAddress</td>
 
 <td>Bad carrier or slot number</td>
 </tr>
@@ -571,15 +610,15 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>S_IPAC_noModule&nbsp;</td>
+<td>S_IPAC_noModule</td>
 
 <td>No IP module installed</td>
 </tr>
 
 <tr>
-<td>S_IPAC_noIpacId&nbsp;</td>
+<td>S_IPAC_noIpacId</td>
 
-<td>"IPAC" identifier not found&nbsp;</td>
+<td>"IPAC" identifier not found</td>
 </tr>
 </table></center>
 
@@ -663,7 +702,7 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>S_IPAC_badAddress&nbsp;</td>
+<td>S_IPAC_badAddress</td>
 
 <td>Bad carrier or slot number</td>
 </tr>
@@ -675,15 +714,15 @@ Returns</h4>
 </tr>
 
 <tr>
-<td>S_IPAC_noModule&nbsp;</td>
+<td>S_IPAC_noModule</td>
 
 <td>No IP module installed</td>
 </tr>
 
 <tr>
-<td>S_IPAC_noIpacId&nbsp;</td>
+<td>S_IPAC_noIpacId</td>
 
-<td>"IPAC" identifier not found&nbsp;</td>
+<td>"IPAC" identifier not found</td>
 </tr>
 </table></center>
 
@@ -867,6 +906,87 @@ used.
 <p>
 <hr>
 <h3>
+<a NAME="ipmIntConnect"></a>ipmIntConnect</h3>
+Connects a module driver Interrupt Service Routine to a particular interrupt
+vector number.
+<pre>int ipmIntConnect (ushort_t carrier, ushort_t slot, ushort_t vecNum,&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; void (*routine)(int parameter), int parameter);</pre>
+
+<h4>
+Parameters</h4>
+
+<dl>
+<dt>
+<tt>ushort_t carrier, ushort_t slot</tt></dt>
+
+<dd>
+Module identification - see <a href="#carrierSlot">above</a></dd>
+
+<dt>
+<tt>ushort_t vecNum</tt></dt>
+
+<dd>
+Interrupt vector number</dd>
+
+<dt>
+<tt>void (*routine)(int parameter)</tt></dt>
+
+<dd>
+Modules Interrupt Service Routine to be connected</dd>
+
+<dt>
+<tt>int parameter</tt></dt>
+
+<dd>
+Context parameter passed to Interrupt Service Routine</dd>
+</dl>
+
+<h4>
+Description</h4>
+Checks input parameters, then passes the request to the carrier driver
+routine.&nbsp; If no carrier routine is provided it uses the standard vxWorks
+intConnect routine instead.&nbsp; This is not quite a direct replacement
+for the vxWorks intConnect call; as well as providing the carrier and slot
+numbers the module driver must not use the INUM_TO_IVEC(vecNum) macro but
+just pass the vector number to this routine.
+<p>VxWorks' interrupt vectoring mechanism varies between bus types, and
+ipmIntConnect allows a module driver to connect its routine to an interrupt
+vector from a particular IPAC module without knowing the requirements of
+the particular bus type. Some carrier drivers will need to maintain a private
+interrupt dispatch table if the bus type (i.e. ISA) does not support interrupt
+vectoring.
+<h4>
+Returns</h4>
+
+<blockquote>
+<pre>int</pre>
+</blockquote>
+
+<center><table BORDER >
+<tr BGCOLOR="#FFFFFF">
+<td><b>Symbol/Value</b></td>
+
+<td><b>Meaning</b></td>
+</tr>
+
+<tr>
+<td>0</td>
+
+<td>OK</td>
+</tr>
+
+<tr>
+<td>S_IPAC_badAddress</td>
+
+<td>No such carrier, slot or vector</td>
+</tr>
+</table></center>
+
+<p>Other values may also be returned depending on the Driver and vector
+used.
+<p>
+<hr WIDTH="100%">
+<h3>
 <a NAME="ipmReport"></a>ipmReport</h3>
 Returns a printable string giving the status/settings of the given slot.
 <pre>char *ipmReport(ushort_t carrier, ushort_t slot);</pre>
@@ -911,7 +1031,7 @@ This string is made up of three parts. The first two elements before the
 colon give the carrier and slot number of the slot. If a module is installed,
 the manufacturer and model IDs follow as two hex numbers. Finally if the
 Carrier Driver contains a report function it is called and the string it
-returns is appended after the hyphen.&nbsp;
+returns is appended after the hyphen.
 <hr>
 <h2>
 <a NAME="section4"></a>4. IPAC Carrier Drivers</h2>
@@ -1214,11 +1334,29 @@ is listening on the necessary level.
 <p>
 <hr>
 <h3>
-<a NAME="MVME162"></a>Motorola MVME162</h3>
+<a NAME="ATC40"></a>GreenSpring ATC40</h3>
+The GreenSpring ATC40 is an IP carrier board for the ISAbus, which is a
+little-endian architecture unlike the VMEbus. Providing support for this
+board has required some changes to the drvIpac software which are described
+in the <a href="#Bus Issues">Bus Issues</a> section above. Unless similar
+precautions are taken when writing module drivers these will not be compatible
+with little-endian systems. This carrier driver was written by <a href="mailto:peregrine@lanl.gov">Peregrine
+McGehee</a> and <a href="mailto:johill@lanl.gov">Jeff Hill</a>, who should
+be approached directly for support. Note that the carrier driver source
+file <i>drvIpac/drvAtc40.c</i> will only compile properly for x86 CPUs,
+and as shipped this file is commented out in <i>drvIpac/Makefile.Vx</i>.
+<br>
+<hr WIDTH="100%">
+<h3>
+<a NAME="MVME162"></a>Motorola MVME162 and MVME172</h3>
 The Motorola MVME162 CPU board provides four IP slots in addition to the
-CPU, memory and I/O. Slot pairs can be used with 32-bit dual-slot IP modules,
-and the IPIC chip which controls the interface supports all of the IPAC
-Driver interrupter commands.
+MC68040 CPU, memory and I/O. Slot pairs can be used with 32-bit dual-slot
+IP modules, and the IPIC chip which controls the interface supports all
+of the IPAC Driver interrupter commands. The Motorola MVME172 CPU board
+uses exactly the same IPIC chip and thus is compatible with the MVME162,
+although physically it only has two IP slots. The same software can be
+used on either board, although slots C and D on an MVME172 will always
+appear to be empty.
 <p>When this CPU board is used the IPAC carrier driver <i>drvIpMv162.c</i>
 can control the IP slots on the board. The <tt>ipacAddCarrier</tt> carrier
 descriptor table parameter is <tt>ipmv162</tt> for this driver. The carrier
@@ -1375,11 +1513,13 @@ static variables may be used to hold information about the carrier provided
 these are protected from simultaneous updates by different tasks.
 <p>The sole interface between the Carrier Driver and the IPAC driver is
 through the <tt>ipac_carrier_t</tt> typedef structure given in the header
-file. This is defined as follows:
+file. Note that this has changed slightly since version 2.0 with the addition
+of the carrier parameter to the initialise routine, and the new intConnect
+routine. This is defined as follows:
 <pre>typedef struct {
 &nbsp;&nbsp;&nbsp; char *carrierType;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* String describing carrier board type */
 </i>&nbsp;&nbsp;&nbsp; ushort_t numberSlots;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* Number of IPAC devices this carrier can hold */
-</i>&nbsp;&nbsp;&nbsp; int (*initialise)(char *cardParams, void **cPrivate);
+</i>&nbsp;&nbsp;&nbsp; int (*initialise)(char *cardParams, void **cPrivate, ushort_t carrier);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* Initialise carrier and return *cPrivate */
 </i>&nbsp;&nbsp;&nbsp; char *(*report)(void *cPrivate, ushort_t slot);
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* Return string giving status of this slot */
@@ -1387,6 +1527,9 @@ file. This is defined as follows:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* Return base addresses for this slot */
 </i>&nbsp;&nbsp;&nbsp; int (*irqCmd)(void *cPrivate, ushort_t slot, ushort_t irqNumber,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ipac_irqCmd_t cmd);&nbsp; <i>/* Interrupt control */
+</i>&nbsp;&nbsp;&nbsp; int (*intConnect)(void *cPrivate, ushort_t slot, ushort_t vecNum,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; void (*routine)(int parameter), int parameter);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>/* Connect routine to interrupt vector */
 </i>} ipac_carrier_t;</pre>
 The first two structure members provide fixed information about the carrier
 to the IPAC driver. <tt>carrierType</tt> is a string which is printed by
@@ -1401,6 +1544,9 @@ carrier board (for example the board base address). The IPAC driver stores
 the <tt>cPrivate</tt> pointer which is returned by the <tt>initialise</tt>
 routine, and passes the same pointer back to the other routines when referring
 to that particular carrier board at a later stage.
+<p>The intConnect function pointer may be set to NULL&nbsp;if the standard
+vxWorks intConnect provides all the funtionality needed to install an interrupt
+vector - this is probably only needed for ISA bus carriers.
 <p>The other parameters to the routines are identical to those described
 in detail in the corresponding IPAC Driver routines above. The IPAC Driver
 performs parameter checking on the <tt>slot</tt> and <tt>irqNumber</tt>

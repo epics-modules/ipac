@@ -17,7 +17,7 @@ Author:
 Created:
     5 July 1995
 Version:
-    $Id: drvVipc310.c,v 1.2 1999-03-08 20:00:13 anj Exp $
+    $Id: drvVipc310.c,v 1.3 1999-07-28 20:37:54 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -114,7 +114,8 @@ Returns:
 
 LOCAL int initialise (
     char *cardParams,
-    void **pprivate
+    void **pprivate,
+    ushort_t carrier
 ) {
     int params, status1 = OK, status2 = OK, mSize = 0;
     long ioBase, mOrig, mBase;
@@ -260,6 +261,7 @@ ipac_carrier_t vipc310 = {
     initialise,
     NULL,
     baseAddr,
-    irqCmd
+    irqCmd,
+    NULL
 };
 

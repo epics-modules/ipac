@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.3 1997-06-19 16:57:23 anj Exp $
+    $Id: drvIpac.c,v 1.4 1999-07-28 20:37:51 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -30,6 +30,8 @@ Version:
 #include <stdlib.h>
 #include <string.h>
 #include <vxLib.h>
+#include <intLib.h>
+#include <iv.h>
 #include "drvIpac.h"
 
 
@@ -55,7 +57,7 @@ LOCAL struct {
 LOCAL ipac_carrier_t nullCarrier = {
     "Null carrier (place holder)",
     0,			/* No slots */
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL
 };
 
 LOCAL struct carrierInfo nullInfo = {
@@ -124,6 +126,7 @@ int ipacAddCarrier (
     int status;
 
     if (carriers.number >= IPAC_MAX_CARRIERS) {
+	printf("ipacAddCarrier: Too many carriers registered.\n");
 	return S_IPAC_tooMany;
     }
 
@@ -137,11 +140,14 @@ int ipacAddCarrier (
 	pcarrierTable->initialise == NULL ||
 	pcarrierTable->baseAddr == NULL ||
 	pcarrierTable->irqCmd == NULL) {
+	printf("ipacAddCarrier: Bad carrier table (arg 1).\n");
 	return S_IPAC_badTable;
     }
 
-    status = pcarrierTable->initialise(cardParams, &cPrivate);
+    status = pcarrierTable->initialise(cardParams, &cPrivate, carriers.number);
     if (status) {
+	printf("ipacAddCarrier: %s driver returned an error.\n", 
+		pcarrierTable->carrierType);
 	return status;
     }
 
@@ -180,7 +186,7 @@ int ipmCheck (
     ushort_t slot
 ) {
     ipac_idProm_t *id;
-    char dummy;
+    ushort_t dummy;
 
     if (carrier >= carriers.number ||
 	slot >= carriers.info[carrier]->driver->numberSlots) {
@@ -192,15 +198,27 @@ int ipmCheck (
 	return S_IPAC_badDriver;
     }
 
-    if (vxMemProbe((void *)&id->asciiI, READ, 1, &dummy)) {
+    if (vxMemProbe((void *)&id->asciiI, READ, sizeof(dummy), (char *)&dummy)) {
 	return S_IPAC_noModule;
     }
-
-    if (id->asciiI != 'I' ||
-	id->asciiP != 'P' ||
-	id->asciiA != 'A' ||
-	id->asciiC != 'C') {
-	return S_IPAC_noIpacId;	/* Not an IPAC */
+    
+    /*
+     * The following code is deliberately de-optimized to fix a problem with
+     * a particular GPIB module which can't handle the back-to-back accesses
+     * that the compiler generates if you combine the conditions in one if.
+     */
+    
+    if ((id->asciiI & 0xff) != 'I') {
+	return S_IPAC_noIpacId;
+    }
+    if ((id->asciiP & 0xff) != 'P') {
+	return S_IPAC_noIpacId;
+    }
+    if ((id->asciiA & 0xff) != 'A') {
+	return S_IPAC_noIpacId;
+    }
+    if ((id->asciiC & 0xff) != 'C') {
+	return S_IPAC_noIpacId;
     }
 
     return OK;
@@ -227,16 +245,16 @@ Returns:
 */
 
 LOCAL int checkCRC (
-    uchar_t *data, 
+    uint16_t *data, 
     ushort_t length
 ) {
     uint_t i, crc = 0xffff;
-    uchar_t mask;
+    uint16_t mask;
 
-    for (i = 1; i < 2*length; i += 2) {
+    for (i = 0; i < length; i++) {
 	mask = 0x80;
 	while (mask) {
-	    if ((data[i] & mask) && (i != 0x17)) {
+	    if ((data[i] & mask) && (i != 0xb)) {
 		crc ^= 0x8000;
 	    }
 	    crc += crc;
@@ -282,6 +300,7 @@ int ipmValidate (
     uchar_t modelId
 ) {
     ipac_idProm_t *id;
+    int crc;
     int status;
 
     status = ipmCheck(carrier, slot);
@@ -290,7 +309,8 @@ int ipmValidate (
     }
 
     id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-    if (checkCRC((uchar_t *) id, id->bytesUsed) != id->CRC) {
+    crc = checkCRC((uint16_t *) id, id->bytesUsed);
+    if (crc != (id->CRC & 0xff)) {
 	return S_IPAC_badCRC;
     }
 
@@ -443,6 +463,58 @@ int ipmIrqCmd (
 /*******************************************************************************
 
 Routine:
+    ipmIntConnect
+
+Function:
+    Connect module driver to interrupt vector number
+
+Description:
+    Checks input parameters, then passes the request to the carrier driver 
+    routine.  If no carrier routine is provided it calls the standard vxWorks
+    intConnect routine instead.  This is not quite a straight replacement for
+    intConnect; as well as providing the carrier and slot numbers the module
+    driver must not use the INUM_TO_IVEC() macro but just give the vector
+    number.
+
+    VxWorks' interrupt vectoring mechanism varies between bus types, and this
+    routine allows a module driver to connect its routine to an interrupt
+    vector from a  particular IPAC module without knowing the requirements of
+    the particular bus type.  Some carrier drivers will need to maintain a
+    private interrupt dispatch table if the bus type (i.e. ISA) does not
+    support interrupt vectoring.
+
+Returns:
+    0 = OK,
+    S_IPAC_badAddress = illegal carrier, slot or vector
+
+*/
+int ipmIntConnect (
+	ushort_t carrier, 
+	ushort_t slot, 
+	ushort_t vecNum, 
+	void (*routine)(int parameter), 
+	int parameter
+) {
+    if (vecNum > 0xff ||
+    	carrier >= carriers.number ||
+	slot >= carriers.info[carrier]->driver->numberSlots) {
+	return S_IPAC_badAddress;
+    }
+
+    /* Use intConnect if carrier driver doesn't provide one */
+    if (carriers.info[carrier]->driver->intConnect == NULL) {
+    	return intConnect (INUM_TO_IVEC(vecNum), routine, parameter);
+    }
+
+    return carriers.info[carrier]->driver->intConnect(
+		carriers.info[carrier]->cPrivate, slot, vecNum, 
+		routine, parameter);
+}
+
+
+/*******************************************************************************
+
+Routine:
     ipacReport
 
 Function:
@@ -471,23 +543,23 @@ int ipacReport (
 		carriers.info[carrier]->driver->numberSlots);
 
 	if (interest > 0) {
-	    long memBase, io32Base;
+	    void *memBase, *io32Base;
 
 	    for (slot=0; slot < carriers.info[carrier]->driver->numberSlots; 
 		 slot++) {
 		printf("    %s\n", ipmReport(carrier, slot));
 
 		if (interest > 1) {
-		    printf("      ID = 0x%lx, I/O = 0x%lx", 
-			    (long) ipmBaseAddr(carrier, slot, ipac_addrID),
-			    (long) ipmBaseAddr(carrier, slot, ipac_addrIO));
-		    io32Base = (long) ipmBaseAddr(carrier, slot, ipac_addrIO32);
+		    printf("      ID = %p, I/O = %p", 
+			    ipmBaseAddr(carrier, slot, ipac_addrID),
+			    ipmBaseAddr(carrier, slot, ipac_addrIO));
+		    io32Base = ipmBaseAddr(carrier, slot, ipac_addrIO32);
 		    if (io32Base != NULL) {
-			printf(", I/O32 = 0x%lx", io32Base);
+			printf(", I/O32 = %p", io32Base);
 		    }
-		    memBase = (long) ipmBaseAddr(carrier, slot, ipac_addrMem);
+		    memBase = ipmBaseAddr(carrier, slot, ipac_addrMem);
 		    if (memBase != NULL) {
-			printf(", Mem = 0x%lx", memBase);
+			printf(", Mem = %p", memBase);
 		    }
 		    printf("\n");
 		}

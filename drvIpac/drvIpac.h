@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.3 1999-03-09 20:24:32 anj Exp $
+    $Id: drvIpac.h,v 1.4 1999-07-28 20:37:52 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -56,37 +56,27 @@ extern "C" {
 #define S_IPAC_badCRC     (M_ipac| 7) /*IPAC CRC Check failed*/
 #define S_IPAC_badModule  (M_ipac| 8) /*IPAC Manufacturer or model ID wrong*/
 #define S_IPAC_notImplemented (M_ipac| 9) /*IPAC Driver command not available*/
+#define S_IPAC_badVector (M_ipac| 10) /*Bad interrupt vector*/
+#define S_IPAC_vectorInUse (M_ipac| 11) /*Interrupt vector in use*/
+#define S_IPAC_badIntLevel (M_ipac| 12) /*Bad interrupt level*/
 
 
 /* Structure of the IPAC ID Prom, located in the pack ID space. */
 
 typedef volatile struct {
-    uchar_t pad00;
-    uchar_t asciiI;
-    uchar_t pad02;
-    uchar_t asciiP;
-    uchar_t pad04;
-    uchar_t asciiA;
-    uchar_t pad06;
-    uchar_t asciiC;
-    uchar_t pad08;
-    uchar_t manufacturerId;
-    uchar_t pad0a;
-    uchar_t modelId;
-    uchar_t pad0c;
-    uchar_t revision;
-    uchar_t pad0e;
-    uchar_t reserved;
-    uchar_t pad10;
-    uchar_t driverIdLow;
-    uchar_t pad12;
-    uchar_t driverIdHigh;
-    uchar_t pad14;
-    uchar_t bytesUsed;
-    uchar_t pad16;
-    uchar_t CRC;
-    uchar_t pad18;
-    uchar_t packSpecific[0x3f-0x18];
+    uint16_t asciiI;
+    uint16_t asciiP;
+    uint16_t asciiA;
+    uint16_t asciiC;
+    uint16_t manufacturerId;
+    uint16_t modelId;
+    uint16_t revision;
+    uint16_t reserved;
+    uint16_t driverIdLow;
+    uint16_t driverIdHigh;
+    uint16_t bytesUsed;
+    uint16_t CRC;
+    uint16_t packSpecific[52];
 } ipac_idProm_t;
 
 
@@ -104,7 +94,7 @@ typedef enum {
 
 
 /* The following are the possible commands to the carrier driver to 
-   handle interrupts from the IP modules.  Some carriers will only be 
+   handle interrupts from the IP modules.  Most carriers will only be 
    able to implement a subset of these commands.  Note that irqEnable 
    should call the vxWorks sysBusEnable routine if this is needed to 
    pass the carrier interrupts through to the CPU. */
@@ -139,15 +129,18 @@ typedef struct {
 			/* String containing carrier board type */
     ushort_t numberSlots;
 			/* Number of IPAC devices this carrier can hold */
-    int (*initialise)(char *cardParams, void **cPrivate);
+    int (*initialise)(char *cardParams, void **cPrivate, ushort_t carrier);
 			/* Initialise carrier and return *cPrivate */
     char *(*report)(void *cPrivate, ushort_t slot);
 			/* Return string with giving status of this slot */
     void *(*baseAddr)(void *cPrivate, ushort_t slot, ipac_addr_t space);
 			/* Return base addresses for this slot */
     int (*irqCmd)(void *cPrivate, ushort_t slot, 
-                  ushort_t irqNumber, ipac_irqCmd_t cmd);
-			/* interrupt manipulation */
+		ushort_t irqNumber, ipac_irqCmd_t cmd);
+			/* Interrupt manipulation */
+    int (*intConnect)(void *cPrivate, ushort_t slot, ushort_t vecNum, 
+		void (*routine)(int parameter), int parameter);
+			/* Connect routine to interrupt vector */
 } ipac_carrier_t;
 
 
@@ -162,11 +155,13 @@ extern int ipacInitialise(int after);
 
 extern int ipmCheck(ushort_t carrier, ushort_t slot);
 extern int ipmValidate(ushort_t carrier, ushort_t slot,
-		       uchar_t manufacturerId, uchar_t modelId);
+		uchar_t manufacturerId, uchar_t modelId);
 extern char *ipmReport(ushort_t carrier, ushort_t slot);
 extern void *ipmBaseAddr(ushort_t carrier, ushort_t slot, ipac_addr_t space);
 extern int ipmIrqCmd(ushort_t carrier, ushort_t slot, 
-		     ushort_t irqNumber, ipac_irqCmd_t cmd);
+		ushort_t irqNumber, ipac_irqCmd_t cmd);
+extern int ipmIntConnect(ushort_t carrier, ushort_t slot, ushort_t vector, 
+		void (*routine)(int parameter), int parameter);
 
 
 #ifdef __cplusplus
