@@ -210,7 +210,7 @@ LOCAL int tyGSOctalRebootHook(int type)
  * For example:
  * .CS
  *    int idx;
- *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
+ *    idx = tyGSOctalModuleInit("SBS232-1", "232", 0x60, 0, 1);
  * .CE
  *
  *
@@ -385,12 +385,12 @@ int tyGSOctalModuleInit
  * to be used should have exactly one device associated with it by calling
  * this routine.
  *
- * For instance, to create the device "/tyGSOctal/0/1/3", with buffer 
- * sizes of 512 bytes, the proper calls would be:
+ * For instance, to create the device "/SBS/0,1/3", with buffer sizes 
+ * of 512 bytes, the proper calls would be:
  * .CS
- *    int idx, dev;
- *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
- *    dev = tyGSOctalDevCreate ("/tyGSOctal/0/1/3", idx, 3, 512, 512);
+ *    if (tyGSOctalModuleInit("232-1", "232", 0x60, 0, 1) != ERROR) {
+ *       char *nam = tyGSOctalDevCreate ("/SBS/0,1/3", "232-1", 3, 512, 512);
+ * }
  * .CE
  *
  * RETURNS: Pointer to device name, or NULL if the driver is not
@@ -453,9 +453,9 @@ const char * tyGSOctalDevCreate
  * For instance, to create devices "/tyGS/0/0" through "/tyGS/0/7", with
  * buffer sizes of 512 bytes, the proper calls would be:
  * .CS
- *    int idx;
- *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
- *    tyGSOctalDevCreateAll ("/tyGS/0/", idx, 512, 512);
+ *    if (tyGSOctalModuleInit("232-1", "232", 0x60, 0, 1) != ERROR) {
+ *       tyGSOctalDevCreateAll ("/tyGS/0/", "232-1", 512, 512);
+ * }
  * .CE
  *
  * RETURNS: OK, or ERROR if the driver is not installed, or any device
