@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBiCan.c,v 1.4 1997-10-17 13:00:27 anj Exp $
+    $Id: devBiCan.c,v 1.5 1998-08-19 08:36:42 anj Exp $
 
 (c) 1995,1997 Royal Greenwich Observatory
 
@@ -290,7 +290,7 @@ LOCAL void biMessage (
     if (pcanBi->prec->scan == SCAN_IO_EVENT) {
 	pcanBi->status = NO_ALARM;
 	scanIoRequest(pcanBi->ioscanpvt);
-    } else {
+    } else if (pcanBi->status == TIMEOUT_ALARM) {
 	pcanBi->status = NO_ALARM;
 	wdCancel(pcanBi->wdId);
 	callbackRequest(&pcanBi->callback);

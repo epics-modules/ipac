@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiCan.c,v 1.4 1997-10-17 13:00:28 anj Exp $
+    $Id: devMbbiCan.c,v 1.5 1998-08-19 08:36:43 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -291,7 +291,7 @@ LOCAL void mbbiMessage (
     if (pcanMbbi->prec->scan == SCAN_IO_EVENT) {
 	pcanMbbi->status = NO_ALARM;
 	scanIoRequest(pcanMbbi->ioscanpvt);
-    } else {
+    } else if (pcanMbbi->status == TIMEOUT_ALARM) {
 	pcanMbbi->status = NO_ALARM;
 	wdCancel(pcanMbbi->wdId);
 	callbackRequest(&pcanMbbi->callback);

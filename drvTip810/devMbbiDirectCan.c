@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.4 1997-10-17 13:00:30 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.5 1998-08-19 08:36:44 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -291,7 +291,7 @@ LOCAL void mbbiDirectMessage (
     if (pcanMbbiDirect->prec->scan == SCAN_IO_EVENT) {
 	pcanMbbiDirect->status = NO_ALARM;
 	scanIoRequest(pcanMbbiDirect->ioscanpvt);
-    } else {
+    } else if (pcanMbbiDirect->status == TIMEOUT_ALARM) {
 	pcanMbbiDirect->status = NO_ALARM;
 	wdCancel(pcanMbbiDirect->wdId);
 	callbackRequest(&pcanMbbiDirect->callback);
