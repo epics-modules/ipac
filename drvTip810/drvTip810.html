@@ -1,0 +1,1409 @@
+<HTML>
+<HEAD>
+   <TITLE>drvTip810 - CAN Bus Driver </TITLE>
+   <META NAME="Author" CONTENT="Andrew Johnson">
+   <META NAME="Description" CONTENT="How to use the Tip810 CANbus driver software">
+   <META NAME="KeyWords" CONTENT="vxWorks, EPICS, CANbus, TEWS, tip810">
+</HEAD>
+<BODY>
+
+<H1 ALIGN=CENTER>drvTip810 - CAN Bus Driver </H1>
+
+<CENTER><P>Developed for Gemini and UKIRT<BR>
+TEWS Tip810 Driver for EPICS<BR>
+$Id: drvTip810.html,v 1.1 1998-05-29 14:37:50 anj Exp $ </P></CENTER>
+
+<CENTER><ADDRESS>Andrew Johnson
+<A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
+</ADDRESS></CENTER>
+
+<UL>
+<LI><A HREF="#section1">Introduction</A> </LI>
+
+<LI><A HREF="#section2">Tip810 Driver Usage</A></LI>
+
+<UL>
+<LI><A HREF="#t810Create">t810Create</A> </LI>
+
+<LI><A HREF="#t810Shutdown">t810Shutdown</A> </LI>
+
+<LI><A HREF="#t810Initialise">t810Initialise</A> </LI>
+
+<LI><A HREF="#t810Report">t810Report</A> </LI>
+
+<LI><A HREF="#canTest">canTest</A> </LI>
+</UL>
+
+<LI><A HREF="#section3">Routines for CANbus Applications</A></LI>
+
+<UL>
+<LI><A HREF="#canOpen">canOpen</A> </LI>
+
+<LI><A HREF="#canIoParse">canIoParse</A> </LI>
+
+<LI><A HREF="#canWrite">canWrite</A> </LI>
+
+<LI><A HREF="#canMessage">canMessage</A> </LI>
+
+<LI><A HREF="#canMsgDelete">canMsgDelete</A> </LI>
+
+<LI><A HREF="#canSignal">canSignal</A> </LI>
+
+<LI><A HREF="#canBusReset">canBusReset</A> </LI>
+
+<LI><A HREF="#canBusStop">canBusStop</A> </LI>
+
+<LI><A HREF="#canBusRestart">canBusRestart</A> </LI>
+
+<LI><A HREF="#canRead">canRead</A> </LI>
+</UL>
+</UL>
+
+<P><HR></P>
+
+<H2><A NAME="section1"></A>1. Introduction</H2>
+
+<P>This document describes the software interface to the TEWS TIP810
+Industry-Pack Module for vxWorks, written as part of an EPICS interface to
+the CANbus for the <A HREF="http://www.gemini.edu/">Gemini</A> and
+<A HREF="http://www.jach.hawaii.edu/UKIRT/home.html">UKIRT</A> telescopes. 
+This software is an IPAC Module Driver and uses the services of the drvIpac
+Industry Pack Driver to interface to the IPAC Carrier Board - see the
+accompanying document <A HREF="drvIpac.html">drvIpac - Industry Pack
+Driver</A> for details of this driver software. The device support routines
+provided for use with EPICS are described in the document <A
+HREF="devCan.html">devCan - CAN Bus Device Support</A> which briefly covers
+the use of the various record types supported. </P>
+
+<P>The following routines provided by this driver are described in detail
+below: </P>
+
+<UL>
+<LI><A HREF="#t810Create">t810Create</A> </LI>
+
+<LI><A HREF="#t810Shutdown">t810Shutdown</A> </LI>
+
+<LI><A HREF="#t810Initialise">t810Initialise</A> </LI>
+
+<LI><A HREF="#t810Report">t810Report</A> </LI>
+
+<LI><A HREF="#canTest">canTest</A> </LI>
+
+<LI><A HREF="#canOpen">canOpen</A> </LI>
+
+<LI><A HREF="#canIoParse">canIoParse</A> </LI>
+
+<LI><A HREF="#canWrite">canWrite</A> </LI>
+
+<LI><A HREF="#canMessage">canMessage</A> </LI>
+
+<LI><A HREF="#canMsgDelete">canMsgDelete</A> </LI>
+
+<LI><A HREF="#canSignal">canSignal</A> </LI>
+
+<LI><A HREF="#canBusReset">canBusReset</A> </LI>
+
+<LI><A HREF="#canBusStop">canBusStop</A> </LI>
+
+<LI><A HREF="#canBusRestart">canBusRestart</A> </LI>
+
+<LI><A HREF="#canRead">canRead</A> </LI>
+</UL>
+
+<P><HR></P>
+
+<H2><A NAME="section2"></A>2. Tip810 Driver Usage</H2>
+
+<P>The software provides an interface to higher level software which, other
+than device initialisation, is not specific to the TIP810 but could be used
+with a CANbus driver for a different hardware interface. The interface to the
+higher level software is provided in two header files: <I>canBus.h</I>
+contains all of the generic CANbus definitions and declarations, while
+<I>drvTip810.h</I> incorporates the additional declarations and definitions
+which are specific to the TIP810 module (and also <TT>#include</TT>s
+<I>canBus.h</I> and the vxWorks ANSI header file <I>types.h</I>). The
+routines which are specific to the TIP810 or meant for use from the vxWorks
+shell are described individually in this section, while the generic CANbus
+interface routines are described in <A HREF="#section3">section 3</A> below.
+</P>
+
+<P>The TEWS TIP810 IP module contains a Philips pca82c200 stand-alone
+CAN-controller chip which performs all of the CANbus interfacing functions.
+The interface to this chip is defined in a separate header file
+<I>pca82c200.h</I> which declares the register interface structure and the
+bit-patterns for the various chip registers. </P>
+
+<P>The driver uses an interrupt service routine with a different interrupt
+vector for each TIP810 module it controls, starting with vector 0x60 and
+increasing by one each time. </P>
+
+<P>The driver can be built for use in a native vxWorks (i.e. non-EPICS)
+application. To do this, the <I>drvTip810.c</I> file should be compiled with
+the <B><TT>-DNO_EPICS</TT></B> switch to disable the EPICS-specific code. </P>
+
+<P><HR></P>
+
+<H3><A NAME="t810Create"></A>t810Create</H3>
+
+<P>Registers a new TIP810 device with the driver. </P>
+
+<PRE>int t810Create (char *pbusName, ushort_t card, ushort_t slot,
+                uint_t busRate);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *pbusName</TT> </DT>
+
+<DD>String which comprises a unique identifier for this particular CAN Bus.
+This must be a static string which should not be changed while the driver is
+loaded and running (vxWorks shell string parameters have this property).
+While <TT>t810Create</TT> enforces no restrictions on the characters which
+may be used in the name, if the <TT>canIoParse</TT> routine is used the name
+should contain alphanumeric characters only. </DD>
+
+<DT><TT>ushort_t card, ushort_t slot</TT> </DT>
+
+<DD>Ipac Driver carrier and slot numbers which identify the IPAC module,
+for use with drvIpac. </DD>
+
+<DT><TT>uint_t busRate</TT> </DT>
+
+<DD>CAN bus rate in Kbits/sec. This parameter can have one of the values
+given in the following table. Other rates will require modifications to
+the driver source code. The Kvaser standard uses different bit timings
+which are not compatible with those used by Tews and so require special
+bit-rate entries. </DD>
+</DL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B><TT>busRate</TT></B></TD>
+<TD><B><I>CANbus bit rate</I></B></TD>
+</TR>
+
+<TR>
+<TD>     5</TD>
+<TD>5 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>    10</TD>
+<TD>10 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>    20</TD>
+<TD>20 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>    50</TD>
+<TD>50 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>   100</TD>
+<TD>100 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>   125</TD>
+<TD>125 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>   250</TD>
+<TD>250 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>   500</TD>
+<TD>500 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>  1000</TD>
+<TD>1000 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>  1600</TD>
+<TD>1600 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>  -125</TD>
+<TD>Kvaser 125 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>  -250</TD>
+<TD>Kvaser 250 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD>  -500</TD>
+<TD>Kvaser 500 Kbits/sec</TD>
+</TR>
+
+<TR>
+<TD> -1000</TD>
+<TD>Kvaser 1000 Kbits/sec</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Description</H4>
+
+<P>This routine will usually be called from the vxWorks (EPICS) start-up
+script. It is used to inform the driver about each TIP810 module which
+it is to control, providing information on how to find the module (the
+IPAC carrier and slot numbers) and what CANbus bit rate is to be used.
+Each module is given a name which is matched during calls to the <TT>canOpen</TT>
+routine to identify the particular module again. </P>
+
+<P>The code checks that the given name and card/slot numbers are unique
+and point to a real Tews Tip810 module, then it creates a new device table
+and initialises it and some of the chip registers. At this stage the device
+is not activated but held in the reset state. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<DL>
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_t810_badBusRate</TD>
+<TD>Bus Rate not supported</TD>
+</TR>
+
+<TR>
+<TD>S_t810_duplicateDevice</TD>
+<TD>another TIP810 already using given name and/or IPAC address </TD>
+</TR>
+
+<TR>
+<TD>(drvIpac)</TD>
+<TD>errors returned by <TT>ipmValidate</TT> </TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>malloc</TT>, <TT>semBCreate</TT>, or <TT>semMCreate</TT></TD>
+</TR>
+</TABLE></CENTER>
+</DL>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>-&gt; t810Create(&quot;CAN1&quot;, 0, 1, 500)
+Value = 0</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="t810Shutdown"></A>t810Shutdown</H3>
+
+<P>Reboot hook routine, resets all devices to stop interrupts. </P>
+
+<PRE>int t810Shutdown(int startType);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>int startType</TT> </DT>
+
+<DD>This parameter is not used by the routine but is
+required to allow it to be used as a vxWorks reboot hook routine, 
+when it differentiates between a cold and a warm restart. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>When <TT>t810Initialise</TT> is run, this routine will be connected
+up to the vxWorks reboot hook to reset the CAN controller chips on all
+known TIP810 modules when the system is rebooted. It can also be called
+by applications programs to turn off all the module drivers in the event
+of a catastrophic failure, but it may be necessary to reboot the system
+to re-enable them afterwards. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_t810_badDevice </TD>
+<TD>Bad or corrupted internal device table found</TD>
+</TR>
+</TABLE></CENTER>
+
+<P><HR></P>
+
+<H3><A NAME="t810Initialise"></A>t810Initialise</H3>
+
+<P>Initialise driver and all registered hardware. </P>
+
+<PRE>int t810Initialise(void);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>void</TT> </DT>
+
+<DD>None. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Under EPICS this routine is called during <TT>iocInit</TT>, which must
+occur after all <TT>canCreate</TT> calls in the start-up script. It completes
+the initialisation of the CAN controller chip and interrupt vector registers
+for all known TIP810 devices and starts the chip running. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>intConnect</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<P><HR></P>
+
+<H3><A NAME="t810Report"></A>t810Report</H3>
+
+<P>Display report giving status of all TEWS Tip810 devices </P>
+
+<PRE>int t810Report(int interest);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>int interest</TT> </DT>
+
+<DD>Interest level, indicating how much detail is required and what information
+to show. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Outputs (to stdout) a list of all the Tip810 devices created, their
+IP carrier &amp; slot numbers and the bus name string. For <TT>interest=1</TT>
+it adds message and error statistics; for <TT>interest=2</TT> it lists
+all CAN IDs for which a call-back has been registered; for <TT>interest=3</TT>
+the status of the CAN controller chip is given. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_t810_badDevice </TD>
+<TD>Bad or corrupted internal device table found</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Examples</H4>
+
+<UL>
+<PRE>-&gt; t810Report(1)
+TEWS tip810 CANbus Ip Modules
+  'CAN1' : IP Carrier 0 Slot 1, bus rate 500 Kbits/sec
+        Messages Sent       :    75
+        Messages Received   :    43
+        Message Overruns    :     0
+        Discarded Messages  :     4
+        Last Discarded ID   : 0x206
+        Error Interrupts    :     0
+        Bus Off Events      :     0
+-&gt; t810Report(2)
+TEWS tip810 CANbus Ip Modules
+  'CAN1' : IP Carrier 0 Slot 1, bus rate 500 Kbits/sec
+        Callbacks registered: 
+            0x1c 0x1d 0x1e 0x1f 0x200 0x202 0x204
+        canRead Status : Idle
+-&gt; t810Report(3)
+TEWS tip810 CANbus Ip Modules
+  'CAN1' : IP Carrier 0 Slot 1, bus rate 500 Kbits/sec
+    pca82c200 Chip Status: 
+        Bus Status             : Bus-On
+        Error Status           : Ok
+        Data Overrun           : Ok
+        Receive Status         : Idle
+        Receive Buffer Status  : Empty
+        Transmit Status        : Idle
+        Transmission Complete  : Complete
+        Transmit Buffer Access : Released</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canTest"></A>canTest</H3>
+
+<P>Test routine, sends a single test message to the named CANbus. </P>
+
+<PRE>int canTest (char *pbusName, ushort_t identifier, ushort_t rtr,
+             uchar_t length, char *data);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *pbusName</TT> </DT>
+
+<DD>Device name to identify the particular T810 device to use. </DD>
+
+<DT><TT>ushort_t identifier</TT> </DT>
+
+<DD>The CANbus message identifier to send. </DD>
+
+<DT><TT>ushort_t rtr</TT> </DT>
+
+<DD>0 for a normal CAN message, non-zero to send a Remote Transmission
+Request packet. </DD>
+
+<DT><TT>uchar_t length</TT> </DT>
+
+<DD>Number of bytes in the data field for this CANbus message type. </DD>
+
+<DT><TT>char *data</TT> </DT>
+
+<DD>Pointer to the data to be sent. Ignored for RTR packets. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>This routine is provided as a diagnostic, to allow the system developer
+to generate CANbus messages and RTR packets from the vxWorks shell. It
+should not be used from within an application. It makes use of the <TT>canOpen</TT>
+and <TT>canWrite</TT> routines, and responds to errors reported by those
+routines by printing a message and returning -1. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>-1</TD>
+<TD>ERROR</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>-&gt; canTest &quot;CAN1&quot;, 0x33, 0, 4, &quot;STOP&quot;</PRE>
+</UL>
+
+<P><HR></P>
+
+<H2><A NAME="section3"></A>3. Routines for CANbus Applications </H2>
+
+<H3><A NAME="canOpen"></A>canOpen</H3>
+
+<P>Return device pointer for given CAN bus name. </P>
+
+<PRE>int canOpen(char *busName, void **pcanBusID);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *busName</TT> </DT>
+
+<DD>Device name to identify the particular Tip810 device to use. </DD>
+
+<DT><TT>void **pcanBusID</TT> </DT>
+
+<DD>Pointer to a void* location to hold the device identifier. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Searches through the list of registered Tip810 devices for one which
+matches the name given, and returns a device identifier for it. This identifier
+is a required parameter for all of the remaining can driver routines. String
+searching in this manner is not particularly fast if several devices have
+been registered so this routine is intended to be used mainly when an application
+starts up. It may be used as often as desired however - there is no associated
+<TT>canClose</TT> routine. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_noDevice</TD>
+<TD>No matching device name found.</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>void *can1;
+if (canOpen(&quot;CAN1&quot;, &amp;can1)) {
+    printf(&quot;Can't open CAN1\n&quot;);
+    return -1;
+}</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canIoParse"></A>canIoParse</H3>
+
+<P>Parse a CAN address string into a canIo_t structure </P>
+
+<PRE>int canIoParse(char *canString, canIo_t *pcanIo);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>const char *canString</TT> </DT>
+
+<DD>Address string to be converted. </DD>
+
+<DT><TT>canIo_t *pcanIo</TT> </DT>
+
+<DD>Pointer to a structure which will be used to return the converted address
+information. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P><TT>canIoParse</TT> is used by the EPICS device support routines to
+convert record hardware addresses, but can be used by any application with
+similar requirements. It is intended to provide a standard way of converting
+the parameters which are needed to specify a portion of a particular CANbus
+message type from an ASCII string to their binary representation as a structure.
+The <TT>canIo_t</TT> structure is defined as a typedef in the canBus.h
+header as follows: </P>
+
+<UL>
+<PRE>typedef struct {
+    char *busName;
+    int timeout;
+    ushort_t identifier;
+    ushort_t offset;
+    int parameter;
+    void *canBusID;
+} canIo_t;</PRE>
+</UL>
+
+<P>The address string passed to this routine consists of a series of elements,
+some of which are optional. </P>
+
+<UL>
+<PRE><I>busName</I>
+[<TT><B>/</B></TT><I>timeout</I>]
+<TT><B>:</B></TT><I>identifier</I>
+[<TT><B>.</B></TT><I>offset</I>]
+<I>parameter</I></PRE>
+</UL>
+
+<P>The first element is the bus name, which should consist of alphanumeric
+characters only. The name is terminated immediately before the first &quot;<TT>/</TT>&quot;
+or &quot;<TT>:</TT>&quot; character in the string, and after omitting any
+leading white-space the characters forming the bus name are copied to a
+newly allocated buffer, the address of which is placed in <TT>pcanIo-&gt;busName</TT>.
+</P>
+
+<P>An oblique stroke (&quot;<TT>/</TT>&quot;) after the bus name introduces
+an optional timeout element, which is an integer number of milli-seconds
+to wait for a response or this particular type of message. This is converted
+into vxWorks ystem clock ticks and placed in <TT>pcanIo-&gt;timeout</TT>.
+If no timeout element is included, the timeout s set to <TT>WAIT_FOREVER</TT>
+(-1). </P>
+
+<P>The CANbus message identifier is preceded by a colon (&quot;<TT>:</TT>&quot;),
+and comprises an unsigned short integer. The stringcan be given in any
+of the standard 'C' formats as converted by <TT>strtoul</TT>, so hex and
+octal numbers may be used for identifiers as desired. </P>
+
+<P>If the identifier is followed by a decimal point (&quot;<TT>.</TT>&quot;),
+the following element is an optional byte offset into the CANbus message.
+The offset is an unsigned short integer (using <TT>strtoul</TT> again for
+the conversion), although to remain within the limits of the message buffer
+it should be restricted to a maximum value of seven. The converted value
+is placed in <TT>pcanIo-&gt;offset</TT>, which defaults to zero if no offset
+is given. </P>
+
+<P>The final element is a general-purpose signed integer parameter, introduced
+by a space or tab character. The value is converted using <TT>strtol</TT>
+and placed in <TT>pcanIo-&gt;paramter</TT>. </P>
+
+<P>If the string is successfully converted without errors, canIoParse will
+also call <TT>canOpen</TT> to initialise the <TT>pcanIo-&gt;canBusID</TT>
+bus identifier. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_badAddress</TD>
+<TD>illegal input string or NULL input parameters</TD>
+</TR>
+
+<TR>
+<TD>S_can_noDevice</TD>
+<TD>No matching device name found</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>malloc</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>canIo_t myIo;
+int status;
+status = canIoParse(&quot;CAN1/20:0126.4 0xfff&quot;, &amp;myIo) 
+if (status) {
+    printf(&quot;Address string rejected\n&quot;);
+    return -1;
+}</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canWrite"></A>canWrite</H3>
+
+<P>Writes a message to the given CANbus </P>
+
+<PRE>int canWrite (void *canBusID, canMessage_t *pmessage, int timeout);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>void *canBusID</TT> </DT>
+
+<DD>CANbus device identifier, obtained from <TT>canOpen</TT> </DD>
+
+<DT><TT>canMessage_t *pmessage</TT> </DT>
+
+<DD>The message to be transmitted. </DD>
+
+<DT><TT>int timeout</TT> </DT>
+
+<DD>Delay in vxWorks system clock ticks, indicating how long to wait for
+exclusive access to the TIP810 hardware. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>This routine is called to transmit a message on a particular CANbus.
+The <TT>canMessage_t</TT> type is defined as the following structure in
+canBus.h: </P>
+
+<UL>
+<PRE>typedef struct {
+    short_t identifier;           /* 0 .. 2047 with holes! */
+    enum {
+        SEND = 0, RTR = 1
+    } rtr;                        /* Remote Transmission Request */
+    uchar_t length;               /* 0 .. 8 */
+    uchar_t data[CAN_DATA_SIZE];  /* CAN_DATA_SIZE = 8 */
+} canMessage_t;</PRE>
+</UL>
+
+<P>When called, <TT>canWrite</TT> obtains exclusive access to the TIP810
+transmission buffer, converts the message into the correct form for the
+interface chip and copies it to the hardware registers. Finally it sends
+a Transmit Message command to the chip. The exclusive access semaphore
+will be released by the Interrupt Service Routine when it receives a notification
+from the chip that the message has been transmitted successfully. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_t810_badDevice</TD>
+<TD>canBusID not valid</TD>
+</TR>
+
+<TR>
+<TD>S_can_badMessage</TD>
+<TD>invalid field in the message buffer</TD>
+</TR>
+
+<TR>
+<TD>S_t810_transmitterBusy</TD>
+<TD>system fault somewhere</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>semTake</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>canIo_t myIo;
+canMessage_t message;
+char data[] = &quot;STOP&quot;;
+int status;
+status = canIoParse(&quot;CAN1/20:0126 0xfff&quot;, &amp;myIo); 
+if (status == OK) {
+    message.identifier = myIo.identifier;
+    message.rtr        = SEND;
+    message.length     = strlen(data);
+    memcpy(&amp;message.data[0], data, message.length);
+    status = canWrite(myIo.canBusID, &amp;message, myIo.timeout); 
+}</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canMessage"></A>canMessage</H3>
+
+<P>Register CAN message call-back </P>
+
+<PRE>int canMessage(void *canBusID, ushort_t identifier,
+               canMsgCallback_t *pcallback, void *pprivate);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>void *canBusID</TT> </DT>
+
+<DD>CANbus device identifier, obtained from <TT>canOpen</TT> </DD>
+
+<DT><TT>ushort_t identifier</TT> </DT>
+
+<DD>The CAN message identifier for which call-backs are required. </DD>
+
+<DT><TT>canMsgCallback_t *pcallback</TT> </DT>
+
+<DD>The address of the routine to be called whenever matching messages
+are received. </DD>
+
+<DT><TT>void *pprivate</TT> </DT>
+
+<DD>A parameter which is passed to the call-back routine to help it identify
+its context. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>This routine is used to add a call-back routine for a particular CAN
+message identifier on the given CANbus. Call-backs can be registered for
+any CAN message identifier, and there can be more than one call-back using
+the same ID - all routines are called in turn when a message with the relevant
+identifier is received. The call-back routine must not change the message
+at all, and should copy any information it needs from the message buffer
+before returning. The call-back is called from vxWorks' Interrupt Context,
+thus there are restrictions in what vxWorks routines the call-back can
+use (see the vxWorks User Guide for details of these), and processing should
+be kept to an absolute minimum. The call-back routine should be of type
+<TT>canMsgCallback_t</TT>: </P>
+
+<PRE>void callback(void *pprivate, const canMessage_t *pmessage);
+</PRE>
+
+<P>The same <TT>pprivate</TT> value supplied when the call-back was registered
+with <TT>canMessage</TT> is passed to the call-back routine with each message
+to allow it to identify its context. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_badMessage</TD>
+<TD>bad identifier or NULL call-back routine</TD>
+</TR>
+
+<TR>
+<TD>S_can_badDevice</TD>
+<TD>bad device pointer</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>malloc</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>void myCallback(short *pvalue, canMessage_t *pmessage) {
+    /* Update value whenever message arrives */
+    memcpy(pvalue, &amp;pmessage-&gt;data[0], sizeof(short)); 
+}
+
+...
+
+int status;
+static short value;
+status = canMessage(myIo.canBusID, myIo.identifier,
+                    (canMsgCallback_t *) myCallback, &amp;value);</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canMsgDelete"></A>canMsgDelete</H3>
+
+<P>Delete CAN message call-back</P>
+
+<PRE>int canMsgDelete(void *canBusID, ushort_t identifier,
+               canMsgCallback_t *pcallback, void *pprivate);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>void *canBusID</TT> </DT>
+
+<DD>CANbus device identifier, obtained from <TT>canOpen</TT> </DD>
+
+<DT><TT>ushort_t identifier</TT> </DT>
+
+<DD>The CAN message identifier for which call-backs were registered.</DD>
+
+<DT><TT>canMsgCallback_t *pcallback</TT> </DT>
+
+<DD>The address of the routine being called whenever matching messages
+were received. </DD>
+
+<DT><TT>void *pprivate</TT> </DT>
+
+<DD>The parameter passed to the call-back routine to help it identify
+its context. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>This routine is used to remove a call-back routine already registerd for a particular CAN
+message identifier on the given CANbus.</P>
+
+<P>Exactly the same parameters given when the call-back was registered with
+<TT>canMessage</TT> must be passed to <TT>canMsgDelete</TT> for it to be
+successfully deleted.</P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_badMessage</TD>
+<TD>bad identifier or NULL call-back routine</TD>
+</TR>
+
+<TR>
+<TD>S_can_noMessage</TD>
+<TD>no matching call-back routine</TD>
+</TR>
+
+<TR>
+<TD>S_can_badDevice</TD>
+<TD>bad device pointer</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<P>To delete the call-back registered in the previous <TT>canMessage</TT> example:</P>
+
+<UL>
+<PRE>status = canMsgDelete(myIo.canBusID, myIo.identifier,
+                    (canMsgCallback_t *) myCallback, &amp;value);</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canSignal"></A>canSignal</H3>
+
+<P>Register CAN error signal call-back </P>
+
+<PRE>int canSignal(void *canBusID, canSigCallback_t *pcallback,
+              void *pprivate);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>void *canBusID</TT> </DT>
+
+<DD>CANbus device identifier, obtained from <TT>canOpen</TT> </DD>
+
+<DT><TT>canSigCallback_t *pcallback</TT> </DT>
+
+<DD>The address of the routine to be called whenever there is a change
+in the bus status. </DD>
+
+<DT><TT>void *pprivate</TT> </DT>
+
+<DD>A parameter which is passed to the call-back routine to help it identify
+its context. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>This routine is used to add a new call-back routine for CANbus error
+reports from the given CANbus. There can be any number of error call-backs
+on each device, and all are called in turn when the controller chip reports
+a Bus Error or Bus Off event. The call-back routine is called from vxWorks'
+Interrupt Context, thus there are restrictions in which vxWorks routines
+can be used (see vxWorks User Guide for details of these), and processing
+should be kept to an absolute minimum. The call-back routine should be
+of type <TT>canSigCallback_t</TT>: </P>
+
+<PRE>void callback(void *pprivate, ushort_t status);
+</PRE>
+
+<P>The pprivate value supplied to canSignal is passed to the call-back
+routine with the error status to allow it to identify its context. Status
+values will be one of </P>
+
+<UL>
+<LI>CAN_BUS_OK </LI>
+
+<LI>CAN_BUS_ERROR </LI>
+
+<LI>CAN_BUS_OFF </LI>
+</UL>
+
+<P>these being pre-processor macros defined in the header file. If the
+chip goes to the Bus Off state, the driver will attempt to restart it,
+thus a Bus Ok signal should follow almost immediately. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_badDevice</TD>
+<TD>bad device identifier</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>malloc</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>int status;
+status = canSignal(myIo.canBusID, logmsg, &quot;CAN Signal, state %hd\n&quot;);
+if (status) {
+    printf(&quot;Couldn't register CAN signal handler.\n&quot;); 
+}</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canBusReset"></A>canBusReset</H3>
+
+<P>Reset CAN chip and message and error counters</P>
+
+<PRE>int canBusReset(char *busName);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *busName</TT> </DT>
+
+<DD>Device name to identify the particular Tip810 device to be reset. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Resets the pca82c200 chip identified by the given <TT>busName</TT>, and
+clears all the counters associated with this device.  This may clear some
+bus-related errors.  All registered callbacks will remain active as before,
+although the chip may miss some incoming messages while resetting.  This
+routine may also be used to restart an interface after a call to
+<TT>canBusStop</TT>. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_noDevice</TD>
+<TD>No matching device name found.</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>-&gt; canBusReset &quot;CAN1&quot;</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canBusStop"></A>canBusStop</H3>
+
+<P>Stop CAN interface</P>
+
+<PRE>int canBusStop(char *busName);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *busName</TT> </DT>
+
+<DD>Device name to identify the particular Tip810 device to be stopped. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Holds the pca82c200 chip identified by the given <TT>busName</TT> in the
+reset state, which prevents it from sending or receiving messages, or from 
+sending message acknowledgements to other nodes.  The interface can be
+reactiviated using either <TT>canBusRestart</TT> or <TT>canBusReset</TT>. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_noDevice</TD>
+<TD>No matching device name found.</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>-&gt; canBusStop &quot;CAN1&quot;</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canBusRestart"></A>canBusRestart</H3>
+
+<P>Restart a stopped CAN interface</P>
+
+<PRE>int canBusReset(char *busName);</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT><TT>char *busName</TT> </DT>
+
+<DD>Device name identifying the Tip810 device to be restarted. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Restarts the pca82c200 chip identified by the given <TT>busName</TT> after
+it has been stopped by a call to <TT>canBusStop</TT>.  All registered 
+callbacks will remain active as before and the message and error counters
+will continue to increment from their previous values. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_can_noDevice</TD>
+<TD>No matching device name found.</TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>-&gt; canBusRestart &quot;CAN1&quot;</PRE>
+</UL>
+
+<P><HR></P>
+
+<H3><A NAME="canRead"></A>canRead</H3>
+
+<P>Send Remote Transmission Request and wait for reply. </P>
+
+<PRE>int canRead(void *canBusID, canMessage_t *pmessage, int timeout);
+</PRE>
+
+<H4>Parameters</H4>
+
+<DL>
+<DT>void *canBusID </DT>
+
+<DD>CANbus device identifier, obtained from <TT>canOpen</TT> </DD>
+
+<DT>canMessage_t *pmessage </DT>
+
+<DD>Message buffer to be used, with identifier and length fields set. </DD>
+
+<DT>int timeout </DT>
+
+<DD>Delay in vxWorks system clock ticks, indicating how long to wait for
+a response, including the delay in <TT>canWrite</TT> to obtain exclusive
+access to the transmit buffer. This value is not an absolute delay but
+is used internally for three separate sequential semaphore time-outs, thus
+there could be a total delay of over twice this period but the routine
+could still succeed. </DD>
+</DL>
+
+<H4>Description</H4>
+
+<P>Sends a CANbus Remote Transmission Request and waits for a reply on
+the same message identifier, returning the message received in the given
+buffer. On entry the message buffer must be initialised with the CANbus
+message identifier and length of the expected reply in the relevant fields.
+</P>
+
+<P>The <TT>canRead</TT> routine can be used along with <TT>canWrite</TT>
+to create simple CANbus interface applications without the need to use
+the message call-back system. This will work in situations where the vxWorks
+system is the only device on the CANbus which initiates message traffic
+and there are no long delays in responses to RTRs. More complex applications
+which need to receive unsolicited messages will need to use the <TT>canMessage</TT>
+call-back functions; these can be used at the same time as <TT>canRead</TT>.
+Although the routine is safe to use in multi-tasking situations, the action
+of sending an RTR and waiting for a returned message will only be performed
+for one task at a time on each bus. </P>
+
+<H4>Returns</H4>
+
+<UL>
+<PRE>int</PRE>
+</UL>
+
+<CENTER><TABLE BORDER=1 >
+<TR BGCOLOR="#FFFFFF">
+<TD><B>Symbol/Value</B></TD>
+<TD><B>Meaning</B></TD>
+</TR>
+
+<TR>
+<TD>0</TD>
+<TD>OK</TD>
+</TR>
+
+<TR>
+<TD>S_t810_badDevice</TD>
+<TD>bad bus ID</TD>
+</TR>
+
+<TR>
+<TD>S_can_badMessage</TD>
+<TD>bad message Identifier or length</TD>
+</TR>
+
+<TR>
+<TD>(vxWorks)</TD>
+<TD>errno from <TT>semTake</TT></TD>
+</TR>
+</TABLE></CENTER>
+
+<H4>Example</H4>
+
+<UL>
+<PRE>int status;
+canMessage_t myBuffer;
+myBuffer.identifier = 139; 
+myBuffer.length     = 4;
+status = canRead(canID, &amp;myBuffer, WAIT_FOREVER);</PRE>
+</UL>
+
+<P><HR></P>
+
+<ADDRESS>
+Andrew Johnson 
+<A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
+</ADDRESS>
+
+</BODY>
+</HTML>
