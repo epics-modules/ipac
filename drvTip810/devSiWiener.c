@@ -16,7 +16,7 @@ Authors:
 Created:
     25 August 1998
 Version:
-    $Id: devSiWiener.c,v 1.3 2003-03-04 21:06:16 anj Exp $
+    $Id: devSiWiener.c,v 1.4 2003-05-28 12:20:21 mrk Exp $
 
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
@@ -59,6 +59,8 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 #include <stringinRecord.h>
 #include <canBus.h>
 #include <string.h>
+#include <alarm.h>
+#include <recGbl.h>
 
 
 typedef struct siCanPrivate_s {

@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.5 2003-03-04 21:06:14 anj Exp $
+    $Id: devBiTip810.c,v 1.6 2003-05-28 12:20:21 mrk Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -44,6 +44,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include	<devSup.h>
 #include	<devLib.h>
 #include	<biRecord.h>
+#include	<alarm.h>
+#include <recGbl.h>
 #include	"canBus.h"
 #include	"drvTip810.h"
 #include	"pca82c200.h"
