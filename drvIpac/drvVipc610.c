@@ -17,7 +17,7 @@ Author:
 Created:
     19 July 1995
 Version:
-    $Id: drvVipc610.c,v 1.5 2000-02-21 21:35:33 anj Exp $
+    $Id: drvVipc610.c,v 1.6 2001-02-14 20:28:09 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -140,7 +140,7 @@ LOCAL int initialise (
     void **pprivate,
     ushort_t carrier
 ) {
-    int params, status1 = OK, status2 = OK, mSize = 0;
+    int params, ioStatus, memStatus = OK, mSize = 0;
     ulong_t ioBase, mOrig, mBase, addr;
     ushort_t space, slot;
     private_t *private;
@@ -164,13 +164,13 @@ LOCAL int initialise (
     mBase = ioBase << 8;	/* Fixed by the VIPC610 card */
     ioBase = ioBase & 0xfc00;	/* Clear A09 */
 
-    status1 = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
+    ioStatus = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
 				(char *) ioBase, (char **) &ioBase);
     if (mSize > 0) {
-	status2 = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
+	memStatus = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
 				    (char *) mBase, (char **) &mBase);
     }
-    if (status1 || status2) {
+    if (ioStatus || memStatus) {
 	return S_IPAC_badAddress;
     }
 
