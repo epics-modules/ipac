@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.1.1.1 1997-03-27 12:34:10 anj Exp $
+    $Id: devAiCan.c,v 1.2 1997-06-19 16:57:14 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -43,8 +43,9 @@ Version:
 #define DO_NOT_CONVERT 2
 
 
-typedef struct {
+typedef struct aiCanPrivate_s {
     CALLBACK callback;		/* This *must* be first member */
+    struct aiCanPrivate_s *nextPrivate;
     WDOG_ID wdId;
     IOSCANPVT ioscanpvt;
     struct aiRecord *prec;
@@ -55,13 +56,22 @@ typedef struct {
     int status;
 } aiCanPrivate_t;
 
+typedef struct aiCanBus_s {
+    CALLBACK callback;		/* This *must* be first member */
+    struct aiCanBus_s *nextBus;
+    aiCanPrivate_t *firstPrivate;
+    void *canBusID;
+    int status;
+} aiCanBus_t;
+
 LOCAL long init_ai(struct aiRecord *prec);
 LOCAL long get_ioint_info(int cmd, struct aiRecord *prec, IOSCANPVT *ppvt);
 LOCAL long read_ai(struct aiRecord *prec);
 LOCAL long special_linconv(struct aiRecord *prec, int after);
 LOCAL void aiProcess(aiCanPrivate_t *pcanAi);
 LOCAL void aiMessage(aiCanPrivate_t *pcanAi, canMessage_t *pmessage);
-LOCAL void aiSignal(aiCanPrivate_t *pcanAi, int status);
+LOCAL void busSignal(aiCanBus_t *pbus, int status);
+LOCAL void busCallback(aiCanBus_t *pbus);
 
 struct {
     long number;
@@ -81,11 +91,13 @@ struct {
     special_linconv
 };
 
+LOCAL aiCanBus_t *firstBus;
 
 LOCAL long init_ai (
     struct aiRecord *prec
 ) {
     aiCanPrivate_t *pcanAi;
+    aiCanBus_t *pbus;
     int status;
     ulong_t fsd;
 
@@ -107,9 +119,15 @@ LOCAL long init_ai (
     /* Convert the address string into members of the canIo structure */
     status = canIoParse(prec->inp.value.instio.string, &pcanAi->inp);
     if (status) {
-	recGblRecordError(S_can_badAddress, (void *) prec,
-			  "devAiCan (init_record) bad CAN address");
-	return S_can_badAddress;
+	if (canSilenceErrors) {
+	    pcanAi->inp.canBusID = NULL;
+	    prec->pact = TRUE;
+	    return OK;
+	} else {
+	    recGblRecordError(S_can_badAddress, (void *) prec,
+			      "devAiCan (init_record) bad CAN address");
+	    return S_can_badAddress;
+	}
     }
 
     #ifdef DEBUG
@@ -158,21 +176,48 @@ LOCAL long init_ai (
 	printf("  fsd=%d, eslo=%g, roff = %d, mask=%#x, sign=%d\n", 
 		fsd, prec->eslo, prec->roff, pcanAi->mask, pcanAi->sign);
     #endif
+    
+    /* Find the bus matching this record */
+    for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
+    	if (pbus->canBusID == pcanAi->inp.canBusID) break;
+    }
+    
+    /* If not found, create one */
+    if (pbus == NULL) {
+    	pbus = malloc(sizeof (aiCanBus_t));
+    	if (pbus == NULL) return S_dev_noMemory;
+    	
+    	/* Fill it in */
+    	pbus->firstPrivate = NULL;
+    	pbus->canBusID = pcanAi->inp.canBusID;
+    	callbackSetCallback(busCallback, &pbus->callback);
+    	callbackSetPriority(priorityMedium, &pbus->callback);
+    	
+    	/* and add it to the list of busses we know about */
+    	pbus->nextBus = firstBus;
+    	firstBus = pbus;
+    	
+    	/* Ask driver for error signals */
+    	canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+    }
+    
+    /* Insert private record structure into linked list for this CANbus */
+    pcanAi->nextPrivate = pbus->firstPrivate;
+    pbus->firstPrivate = pcanAi;
 
-    /* Create a callback for asynchronous processing */
+    /* Set the callback parameters for asynchronous processing */
     callbackSetCallback(aiProcess, &pcanAi->callback);
     callbackSetPriority(prec->prio, &pcanAi->callback);
 
-    /* and a watchdog for CANbus RTR timeouts */
+    /* and create a watchdog for CANbus RTR timeouts */
     pcanAi->wdId = wdCreate();
     if (pcanAi->wdId == NULL) {
 	return S_dev_noMemory;
     }
 
-    /* Register the message and signal handlers with the Canbus driver */
+    /* Register the message handler with the Canbus driver */
     canMessage(pcanAi->inp.canBusID, pcanAi->inp.identifier, 
 	       (canMsgCallback_t *) aiMessage, pcanAi);
-    canSignal(pcanAi->inp.canBusID, (canSigCallback_t *) aiSignal, pcanAi);
 
     return OK;
 }
@@ -296,6 +341,8 @@ LOCAL void aiMessage (
     aiCanPrivate_t *pcanAi,
     canMessage_t *pmessage
 ) {
+    if (!interruptAccept) return;
+    
     if (pmessage->rtr == RTR) {
 	return;		/* Ignore RTRs */
     }
@@ -328,19 +375,34 @@ LOCAL void aiMessage (
     }
 }
 
-LOCAL void aiSignal (
-    aiCanPrivate_t *pcanAi,
+LOCAL void busSignal (
+    aiCanBus_t *pbus,
     int status
 ) {
+    if (!interruptAccept) return;
+    
     switch(status) {
 	case CAN_BUS_OK:
+	    pbus->status = NO_ALARM;
 	    return;
 	case CAN_BUS_ERROR:
-	    pcanAi->status = READ_ALARM;
+	    pbus->status = READ_ALARM;
 	    break;
 	case CAN_BUS_OFF:
-	    pcanAi->status = COMM_ALARM;
+	    pbus->status = COMM_ALARM;
 	    break;
     }
-    callbackRequest(&pcanAi->callback);
+    callbackRequest(&pbus->callback);
+}
+
+LOCAL void busCallback (
+    aiCanBus_t *pbus
+) {
+    aiCanPrivate_t *pcanAi = pbus->firstPrivate;
+    
+    while (pcanAi != NULL) {
+	pcanAi->status = pbus->status;
+	aiProcess(pcanAi);
+	pcanAi = pcanAi->nextPrivate;
+    }
 }

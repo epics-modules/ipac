@@ -15,7 +15,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: ipic.h,v 1.1.1.1 1997-03-27 12:34:12 anj Exp $
+    $Id: ipic.h,v 1.2 1997-06-19 16:57:27 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -70,7 +70,7 @@ extern "C" {
 
 /* Chip Structure */
 
-typedef struct {
+typedef volatile struct {
     uchar_t chipId;
     uchar_t chipRevision;
     uchar_t reserved1[2];

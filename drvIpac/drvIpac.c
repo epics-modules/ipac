@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.2 1997-04-15 18:54:13 anj Exp $
+    $Id: drvIpac.c,v 1.3 1997-06-19 16:57:23 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -179,7 +179,7 @@ int ipmCheck (
     ushort_t carrier, 
     ushort_t slot
 ) {
-    volatile ipac_idProm_t *id;
+    ipac_idProm_t *id;
     char dummy;
 
     if (carrier >= carriers.number ||

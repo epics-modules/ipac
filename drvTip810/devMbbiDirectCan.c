@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.1.1.1 1997-03-27 12:34:11 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.2 1997-06-19 16:57:19 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -43,8 +43,9 @@ Version:
 #define DO_NOT_CONVERT 2
 
 
-typedef struct {
+typedef struct mbbiDirectCanPrivate_s {
     CALLBACK callback;		/* This *must* be first member */
+    struct mbbiDirectCanPrivate_s *nextPrivate;
     WDOG_ID wdId;
     IOSCANPVT ioscanpvt;
     struct mbbiDirectRecord *prec;
@@ -53,12 +54,21 @@ typedef struct {
     int status;
 } mbbiDirectCanPrivate_t;
 
+typedef struct mbbiDirectCanBus_s {
+    CALLBACK callback;		/* This *must* be first member */
+    struct mbbiDirectCanBus_s *nextBus;
+    mbbiDirectCanPrivate_t *firstPrivate;
+    void *canBusID;
+    int status;
+} mbbiDirectCanBus_t;
+
 LOCAL long init_mbbiDirect(struct mbbiDirectRecord *prec);
 LOCAL long get_ioint_info(int cmd, struct mbbiDirectRecord *prec, IOSCANPVT *ppvt);
 LOCAL long read_mbbiDirect(struct mbbiDirectRecord *prec);
 LOCAL void mbbiDirectProcess(mbbiDirectCanPrivate_t *pcanMbbiDirect);
 LOCAL void mbbiDirectMessage(mbbiDirectCanPrivate_t *pcanMbbiDirect, canMessage_t *pmessage);
-LOCAL void mbbiDirectSignal(mbbiDirectCanPrivate_t *pcanMbbiDirect, int status);
+LOCAL void busSignal(mbbiDirectCanBus_t *pbus, int status);
+LOCAL void busCallback(mbbiDirectCanBus_t *pbus);
 
 struct {
     long number;
@@ -76,13 +86,16 @@ struct {
     read_mbbiDirect
 };
 
+LOCAL mbbiDirectCanBus_t *firstBus;
+
 
 LOCAL long init_mbbiDirect (
     struct mbbiDirectRecord *prec
 ) {
     mbbiDirectCanPrivate_t *pcanMbbiDirect;
+    mbbiDirectCanBus_t *pbus;
     int status;
-
+    
     if (prec->inp.type != INST_IO) {
 	recGblRecordError(S_db_badField, (void *) prec,
 			  "devMbbiDirectCan (init_record) Illegal INP field");
@@ -103,9 +116,15 @@ LOCAL long init_mbbiDirect (
     if (status ||
 	pcanMbbiDirect->inp.parameter < 0 ||
 	pcanMbbiDirect->inp.parameter > 7) {
-	recGblRecordError(S_can_badAddress, (void *) prec,
-			  "devMbbiDirectCan (init_record) bad CAN address");
-	return S_can_badAddress;
+	if (canSilenceErrors) {
+	    pcanMbbiDirect->inp.canBusID = NULL;
+	    prec->pact = TRUE;
+	    return OK;
+	} else {
+	    recGblRecordError(S_can_badAddress, (void *) prec,
+			      "devMbbiDirectCan (init_record) bad CAN address");
+	    return S_can_badAddress;
+	}
     }
 
     #ifdef DEBUG
@@ -124,21 +143,47 @@ LOCAL long init_mbbiDirect (
 		pcanMbbiDirect->inp.parameter, prec->mask);
     #endif
 
-    /* Create a callback for asynchronous processing */
+    /* Find the bus matching this record */
+    for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
+      if (pbus->canBusID == pcanMbbiDirect->inp.canBusID) break;
+    }  
+
+    /* If not found, create one */
+    if (pbus == NULL) {
+      pbus = malloc(sizeof (mbbiDirectCanBus_t));
+      if (pbus == NULL) return S_dev_noMemory;
+
+      /* Fill it in */
+      pbus->firstPrivate = NULL;
+      pbus->canBusID = pcanMbbiDirect->inp.canBusID;
+      callbackSetCallback(busCallback, &pbus->callback);
+      callbackSetPriority(priorityMedium, &pbus->callback);
+
+      /* and add it to the list of busses we know about */
+      pbus->nextBus = firstBus;
+      firstBus = pbus;
+
+      /* Ask driver for error signals */
+      canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+    }  
+
+    /* Insert private record structure into linked list for this CANbus */
+    pcanMbbiDirect->nextPrivate = pbus->firstPrivate;
+    pbus->firstPrivate = pcanMbbiDirect;
+
+    /* Set the callback parameters for asynchronous processing */
     callbackSetCallback(mbbiDirectProcess, &pcanMbbiDirect->callback);
     callbackSetPriority(prec->prio, &pcanMbbiDirect->callback);
 
-    /* and a watchdog for CANbus RTR timeouts */
+    /* and create a watchdog for CANbus RTR timeouts */
     pcanMbbiDirect->wdId = wdCreate();
     if (pcanMbbiDirect->wdId == NULL) {
 	return S_dev_noMemory;
     }
 
-    /* Register the message and signal handlers with the Canbus driver */
+    /* Register the message handler with the Canbus driver */
     canMessage(pcanMbbiDirect->inp.canBusID, pcanMbbiDirect->inp.identifier, 
 	       (canMsgCallback_t *) mbbiDirectMessage, pcanMbbiDirect);
-    canSignal(pcanMbbiDirect->inp.canBusID, 
-	      (canSigCallback_t *) mbbiDirectSignal, pcanMbbiDirect);
 
     return OK;
 }
@@ -235,6 +280,8 @@ LOCAL void mbbiDirectMessage (
     mbbiDirectCanPrivate_t *pcanMbbiDirect,
     canMessage_t *pmessage
 ) {
+    if (!interruptAccept) return;
+    
     if (pmessage->rtr == RTR) {
 	return;		/* Ignore RTRs */
     }
@@ -251,19 +298,34 @@ LOCAL void mbbiDirectMessage (
     }
 }
 
-LOCAL void mbbiDirectSignal (
-    mbbiDirectCanPrivate_t *pcanMbbiDirect,
+LOCAL void busSignal (
+    mbbiDirectCanBus_t *pbus,
     int status
 ) {
+    if (!interruptAccept) return;
+    
     switch(status) {
 	case CAN_BUS_OK:
+	    pbus->status = NO_ALARM;
 	    return;
 	case CAN_BUS_ERROR:
-	    pcanMbbiDirect->status = READ_ALARM;
+	    pbus->status = READ_ALARM;
 	    break;
 	case CAN_BUS_OFF:
-	    pcanMbbiDirect->status = COMM_ALARM;
+	    pbus->status = COMM_ALARM;
 	    break;
     }
-    callbackRequest(&pcanMbbiDirect->callback);
+    callbackRequest(&pbus->callback);
+}
+
+LOCAL void busCallback (
+    mbbiDirectCanBus_t *pbus
+) {
+    mbbiDirectCanPrivate_t *pcanMbbiDirect = pbus->firstPrivate;
+    
+    while (pcanMbbiDirect != NULL) {
+	pcanMbbiDirect->status = pbus->status;
+	mbbiDirectProcess(pcanMbbiDirect);
+	pcanMbbiDirect = pcanMbbiDirect->nextPrivate;
+    }
 }

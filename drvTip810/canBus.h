@@ -14,7 +14,7 @@ Author:
 Created:
     25 July 1995
 Version:
-    $Id: canBus.h,v 1.1.1.1 1997-03-27 12:34:12 anj Exp $
+    $Id: canBus.h,v 1.2 1997-06-19 16:57:13 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -41,6 +41,7 @@ Version:
 #define S_can_badAddress	(M_can| 2) /*CAN address syntax error*/
 #define S_can_noDevice		(M_can| 3) /*CAN bus name does not exist*/
 
+
 typedef struct {
     ushort_t identifier;	/* 0 .. 2047 with holes! */
     enum { 
@@ -61,6 +62,9 @@ typedef struct {
 
 typedef void canMsgCallback_t(void *pprivate, canMessage_t *pmessage);
 typedef void canSigCallback_t(void *pprivate, int status);
+
+
+extern int canSilenceErrors;	/* Really meant for EPICS use only */
 
 extern int canOpen(char *busName, void **pcanBusID);
 extern int canRead(void *canBusID, canMessage_t *pmessage, int timeout);

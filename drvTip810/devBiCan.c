@@ -14,9 +14,9 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBiCan.c,v 1.1.1.1 1997-03-27 12:34:10 anj Exp $
+    $Id: devBiCan.c,v 1.2 1997-06-19 16:57:15 anj Exp $
 
-(c) 1995 Royal Greenwich Observatory
+(c) 1995,1997 Royal Greenwich Observatory
 
 *******************************************************************************/
 
@@ -43,8 +43,9 @@ Version:
 #define DO_NOT_CONVERT 2
 
 
-typedef struct {
+typedef struct biCanPrivate_s {
     CALLBACK callback;		/* This *must* be first member */
+    struct biCanPrivate_s *nextPrivate;
     WDOG_ID wdId;
     IOSCANPVT ioscanpvt;
     struct biRecord *prec;
@@ -53,12 +54,21 @@ typedef struct {
     int status;
 } biCanPrivate_t;
 
+typedef struct biCanBus_s {
+    CALLBACK callback;		/* This *must* be first member */
+    struct biCanBus_s *nextBus;
+    biCanPrivate_t *firstPrivate;
+    void *canBusID;
+    int status;
+} biCanBus_t;
+
 LOCAL long init_bi(struct biRecord *prec);
 LOCAL long get_ioint_info(int cmd, struct biRecord *prec, IOSCANPVT *ppvt);
 LOCAL long read_bi(struct biRecord *prec);
 LOCAL void biProcess(biCanPrivate_t *pcanBi);
 LOCAL void biMessage(biCanPrivate_t *pcanBi, canMessage_t *pmessage);
-LOCAL void biSignal(biCanPrivate_t *pcanBi, int status);
+LOCAL void busSignal(biCanBus_t *pbus, int status);
+LOCAL void busCallback(biCanBus_t *pbus);
 
 struct {
     long number;
@@ -76,13 +86,16 @@ struct {
     read_bi
 };
 
+LOCAL biCanBus_t *firstBus;
+
 
 LOCAL long init_bi (
     struct biRecord *prec
 ) {
     biCanPrivate_t *pcanBi;
+    biCanBus_t *pbus;
     int status;
-
+    
     if (prec->inp.type != INST_IO) {
 	recGblRecordError(S_db_badField, (void *) prec,
 			  "devBiCan (init_record) Illegal INP field");
@@ -103,9 +116,15 @@ LOCAL long init_bi (
     if (status ||
 	pcanBi->inp.parameter < 0 ||
 	pcanBi->inp.parameter > 7) {
-	recGblRecordError(S_can_badAddress, (void *) prec,
-			  "devBiCan (init_record) bad CAN address");
-	return S_can_badAddress;
+	if (canSilenceErrors) {
+	    pcanBi->inp.canBusID = NULL;
+	    prec->pact = TRUE;
+	    return OK;
+	} else {
+	    recGblRecordError(S_can_badAddress, (void *) prec,
+			      "devBiCan (init_record) bad CAN address");
+	    return S_can_badAddress;
+	}
     }
 
     #ifdef DEBUG
@@ -123,20 +142,47 @@ LOCAL long init_bi (
 		pcanBi->inp.parameter, prec->mask);
     #endif
 
-    /* Create a callback for asynchronous processing */
+    /* Find the bus matching this record */
+    for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
+    	if (pbus->canBusID == pcanBi->inp.canBusID) break;
+    }
+    
+    /* If not found, create one */
+    if (pbus == NULL) {
+    	pbus = malloc(sizeof (biCanBus_t));
+    	if (pbus == NULL) return S_dev_noMemory;
+    	
+    	/* Fill it in */
+    	pbus->firstPrivate = NULL;
+    	pbus->canBusID = pcanBi->inp.canBusID;
+    	callbackSetCallback(busCallback, &pbus->callback);
+    	callbackSetPriority(priorityMedium, &pbus->callback);
+    	
+    	/* and add it to the list of busses we know about */
+    	pbus->nextBus = firstBus;
+    	firstBus = pbus;
+    	
+    	/* Ask driver for error signals */
+    	canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+    }
+    
+    /* Insert private record structure into linked list for this CANbus */
+    pcanBi->nextPrivate = pbus->firstPrivate;
+    pbus->firstPrivate = pcanBi;
+
+    /* Set the callback parameters for asynchronous processing */
     callbackSetCallback(biProcess, &pcanBi->callback);
     callbackSetPriority(prec->prio, &pcanBi->callback);
 
-    /* and a watchdog for CANbus RTR timeouts */
+    /* and create a watchdog for CANbus RTR timeouts */
     pcanBi->wdId = wdCreate();
     if (pcanBi->wdId == NULL) {
 	return S_dev_noMemory;
     }
 
-    /* Register the message and signal handlers with the Canbus driver */
+    /* Register the message handler with the Canbus driver */
     canMessage(pcanBi->inp.canBusID, pcanBi->inp.identifier, 
 	       (canMsgCallback_t *) biMessage, pcanBi);
-    canSignal(pcanBi->inp.canBusID, (canSigCallback_t *) biSignal, pcanBi);
 
     return OK;
 }
@@ -233,6 +279,8 @@ LOCAL void biMessage (
     biCanPrivate_t *pcanBi,
     canMessage_t *pmessage
 ) {
+    if (!interruptAccept) return;
+    
     if (pmessage->rtr == RTR) {
 	return;		/* Ignore RTRs */
     }
@@ -249,19 +297,34 @@ LOCAL void biMessage (
     }
 }
 
-LOCAL void biSignal (
-    biCanPrivate_t *pcanBi,
+LOCAL void busSignal (
+    biCanBus_t *pbus,
     int status
 ) {
+    if (!interruptAccept) return;
+    
     switch(status) {
 	case CAN_BUS_OK:
+	    pbus->status = NO_ALARM;
 	    return;
 	case CAN_BUS_ERROR:
-	    pcanBi->status = READ_ALARM;
+	    pbus->status = READ_ALARM;
 	    break;
 	case CAN_BUS_OFF:
-	    pcanBi->status = COMM_ALARM;
+	    pbus->status = COMM_ALARM;
 	    break;
     }
-    callbackRequest(&pcanBi->callback);
+    callbackRequest(&pbus->callback);
+}
+
+LOCAL void busCallback (
+    biCanBus_t *pbus
+) {
+    biCanPrivate_t *pcanBi = pbus->firstPrivate;
+    
+    while (pcanBi != NULL) {
+	pcanBi->status = pbus->status;
+	biProcess(pcanBi);
+	pcanBi = pcanBi->nextPrivate;
+    }
 }

@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.1.1.1 1997-03-27 12:34:12 anj Exp $
+    $Id: drvIpac.h,v 1.2 1997-06-19 16:57:24 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -61,7 +61,7 @@ extern "C" {
 
 /* Structure of the IPAC ID Prom, located in the pack ID space. */
 
-typedef struct {
+typedef volatile struct {
     uchar_t pad00;
     uchar_t asciiI;
     uchar_t pad02;

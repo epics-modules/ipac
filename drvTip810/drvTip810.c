@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.1.1.1 1997-03-27 12:34:11 anj Exp $
+    $Id: drvTip810.c,v 1.2 1997-06-19 16:57:25 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -91,7 +91,39 @@ typedef struct t810Dev_s {
 } t810Dev_t;
 
 
-t810Dev_t *pt810First = NULL;
+LOCAL t810Dev_t *pt810First = NULL;
+
+int canSilenceErrors = FALSE;	/* Really for EPICS device support use */
+
+
+/*******************************************************************************
+
+Routine:
+    t810Status
+
+Purpose:
+    Return status of given t810 device
+
+Description:
+    Returns the status of the t810 device identified by the input parameter, 
+    or -1 if not a device ID.
+
+Returns:
+    Bit-pattern (0..255) or -1.
+
+*/
+
+int t810Status (
+    void *canBusID
+) {
+    t810Dev_t *pdevice = (t810Dev_t *)canBusID;
+    if (canBusID != 0 &&
+    	pdevice->magicNumber == T810_MAGIC_NUMBER) {
+    	return pdevice->pchip->status;
+    } else {
+    	return -1;
+    }
+}
 
 
 /*******************************************************************************
@@ -576,7 +608,7 @@ Returns:
 int t810Initialise (
     void
 ) {
-    uchar_t intVec = T810_INT_VEC_BASE, intLevel;
+    uchar_t intVec = T810_INT_VEC_BASE;
     t810Dev_t *pdevice = pt810First;
     int status = OK;
 
@@ -595,8 +627,7 @@ int t810Initialise (
 	}
 	*(pdevice->pintVec) = intVec++;
 
-	intLevel = ipmIrqCmd(pdevice->card, pdevice->slot, 0, ipac_irqGetLevel);
-	sysIntEnable(intLevel);
+	ipmIrqCmd(pdevice->card, pdevice->slot, 0, ipac_irqEnable);
 
 	pdevice->pchip->control = PCA_CR_OIE |
 				  PCA_CR_EIE |

@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.h,v 1.1.1.1 1997-03-27 12:34:12 anj Exp $
+    $Id: drvTip810.h,v 1.2 1997-06-19 16:57:26 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -40,6 +40,7 @@ Version:
 #define S_t810_transmitterBusy	(M_t810| 4) /*transmit buffer unexpectedly busy*/
 
 
+extern int t810Status(void *canBusID);
 extern int t810Report(int page);
 extern int t810Create(char *busName, ushort_t card, ushort_t slot, 
 		      uint_t busRate);
