@@ -325,6 +325,7 @@ int tyGSOctalModuleInit
             return(ERROR);
         }
         ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
+        ipmIrqCmd(carrier, module, 1, ipac_irqEnable);
     }
   
     return (tyGSOctalLastModule++);
