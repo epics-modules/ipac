@@ -556,23 +556,23 @@ LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
     if(qt->modelID == GSIP_OCTAL485) {
 	pTyGSOctalDv->mode = RS485;
 
-	/* Tx Output MPOa will be dis/en-abled using control reg */
-	regs->u.w.opcr = 0x80; /* out, MPOb=RTSN, MPOa=RTSN */
+	/* Tx Output (MPOa/b) will be dis/en-abled using control reg */
+	regs->u.w.opcr = 0x80; /* out, MPOa/b=RTSN */
 
 	mr1 &= 0x7f; /* no auto RxRTS */
-	mr2 &= 0xcf; /* no auto TxRTS and no CTS enable Tx */
+	mr2 &= 0xcf; /* no CTS enable Tx */
     } else {
 	pTyGSOctalDv->mode = RS232;
 
-	/* RTS (MPOa) will be controlled automatically by UART */
-	regs->u.w.opcr = 0x87;  /* out, MPOb=RTSN, MPOa=FIFO full */
-
-	mr1 |= 0x80; /* use RxRTS (auto mode) */
-	mr2 |= 0x20; /* use TxRTS (auto mode),CTS enable Tx */
+	/* RTS (MPOa/b) will be controlled automatically by UART */
+	regs->u.w.opcr = 0xf7;  /* out, MPOa/b=FIFO full */
     }
     chan->u.w.cr = 0x10; /* point MR to MR1 */
     chan->u.w.mr = mr1;
     chan->u.w.mr = mr2;
+    if (mr1 & 0x80) { /* Hardware flow control */
+	chan->u.w.cr = 0x80;	/* Assert RTSN */
+    }
 }
 
 /******************************************************************************
