@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.6 1998-08-20 16:53:28 anj Exp $
+    $Id: drvTip810.c,v 1.7 1998-08-20 18:55:49 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -915,7 +915,7 @@ int canIoParse (
     
     /* Handle any number of optional +<n> additions to the ID */
     while (separator == '+') {
-    	pcanIo->identifier += strtoul(canString, &canString, 0);
+    	pcanIo->identifier += strtol(canString, &canString, 0);
 	separator = *canString++;
     }
 
