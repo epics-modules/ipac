@@ -533,7 +533,7 @@ LOCAL int tyGSOctalWrite
         {
             /* make sure all data sent */
             while(!(chan->u.r.sr & 0x08)); /* TxEMT */
-            /* enable recv, 1001=negate RTSN high */
+            /* enable recv, 1001=negate RTSN (high) */
             chan->u.w.cr = 0x91;
         }
         
@@ -553,7 +553,7 @@ LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
     SCC2698 *regs = pTyGSOctalDv->regs;
     QUAD_TABLE *qt = pTyGSOctalDv->qt;
     
-    if(qt->modelID == GSIP_OCTAL485) {
+    if (qt->modelID == GSIP_OCTAL485) {
 	pTyGSOctalDv->mode = RS485;
 
 	/* Tx Output (MPOa/b) will be dis/en-abled using control reg */
@@ -598,15 +598,15 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
     } else {
 	mr2|=0x07;
     }
-    switch (opts & (PARENB|PARODD)) {
-	case PARENB|PARODD: mr1|=0x04; break;
-	case PARENB: break;
-	case PARODD: mr1|=0x18; break; /* multi-drop mode (?) */
-	default:
-	case 0: mr1|=0x10; break;
+    if (!(opts & PARENB)) {
+	mr1|=0x10;
+    }
+    if (opts & PARODD) {
+	mr1|=0x04;
     }
     if (!(opts & CLOCAL)) {
-	mr1|=0x80; mr2|=0x10;
+	mr1|=0x80;	/* Control RTS from RxFIFO */
+	mr2|=0x10;	/* Enable Tx using CTS */
     }
 
     tyGSOctalSetmr(pTyGSOctalDv, mr1, mr2);
