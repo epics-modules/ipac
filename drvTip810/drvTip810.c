@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.13 2002-04-17 19:30:51 anj Exp $
+    $Id: drvTip810.c,v 1.14 2003-06-03 19:38:46 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -381,6 +381,7 @@ int t810Create (
 				     PCA_OCR_OCT1_PUSHPULL;
     /* chip now initialised, but held in the Reset state */
 
+    ipmIrqCmd(card, slot, 0, ipac_statActive);
     return OK;
 }
 
@@ -413,6 +414,8 @@ int t810Shutdown (
 	}
 
 	pdevice->pchip->control = PCA_CR_RR;	/* Reset, interrupts off */
+	ipmIrqCmd(pdevice->card, pdevice->slot, 0, ipac_statUnused);
+	
 	pdevice = pdevice->pnext;
     }
     return OK;

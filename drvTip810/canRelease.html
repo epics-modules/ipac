@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.8 2002-04-17 19:30:48 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.9 2003-06-03 19:38:45 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,33 @@
 CANbus driver as it has evolved since first release.  The earliest version
 appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+
+<H2>Version 2.5</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>This version is intended for use with EPICS Base R3.14.x, and has been
+built against Base R3.14.2 (but not actually tested before release as I don't
+have a TIP810 module). There were a few minor changes to the code, but these
+were just to get it to build properly. The only supported operating system is
+still vxWorks - the EPICS OSI layer does not currently provide API equivalents
+for vxMemProbe() or intConnect(). There is a reasonable chance of porting this
+code to run on RTEMS once the OSI layer is sufficiently functional, but other
+operating systems are not likely to be easy targets.</LI>
+
+</UL>
+
+<P>Added:</P>
+<UL>
+
+<LI>Code to mark the IP slot as active using the ipmIrqCmd() command
+ipac_statActive at initialization, and inactive again when the rebootHook
+routine is run. This will be ignored by most IP carrier drivers.</LI>
+
+</UL>
 <HR>
 
 

@@ -171,19 +171,14 @@ void tyGSOctalReport()
         }
     }
 }
+
 LOCAL int tyGSOctalRebootHook(int type)
 {
-/*
- * Something intelligent needs to be done here.
- * Will just calling ipmIrqCmd(.., ipac_irqDisable) work?
- *
-*/
     QUAD_TABLE *qt;
     int i, n;
     TY_GSOCTAL_DEV *pty;
     FAST int oldlevel;
 	
- /*   printf("tyGSOctalRebootHook\r\n");*/
     oldlevel = intLock();	/* disable all interrupts */
 
     for (n = 0; n < tyGSOctalLastModule; n++) {
@@ -196,7 +191,8 @@ LOCAL int tyGSOctalRebootHook(int type)
             }
         ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
         ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
-
+	
+	ipmIrqCmd(qt->carrier, qt->module, 0, ipac_statUnused);
         }
     }
     intUnlock (oldlevel);
@@ -362,6 +358,8 @@ int tyGSOctalModuleInit
         }
         ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
         ipmIrqCmd(carrier, module, 1, ipac_irqEnable);
+	
+	ipmIrqCmd(carrier, module, 0, ipac_statActive);
     }
   
     return (tyGSOctalLastModule++);

@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.9 2002-04-17 21:25:03 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.10 2003-06-03 19:38:45 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -19,7 +19,24 @@ version appears at the bottom, with more recent releases above it.</P>
 
 <HR>
 
-<H2>Varsion 2.4</H2>
+<H2>Version 2.5</H2>
+
+<P>Changed:<UL>
+
+<LI>This version is intended for builds using EPICS Base R3.14.x, and has been
+tested against Base R3.14.2. There were a few minor changes to the code, but
+these were just to get it to build properly. The only supported operating
+system is still vxWorks - the EPICS OSI layer does not currently provide API
+equivalents for vxMemProbe() or intConnect(). There is a reasonable chance of
+porting drvIpac and some of the carrier drivers to run on RTEMS once the OSI
+layer is sufficiently functional, but other operating systems are not likely to
+be easy targets.</LI>
+
+</UL></P>
+
+<HR>
+
+<H2>Version 2.4</H2>
 
 <P>Added:<UL>
 

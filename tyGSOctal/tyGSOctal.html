@@ -8,122 +8,38 @@
 </head>
 <body text="#000000" bgcolor="#ffffff" link="#000080" vlink="#707070" alink="0000080">
 
-<h1>GreenSpring OctalUart IP Module Support</h1>
+<h1>SBS OctalUart IP Module Support</h1>
 
 <h2>Introduction</h2>
 
 <p>
-This software drives the GreenSpring OctalUart family of Industry Pack modules
-to communicate with a number of RS-232, RS-422, and RS-485 devices.  Note that
-this driver is <b>not</b> compatible with GreenSpring's newer IP-OctalPlus
-modules as they use a different chipset.</p>
+This software drives the SBS (formerly GreenSpring) OctalUart family of
+Industry Pack modules to communicate with a number of RS-232, RS-422, and
+RS-485 devices.  Note that this driver is <b>not</b> compatible with newer
+IP-OctalPlus modules as they use a different chipset.</p>
 
 <p>
 The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the
 carrier board plus access routines for the SCC2698 octalUart used in the IP
-modules. The driver is implemented as a standard vxWorks terminal driver making
-use of the tyLib() system library. </p>
+modules. The driver implements a standard vxWorks terminal driver making use of
+the vxWorks tyLib system library.</p>
 
 <h2>
-Structure</h2>
+Configuration Example</h2>
 
 <p>
-The software structure used to support EPICS record processing is in three
-layers:</p>
+The following is an example of setting up the device driver from a vxWorks
+startup script:</p>
 
-<p>
-EPICS device and driver support</p>
-
-<ul>
-<li>devNode - simple support for stringin/out records with multiple delimiters
-<li>drvNode - driver support called by devNode
-</ul>
-
-<hr>
-<p>
-EPICS STDIO support</p>
-
-<ul>
-<li>drvSerial -  EPICS STDIO Driver Support (for serial devices)
-</ul>
-
-<hr>
-<p>
-vxWorks device driver</p>
-
-<ul>
-<li>tyGSOctal - vxWorks device driver for the GreenSpring OctalUART
-<li>drvIpac - IPAC management
-</ul>
-
-<h2>
-Related Systems</h2>
-
-<p>
-Other present options for EPICS device/driver support that use drvSerial
-are:</p>
-
-<ul>
-<li>devAscii/drvAscii - support for ASCII commands and responses
-<li>devAbDf1/drvAbDf1 - support for the Allen-Bradley DF1 protocol
-</ul>
-
-<p>
-drvSerial is designed to use any vxWorks serial device driver. Other hardware
-supported includes:</p>
-
-<ul>
-<li>tyFs2 - vxWorks device driver for the FORCE SIO-2 VME card
-</ul>
-
-<h2>
-Where to Find It!</h2>
-
-<p>
-EPICS device and driver support.</p>
-
-<ul>
-<li>devNode - <a href="http://www.cfht.hawaii.edu/~tcs/tcsiv/devNode.html">devNode WWW Page</a>
-<li>drvNode - <a href="http://www.cfht.hawaii.edu/~tcs/tcsiv/drvNode.html">drvNode WWW page</a>
-<li>devAscii/drvAscii - <a href="mailto:ahoney@keck.hawaii.edu">ahoney@keck.hawaii.edu (Allan Honey)</a>
-<li>devAbDf1/drvAbDf1 - <a href="mailto:johill@lanl.gov">johill@lanl.gov (Jeff Hill)</a>
-</ul>
-
-<hr>
-<p>
-EPICS STDIO support.</p>
-
-<ul>
-<li>drvSerial -  <a href="mailto:johill@lanl.gov">johill@lanl.gov (Jeff Hill)</a>
-</ul>
-
-<hr>
-<p>
-vxWorks device driver</p>
-
-<ul>
-<li>drvIpac - <a href="http://www.aps.anl.gov/asd/people/anj/ipac">http://www.aps.anl.gov/asd/people/anj/ipac</a>
-<li>tyGSOctal - included with drvIpac
-<li>tyFs2 -  <a href="mailto:ahoney@keck.hawaii.edu">ahoney@keck.hawaii.edu (Allan Honey)</a>
-</ul>
-
-<h2>
-Driver Routines</h2>
-
-<p>
-The following is an example of setting up the device driver from within a
-vxWorks startup script:</p>
-
+<blockquote>
 <pre>
-#####################
-# Configuration Setup
-#####################
+# Initialize our drvIpac carrier
+ipacAddCarrier &amp;ipmv162, "A:m=0xe0000000,64 l=3,2"
 
-# Initialize the IP module tasks
-tyGSOctalDrv 4
-ipacAddCarrier &amp;vipc610, "0x6000"
+# Number of tyGSOctal modules to support:
+tyGSOctalDrv 1
 
-# Init module on carrier 0, slot 0
+# Init module on carrier 0, slot 0, IRQ #80
 MOD0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
 
 # Create devices
@@ -132,35 +48,13 @@ PORT02 = tyGSOctalDevCreate("/tyGS/0/2", MOD0, 2, 512, 512)
 PORT04 = tyGSOctalDevCreate("/tyGS/0/4", MOD0, 4, 512, 512)
 PORT06 = tyGSOctalDevCreate("/tyGS/0/6", MOD0, 6, 512, 512)
 
-# Config ports
+# Configure the ports
 # baud, parity(N/E/O), stop, bits, flow(N/H)
 tyGSOctalConfig PORT00, 9600, 'N', 1, 8, 'N'
 tyGSOctalConfig PORT02, 9600, 'N', 1, 8, 'N'
 tyGSOctalConfig PORT04, 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig PORT06, 9600, 'N', 1, 8, 'N'
-
-#
-# The following uses the EPICS drvNode/devNode support
-#
-# Create NODEs - device support uses these names
-COMMON = drvNodeInit("/tyGS/0/0")
-VILINK = drvNodeInit("/tyGS/0/2")
-AOBG   = drvNodeInit("/tyGS/0/4")
-OSIS   = drvNodeInit("/tyGS/0/6")
-
-# Configure NODE delimiters
-drvNodeSetDelim COMMON, 0, 2, "\015\012", 0x00
-drvNodeSetDelim COMMON, 1, 2, "> ", 0x00
-drvNodeSetDelim COMMON, 2, 3, ":  ", 0x00
-drvNodeSetDelim COMMON, 3, 3, ")? ", 0x00
-drvNodeSetDelim COMMON, 4, 3, "): ", 0x00
-#
-drvNodeSetDelim VILINK, 0, 2, "\015\012", 0x00
-#
-drvNodeSetDelim AOBG, 0, 1, "\015", 0x00
-#
-drvNodeSetDelim OSIS, 0, 1, "\015", 0x00
-</pre>
+tyGSOctalConfig PORT06, 9600, 'N', 1, 8, 'N'</pre>
+</blockquote>
 
 </body>
 </html>

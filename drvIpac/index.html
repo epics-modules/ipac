@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.4 2002-04-17 21:25:02 anj Exp $">
+   <meta name="Version" content="$Id: index.html,v 1.5 2003-06-03 19:38:44 anj Exp $">
    <title>EPICS ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
@@ -159,6 +159,18 @@ R3.13.x</td>
 <td>
 <a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
 </tr>
+
+<tr>
+<td align=center>
+2.5</td>
+
+<td>
+R3.14.2</td>
+
+<td>
+<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
+</tr>
+
 </table>
 </blockquote></li>
 
@@ -190,19 +202,23 @@ Application Installation</h2>
 To use the installed and built support software in an &lt;ioctop&gt;
 application, make the following changes to the IOC application:</p>
 
+<h3>
+EPICS R3.13.x</h3>
+
 <ol>
 <li>
-Edit the <tt>config/RELEASE</tt> file and add the line</li>
+You must use drvIpac release 2.4 or earlier. Edit the <tt>config/RELEASE</tt>
+file and add the line
 
 <blockquote>
 <pre>IPAC=<i>/path/to/ipac/version</i></pre>
-</blockquote>
+</blockquote></li>
 
 <li>
 If you are still using an EPICS version prior to 3.13.2 (or your &lt;ioctop&gt;
 predates 3.13.2 and you haven't updated the files in config since then), edit
 the <tt>config/CONFIG_APP</tt> file and add the following lines.  This step is
-<b>not</b> required from EPICS 3.13.2 onwards.</li>
+<b>not</b> required from EPICS 3.13.2 onwards.
 
 <blockquote>
 <pre>ifdef IPAC
@@ -210,27 +226,64 @@ USR_INCLUDES += -I$(IPAC)/include
 IPAC_BIN = $(IPAC)/bin/$(T_A)
 USER_DBDFLAGS += -I $(IPAC)/dbd
 endif</pre>
-</blockquote>
+</blockquote></li>
 
 <li>
 In the application source directory where the base object files are linked
-together, edit <tt>Makefile.Vx</tt> and add</li>
+together, edit <tt>Makefile.Vx</tt> and add
 
 <blockquote>
 <pre>
-LIBOBJS += $(IPAC_BIN)/ipacLib     <i>for drvIpac, and</i>
-LIBOBJS += $(IPAC_BIN)/tip810Lib   <i>if you want CANbus support</i></pre>
-</blockquote>
+LIBOBJS += $(IPAC_BIN)/ipacLib     # for drvIpac, and
+LIBOBJS += $(IPAC_BIN)/tip810Lib   # if you want CANbus support</pre>
+</blockquote></li>
 
 <li>
 Ensure the following is included in the construction of the application's
-database definition file</li>
+database definition file
 
 <blockquote>
 <pre>
-include "drvIpac.dbd"              <i>if you only want drvIpac, or</i>
-include "devTip810.dbd"            <i>if you want CANbus support too</i></pre>
-</blockquote>
+include "drvIpac.dbd"              # if you only want drvIpac, or
+include "devTip810.dbd"            # if you want CANbus support too</pre>
+</blockquote></li>
+
+<li>
+Rebuild the application and use the newly installed support as desired.</li>
+</ol>
+
+<h3>
+EPICS R3.14.x</h3>
+
+<ol>
+<li>
+You must use drvIpac release 2.5 or later. Edit the <tt>configure/RELEASE</tt>
+file and add the line
+
+<blockquote>
+<pre>IPAC=<i>/path/to/ipac/version</i></pre>
+</blockquote></li>
+
+<li>
+In the application source directory where the object files are linked together,
+edit the <tt>Makefile</tt> and add
+
+<blockquote>
+<pre>
+&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/ipacLib    # for drvIpac,
+&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/tip810Lib  # for CANbus support
+&lt;myapp&gt;_OBJS_vxWorks   += $(IPAC_BIN)/tyGSOctal  # for SBS Octal UART</pre>
+</blockquote></li>
+
+<li>
+Ensure the following is included in the construction of the application's
+database definition file
+
+<blockquote>
+<pre>
+include "drvIpac.dbd"              # if you only want drvIpac, or
+include "devTip810.dbd"            # if you want CANbus support too</pre>
+</blockquote></li>
 
 <li>
 Rebuild the application and use the newly installed support as desired.</li>

@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.3 2001-02-14 21:20:59 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.4 2003-06-03 19:38:48 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -20,50 +20,93 @@ driver was merged into the unbundled EPICS ipac support area.  Version numbers
 refer to the release of the ipac support software as a whole.  The earliest
 version appears at the bottom, with more recent releases above it. </P><HR>
 
+<H2>Version 2.5</H2>
+
+<P>Added:</P>
+
+<UL>
+
+<LI>Support for the ioctl FIOBAUDRATE, needed for MPF.</LI>
+
+<LI>Mark the IP slot active at initialization time, and inactive again in the
+reboot hook routine.</LI>
+
+</UL>
+
+<P>Bugs Fixed:</P>
+
+<UL>
+
+<LI>Modified the reboot hook routine to fix a race condition.</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.3</H2>
 
-<P>Modified documentation to indicate non-support of the new IP-OctalPlus
-module family, which uses different UARTS.</P>
+<P>Changed:</P>
 
-<P>Added Burkhard W. Kolb's RebootHook routine to turn off interrupts.</P>
+<UL>
 
+<LI>Modified documentation to indicate non-support of the new IP-OctalPlus
+module family, which uses different UARTS.</LI>
+
+</UL>
+
+<P>Added:</P>
+
+<UL>
+
+<LI>Burkhard W. Kolb's RebootHook routine to turn off interrupts.</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.1</H2>
 
 <P>Updated due to changes made to drvIpac, and also actually tried it out for
 myself - got some interrupts but I haven't done a full test.</P>
 
-<P>Changes:<UL>
+<P>Changed:</P>
 
-<LI>Use <TT>ipmIntConnect</TT> to attach the ISR. </LI>
+<UL>
 
-</UL></P>
+<LI>Use <TT>ipmIntConnect()</TT> to attach the ISR. </LI>
 
-<P>Bugs fixed:<UL>
+</UL>
+
+<P>Bugs fixed:</P>
+
+<UL>
 
 <LI>Now works with the ipmv162 carrier driver - the interrupt vector register
 was being accessed at an offset from the I/O space, which works on GreenSpring
 carriers but doesn't meet the IPAC specification.  The register is correctly
-accessed in the IP memory space, which means that this must be mapped in. </LI>
+accessed in the IP memory space, which means that this must be mapped in.</LI>
 
-</UL></P><HR>
+</UL>
 
-
+<HR>
 <H2>Version 2.0</H2>
 
 <P>First version containing this driver, ipac support is now structured as an
-EPICS R3.13.1 &lt;supporttop&gt; application. </P>
+EPICS R3.13.1 &lt;supporttop&gt; application.</P>
 
-<P>Added:<UL>
+<P>Added:</P>
+
+<UL>
 
 <LI>This driver software and these release notes.</LI>
 
-</UL></P>
+</UL>
 
-<P>Bugs fixed:<UL>
+<P>Bugs fixed:</P>
+
+<UL>
 
 <LI>Gcc compilation warnings attended to.</LI>
 
-</UL></P>
+</UL>
 
 </BODY>
 </HTML>
