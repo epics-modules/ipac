@@ -29,31 +29,32 @@ Configuration Example</h2>
 
 <p>
 The following is an example of setting up the device driver from a vxWorks
-startup script:</p>
+or iocsh startup script:</p>
 
 <blockquote>
 <pre>
 # Initialize our drvIpac carrier
-ipacAddCarrier &amp;ipmv162, "A:m=0xe0000000,64 l=3,2"
+ipacAddMVME162 "A:m=0xe0000000,64 l=3,2"
 
 # Number of tyGSOctal modules to support:
 tyGSOctalDrv 1
 
-# Init module on carrier 0, slot 0, IRQ #80
-MOD0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
+# Init an RS232 module using IRQ #80 on carrier 0, slot 0
+tyGSOctalModuleInit "RS232", 0x80, 0, 0
 
 # Create devices
-PORT00 = tyGSOctalDevCreate("/tyGS/0/0", MOD0, 0, 512, 512)
-PORT02 = tyGSOctalDevCreate("/tyGS/0/2", MOD0, 2, 512, 512)
-PORT04 = tyGSOctalDevCreate("/tyGS/0/4", MOD0, 4, 512, 512)
-PORT06 = tyGSOctalDevCreate("/tyGS/0/6", MOD0, 6, 512, 512)
+# name, module#, port#, rdBuf, wrBuf
+tyGSOctalDevCreate "/tyGS0/0", 0, 0, 512, 512
+tyGSOctalDevCreate "/tyGS0/2", 0, 2, 512, 512
+tyGSOctalDevCreate "/tyGS0/4", 0, 4, 512, 512
+tyGSOctalDevCreate "/tyGS0/6", 0, 6, 512, 512
 
 # Configure the ports
 # baud, parity(N/E/O), stop, bits, flow(N/H)
-tyGSOctalConfig PORT00, 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig PORT02, 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig PORT04, 9600, 'N', 1, 8, 'N'
-tyGSOctalConfig PORT06, 9600, 'N', 1, 8, 'N'</pre>
+tyGSOctalConfig "/tyGS0/0", 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig "/tyGS0/2", 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig "/tyGS0/4", 9600, 'N', 1, 8, 'N'
+tyGSOctalConfig "/tyGS0/6", 9600, 'N', 1, 8, 'N'</pre>
 </blockquote>
 
 </body>

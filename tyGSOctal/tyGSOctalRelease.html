@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.4 2003-06-03 19:38:48 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.5 2003-11-13 21:40:23 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -20,6 +20,42 @@ driver was merged into the unbundled EPICS ipac support area.  Version numbers
 refer to the release of the ipac support software as a whole.  The earliest
 version appears at the bottom, with more recent releases above it. </P><HR>
 
+<H2>Version 2.6</H2>
+
+<P>Added:</P>
+
+<UL>
+
+<LI>Support for the ioctls <tt>SIO_HW_OPTS_SET</tt> and <tt>SIO_BAUD_SET</tt>
+(defined in the vxWorks header file sioLib.h).</LI>
+
+<LI>EPICS iocsh command tables and a registrar routine.</LI>
+
+<LI>The database definition file <tt>tyGSOctal.dbd</tt>.</LI>
+
+</UL>
+
+<P>Changed:</P>
+
+<UL>
+
+<LI>Minor internal surgery/refactoring, including removal of unnecessarily
+exported routines from the API.</LI>
+
+<LI>The type returned from tyGSOctalDevCreate() is now the char* name argument.
+The first argument to tyGSOctalConfig() is now also the char* name for the
+device.  This change should be backwards compatible for all IOCs where the
+initialization was being performed in the vxWorks startup script, but now
+allows a slightly different set of initialization commands to be used from
+either the vxWorks shell or the EPICS iocsh.</LI>
+
+<LI>This code now compiles to a library rather than an object file so the
+method of linking it into an IOC application now matches other EPICS R3.14.x
+support applications.</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.5</H2>
 
 <P>Added:</P>
