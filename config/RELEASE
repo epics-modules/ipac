@@ -1,2 +1,3 @@
 #RELEASE Location of external products
-EPICS_BASE=/home/phoebus/MRK/epics/base
+SUPPORT=/usr/local/iocapps/R3.13.6/support
+EPICS_BASE=$(SUPPORT)/base/3-13-6-asd1
