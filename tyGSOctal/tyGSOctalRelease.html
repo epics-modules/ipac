@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks GreenSpring Octal Serial driver software">
 <META NAME="KeyWords" CONTENT="SBS/GreenSpring, vxWorks, IPAC, Octal Serial">
-<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.8 2004-12-16 18:58:40 anj Exp $">
+<META NAME="Version" CONTENT="$Id: tyGSOctalRelease.html,v 1.9 2005-02-18 22:53:28 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -20,6 +20,24 @@ driver was merged into the unbundled EPICS ipac support area. Version numbers
 refer to the release of the ipac support software as a whole. The earliest
 version appears at the bottom, with more recent releases above it.</P><HR>
 
+<HR>
+<H2>Version 2.9</H2>
+
+<P>Changed:</P>
+
+<UL>
+
+<LI>Added CLOCAL to the initial port settings; omitting it turns on hardware
+flow control (actually this control bit should be CRTSCTS but vxWorks doesn't
+actually define that in sioLib.h and the WRS drivers use CLOCAL instead), but
+ports are supposed to default to no flow control.  ASYN uses the ioctl
+<tt>SIO_HW_OPTS_GET</tt> to query the port settings, and thus found the problem
+&#8212; presumably everybody else who uses tyGSOctal has been explicitly setting
+up each port.</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.8</H2>
 
 <P>Added:</P>

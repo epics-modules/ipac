@@ -563,7 +563,7 @@ LOCAL void tyGSOctalInitChannel
  * 9600 baud, no parity, 1 stop bit, 8 bits per char, no flow control
  */
     tyGSOctalBaudSet(pTyGSOctalDv, 9600);
-    tyGSOctalOptsSet(pTyGSOctalDv, CS8);
+    tyGSOctalOptsSet(pTyGSOctalDv, CS8 | CLOCAL);
 
 /*
  * enable everything, really only Rx interrupts
