@@ -4,20 +4,21 @@ Project:
     Gemini/UKIRT CAN Bus Driver for EPICS
 
 File:
-    drvVipc610.c
+    drvVipc610_01.c
 
 Description:
-    IPAC Carrier Driver for the GreenSpring VIPC610 Quad IndustryPack 
+    IPAC Carrier Driver for the GreenSpring VIPC610-01 Quad IndustryPack 
     Carrier VME board, provides the interface between IPAC driver and the 
     hardware.  This carrier is 6U high, but cannot support 32-bit accesses 
-    to dual-slot IP modules, or Extended mode addresses.
+    to dual-slot IP modules.  Note the VIPC610-01 fixes the IRQ levels to
+    be equivalent to two VIPC310 carriers, different to the VIPC610.
 
 Author:
     Andrew Johnson
 Created:
     19 July 1995
 Version:
-    $Id: drvVipc610.c,v 1.2 1998-05-29 14:24:32 anj Exp $
+    $Id: drvVipc610_01.c,v 1.1 1998-05-29 14:24:33 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -50,16 +51,16 @@ Version:
 #define PROM_D 0x0380
 
 
-/* VME Interrupt levels */
+/* VME Interrupt levels for -01 option */
 
-#define IRQ_A0 1
-#define IRQ_A1 2
-#define IRQ_B0 3
-#define IRQ_B1 4
-#define IRQ_C0 5
-#define IRQ_C1 6
-#define IRQ_D0 7
-#define IRQ_D1 0
+#define IRQ_A0 4
+#define IRQ_A1 5
+#define IRQ_B0 2
+#define IRQ_B1 1
+#define IRQ_C0 4
+#define IRQ_C1 5
+#define IRQ_D0 2
+#define IRQ_D1 1
 
 
 /* Carrier Private structure type, one instance per board */
@@ -228,7 +229,7 @@ Description:
     VMEbus interrupter is listening on the necessary level.
 
 Returns:
-    ipac_irqGetLevel returns the interrupt level,
+    ipac_irqGetLevel returns the interrupt level (1, 2, 4 or 5),
     ipac_irqEnable returns 0 = OK,
     other calls return S_IPAC_notImplemented.
 
@@ -265,8 +266,8 @@ LOCAL int irqCmd (
 
 /* IPAC Carrier Table */
 
-ipac_carrier_t vipc610 = {
-    "GreenSpring VIPC610",
+ipac_carrier_t vipc610_01 = {
+    "GreenSpring VIPC610-01",
     SLOTS,
     initialise,
     NULL,

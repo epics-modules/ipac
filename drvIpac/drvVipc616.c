@@ -4,22 +4,22 @@ Project:
     Gemini/UKIRT CAN Bus Driver for EPICS
 
 File:
-    drvVipc610.c
+    drvVipc616.c
 
 Description:
-    IPAC Carrier Driver for the GreenSpring VIPC610 Quad IndustryPack 
+    IPAC Carrier Driver for the GreenSpring VIPC616 Quad IndustryPack 
     Carrier VME board, provides the interface between IPAC driver and the 
-    hardware.  This carrier is 6U high, but cannot support 32-bit accesses 
-    to dual-slot IP modules, or Extended mode addresses.
+    hardware.  This carrier is 6U high and can support VME Extended mode 
+    addresses, but not 32-bit access to dual-slot IP modules.
 
 Author:
     Andrew Johnson
 Created:
-    19 July 1995
+    17 October 1997
 Version:
-    $Id: drvVipc610.c,v 1.2 1998-05-29 14:24:32 anj Exp $
+    $Id: drvVipc616.c,v 1.1 1998-05-29 14:24:33 anj Exp $
 
-(c) 1995 Royal Greenwich Observatory
+(c) 1997 Royal Greenwich Observatory
 
 *******************************************************************************/
 
@@ -73,46 +73,53 @@ Routine:
     initialise
 
 Purpose:
-    Creates new private table for VIPC610 at addresses given by cardParams
+    Creates new private table for VIPC616 at addresses given by cardParams
 
 Description:
     Checks the parameter string for the address of the card I/O space and 
-    optional size of the memory space for the modules.  If both the I/O and
-    memory base addresses can be reached from the CPU, a private table is 
-    created for this board.  The private table is a 2-D array of pointers 
-    to the base addresses of the various accessible parts of the IP module.
+    optional address and size of the card memory space.  A private table 
+    is created for this card which is a 2-D array of pointers to the base 
+    addresses of the various accessible parts of each IP module.
 
 Parameters:
-    The parameter string should comprise a hex number (the 0x or 0X at the 
-    start is optional) optionally followed by a comma and a decimal integer.  
-    The first number is the I/O base address of the card in the VME A16 
-    address space (the factory default is 0x6000).  If present the second 
-    number gives the memory space in Kbytes allocated to each IP module.  
-    The memory base address of the VIPC610 card is set using the same jumpers 
-    as the I/O base address and is always 256 times the I/O base address, 
-    but in the VME A24 address space.  The factory default for the memory 
-    base address is thus 0x600000.  If the memory size parameter is omitted 
-    or set to zero then none of the IP modules on the carrier provide any 
-    memory space.  Legal memory size values are 0, 64?, 128, 256, 512, 1024 
-    or 2048.  The memory size interacts with the memory base address such
-    that it is possible to exclude memory from the lower slots while still
-    providing access to memory in the later slots by adjusting the base
-    address suitably.
+
+    The parameter string should comprise a hex number (the 0x or 0X at
+    the start is optional), optionally followed by a comma and another
+    hex number, and possibly then another comma and a decimal integer.  
+    The first number is the I/O base address of the card in the VME A16
+    address space (the factory default is 0x6000).  If the second
+    number is present without the third number, this is the base
+    address of the module memory space in the VME A32 address space
+    (the address can then only have non-zero bits in A25 to A31; each 
+    IP module is allocated 8Mb for memory in the VME A32 space).  If a
+    third number is present, the second number is the card memory
+    address within the VME A24 address space and the third number is
+    the size in Kbytes allocated to each IP module.  Legal memory size
+    values are 0, 64?, 128, 256, 512, 1024 or 2048.  This memory size
+    interacts with the memory base address such that it is possible to
+    exclude memory from the lower slots while still providing access to
+    memory in the later slots by adjusting the base address suitably.
+
+    The factory default for the memory base address of the VIPC616 is 
+    0xD0000000 (A32 space).  If the memory address parameters are omitted 
+    then none of the IP modules on the carrier provide any memory space.  
 
 Examples:
     "0x6000" 
 	This indicates that the carrier board has its I/O base set to 
 	0x6000, and none of the slots provide memory space.
-    "1000,128"
-	Here the I/O base is set to 0x1000, and there is 128Kbytes of 
-	memory on each module, with the IP module A memory at 0x100000,
-	module B at 0x120000, module C at 0x140000 and D at 0x160000.
-    "7000,1024"
-	The I/O base is at 0x7000, and hence the carrier memory base is 
-	0x700000.  However because the memory size is set to 1024 Kbytes, 
-	modules A, B and C cannot be selected (1024 K = 0x100000, so they 
-	are decoded at 0x400000, 0x500000 and 0x600000 but can't be accessed
-	because these are below the base address).
+    "1000,80000000"
+	Here the I/O base is set to 0x1000, and the module memory areas
+	are accessible in A32 space starting at 0x80000000, so IP module 
+	A memory starts at 0x80000000, module B at 0x80800000, module C 
+	at 0x81000000 and D at 0x81800000.
+    "6000,700000,1024"
+	The I/O base is at 0x6000, and the carrier memory base is in A24 
+	space at 0x700000.  However because the memory size is set to 
+	1024 Kbytes, modules A, B and C cannot be selected (1024 K = 
+	0x100000, so they are decoded at 0x400000, 0x500000 and 0x600000 
+	but can't be accessed because these are below the memory base 
+	address).
 
 Returns:
     0 = OK, 
@@ -135,31 +142,41 @@ LOCAL int initialise (
 
     if (cardParams == NULL ||
 	strlen(cardParams) == 0) {
+	/* No or empty string, use manufacturers default settings */
 	ioBase = 0x6000;
+	mBase = 0xd0000000;
+	params = 2;	/* Pretend, mBase is in A32 space */
     } else {
-	params = sscanf(cardParams, "%p,%i", (void **) &ioBase, &mSize);
-	if (params < 1 || params > 2 ||
-	    ioBase > 0xfc00 || ioBase & 0x01ff ||
+	params = sscanf(cardParams, "%p,%p,%i", 
+			(void **) &ioBase, (void **) &mBase, &mSize);
+	if (params < 1 || params > 3 ||
+	    ioBase > 0xfc00 || ioBase & 0x03ff ||
+	    (params == 2 && mBase & 0x01ffffff) ||
+	    (params == 3 && mBase & 0xff01ffff) ||
 	    mSize < 0 || mSize > 2048 || mSize & 63) {
 	    return S_IPAC_badAddress;
 	}
     }
 
-    mBase = ioBase << 8;	/* Fixed by the VIPC610 card */
-    ioBase = ioBase & 0xfc00;	/* Clear A09 */
-
     status1 = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
 				(char *) ioBase, (char **) &ioBase);
-    if (mSize > 0) {
+    if (params == 2) {
+	/* A32 space, 8Mb allocated per module */
+	status2 = sysBusToLocalAdrs(VME_AM_EXT_SUP_DATA, 
+				    (char *) mBase, (char **) &mBase);
+	mSize = 8 << 20;
+	mOrig = mBase;
+    } else {
+	/* A24 space, variable size per module */
 	status2 = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
 				    (char *) mBase, (char **) &mBase);
+    	mSize = mSize << 10;	    /* Convert size from K to Bytes */
+    	mOrig = mBase & ~(mSize * SLOTS - 1);
+
     }
     if (status1 || status2) {
 	return S_IPAC_badAddress;
     }
-
-    mSize = mSize << 10;	/* Convert size from K to Bytes */
-    mOrig = mBase & ~(mSize * SLOTS - 1);
 
     private = malloc(sizeof (private_t));
     for (space = 0; space < IO_SPACES; space++) {
@@ -265,8 +282,8 @@ LOCAL int irqCmd (
 
 /* IPAC Carrier Table */
 
-ipac_carrier_t vipc610 = {
-    "GreenSpring VIPC610",
+ipac_carrier_t vipc616 = {
+    "GreenSpring VIPC616",
     SLOTS,
     initialise,
     NULL,
