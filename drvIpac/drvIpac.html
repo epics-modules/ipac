@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.10 2003-11-14 00:22:44 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.11 2004-01-26 23:55:33 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -1407,7 +1407,7 @@ system, and provides the registrar routine <tt>vipc616Registrar</tt> to add the
 above commands to the iocsh and link the driver into a final IOC executable,
 for which it must be listed in the IOC's .dbd file thus:</p>
 
-<blockquote><pre>registrar(vipc610Registrar)</pre></blockquote>
+<blockquote><pre>registrar(vipc616Registrar)</pre></blockquote>
 
 <p>
 <b>Warning:</b> As delivered by SBS/GreenSpring the VIPC616 has IRQ0 of slot D
