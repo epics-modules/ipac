@@ -3,7 +3,8 @@
    <TITLE>devCan - CAN Bus Device Support</TITLE>
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="User Documentation for the EPICS CANbus device support software">
-   <META NAME="KeyWords" CONTENT="CANbus, EPICS">
+   <META NAME="KeyWords" CONTENT="CANbus, EPICS, Tip810">
+   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.2 1998-05-29 16:31:43 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -11,7 +12,7 @@
 
 <CENTER><P>Developed for Gemini and UKIRT <BR>
 CANbus Device Support for EPICS <BR>
-$Id: devCan.html,v 1.1 1998-05-29 14:37:48 anj Exp $</P></CENTER>
+Version 1.1</P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson 
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -42,7 +43,7 @@ $Id: devCan.html,v 1.1 1998-05-29 14:37:48 anj Exp $</P></CENTER>
 <LI><A HREF="#multiBitBinaryRecords">Multi-Bit Binary Records</A></LI>
 </UL>
 
-<LI><A HREF="#biTip810">Tip810 Module Status Records</A></LI>
+<LI><B>NEW: </B><A HREF="#biTip810">Tip810 Module Status Records</A></LI>
 </UL>
 
 <P><HR></P>
@@ -110,11 +111,7 @@ This contains a number of elements, some of which are optional, and is
 formatted as follows: </P>
 
 <UL>
-<PRE><B>@</B><I>busName</I>
-[<B>/</B><I>timeout</I>]
-<B>:</B><I>identifier</I>
-[<B>.</B><I>offset</I>]
-<I>parameter</I></PRE>
+<PRE><B>@</B><I>busName</I>[<B>/</B><I>timeout</I>]<B>:</B><I>identifier</I>[<B>.</B><I>offset</I>]<I>parameter</I></PRE>
 </UL>
 
 <P>The first element after the &quot;<B><TT>@</TT></B>&quot; is the bus
@@ -285,7 +282,7 @@ exceeds 8. </P>
 
 <H2><A NAME="biTip810"></A>4. Tip810 Module Status Records</H2>
 
-<P>Version 2 of the CANbus driver software adds the ability to monitor
+<P>Version 1.1 of the CANbus driver software adds the ability to monitor
 the status bits of the Tip810 CANbus interface chip using Binary Input
 records. I do not regard these records as necessarily applying to any type
 of CANbus interface which is why I have made them specifically named for

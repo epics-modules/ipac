@@ -4,6 +4,7 @@
    <META NAME="Author" CONTENT="Andrew Johnson">
    <META NAME="Description" CONTENT="How to use the drvIpac Industry Pack Carrier driver software">
    <META NAME="KeyWords" CONTENT="IndustryPack, vxWorks, EPICS, GreenSpring">
+   <META NAME="Version" CONTENT="$Id: drvIpac.html,v 1.2 1998-05-29 16:31:44 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -11,7 +12,7 @@
 
 <CENTER><P>Developed with the Gemini/UKIRT<BR>
 CAN Bus Driver for EPICS<BR>
-$Id: drvIpac.html,v 1.1 1998-05-29 14:37:49 anj Exp $ </P></CENTER>
+Version 1.1 </P></CENTER>
 
 <CENTER><ADDRESS>Andrew Johnson
 <A HREF="mailto:anjohnson@iee.org">&lt;anjohnson@iee.org&gt;</A>
@@ -49,9 +50,9 @@ $Id: drvIpac.html,v 1.1 1998-05-29 14:37:49 anj Exp $ </P></CENTER>
 <UL>
 <LI><A HREF="#VIPC310">GreenSpring VIPC310</A> </LI>
 
-<LI><A HREF="#VIPC610">GreenSpring VIPC610</A> </LI>
+<LI><B>REVISED:</B> <A HREF="#VIPC610">GreenSpring VIPC610</A> </LI>
 
-<LI><A HREF="#VIPC616">GreenSpring VIPC616</A> </LI>
+<LI><B>NEW:</B> <A HREF="#VIPC616">GreenSpring VIPC616</A> </LI>
 
 <LI><A HREF="#MVME162">Motorola MVME162</A> </LI>
 </UL>
@@ -918,7 +919,7 @@ files <I>drvVipc610.c </I>and <I>drvVipc610_01.c</I> which export the symbols
 <TT>vipc610</TT> and <TT>vipc610_01</TT> respectively for use as the carrier
 descriptor tables with <TT>ipacAddCarrier</TT>. </P>
 
-<P>Note that as from version 2 of this software <TT>vipc610_01</TT> is
+<P>Note that as from version 1.1 of this software <TT>vipc610_01</TT> is
 a new name for the original <TT>vipc610</TT> symbol which has been changed
 to allow support for the standard board. Use of the wrong symbol may result
 in interrupts from modules in slots B through D being ignored.</P>
