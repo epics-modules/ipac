@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, GreenSpring">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.4 1999-07-28 20:37:53 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.5 1999-07-30 15:50:52 anj Exp $">
    <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; SunOS 5.6 sun4u) [Netscape]">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
@@ -13,12 +13,10 @@
 
 <center>
 <h1>
-drvIpac - Industry Pack Driver</h1></center>
+drvIpac - Industry Pack Driver</h1>
 
-<center>Version 2.1<font color="#000000"> </font><b><font color="#FF0000">draft
-A</font></b></center>
+Version 2.1
 
-<center>
 <address>
 Andrew Johnson</address></center>
 
@@ -104,25 +102,31 @@ RS485)</a></li>
 <hr>
 <h2>
 <a NAME="section1"></a>1. Introduction</h2>
+
 This document describes the software interface to a generic Industry Pack
-(IPAC) driver module for vxWorks, written as part of a <a href="drvTip810.html">CANbus
-EPICS device driver</a> for the <a href="http://www.gemini.edu/">Gemini</a>
-and <a href="http://www.jach.hawaii.edu/UKIRT/home.html">UKIRT</a> telescopes.
-The original purpose of the generic IPAC driver was to ensure that the
-CANbus driver would not be restricted to use with a single carrier board
-but could be used with different carriers as required, including with more
-than one type of carrier board simultaneously. The use of the generic driver
-also ensures that additional IPAC modules and drivers for other interfaces
-can be added without affecting the functioning of the CANbus driver.
+(IPAC) driver module for vxWorks, written as part of a 
+<a href="drvTip810.html">CANbus EPICS device driver</a> for the
+<a href="http://www.gemini.edu/">Gemini</a> and 
+<a href="http://www.jach.hawaii.edu/UKIRT/home.html">UKIRT</a> telescopes. The
+original purpose of the generic IPAC driver was to ensure that the CANbus
+driver would not be restricted to use with a single carrier board but could be
+used with different carriers as required, including with more than one type of
+carrier board simultaneously. The use of the generic driver also ensures that
+additional IPAC modules and drivers for other interfaces can be added without
+affecting the functioning of the CANbus driver.
+
 <p>To provide a generic IPAC carrier board interface for each IPAC module
-driver, all control of or requests for information about the carrier board
-goes via the IPAC driver which in turn calls the IPAC Carrier driver written
-for the particular type of carrier board. This carrier driver should be
-simple to write, comprising three or four short subroutines and an interface
-structure. Carrier drivers are available for the <a href="http://www.greenspring.com/">GreenSpring</a>
-VIPC310, 610 and 616 boards, and a driver for the <a href="http://www.mot.com/GSS/MCG/products/boards/vme/mvme162/mvme162.html">Motorola
-MVME162</a> has also been written but not tested by the author (others
-report that it works).
+driver, all control of or requests for information about the carrier board goes
+via the IPAC driver which in turn calls the IPAC Carrier driver written for the
+particular type of carrier board. This carrier driver should be simple to
+write, comprising three or four short subroutines and an interface structure.
+On VMEbus, carrier drivers are available for the 
+<a href="http://www.greenspring.com/">GreenSpring</a> VIPC310, 610 and 616
+boards, and a driver for the
+<a href="http://www.mot.com/GSS/MCG/products/boards/vme/mvme162/mvme162.html">Motorola
+MVME162</a> that also works on the MVME172.  On ISAbus the GreenSpring ATC40
+carrier is now supported by a driver from Jeff Hill.
+
 <p>At present the IPAC driver is limited (by the size of an internal array)
 to controlling a maximum of 21 carrier boards, but this limitation should
 be easy to dispense with completely without altering any of its interfaces.
@@ -233,7 +237,7 @@ the following structures which can be used here:</dd>
 </tr>
 
 <tr>
-<td><b>GreenSpring</b> <b>VIPC610</b></td>
+<td><b>GreenSpring VIPC610</b></td>
 
 <td>drvVipc610</td>
 
@@ -241,7 +245,7 @@ the following structures which can be used here:</dd>
 </tr>
 
 <tr>
-<td><b>GreenSpring</b> <b>VIPC610-01</b></td>
+<td><b>GreenSpring VIPC610-01</b></td>
 
 <td>drvVipc610_01</td>
 
@@ -249,7 +253,7 @@ the following structures which can be used here:</dd>
 </tr>
 
 <tr>
-<td><b>GreenSpring</b> <b>VIPC616</b></td>
+<td><b>GreenSpring VIPC616</b></td>
 
 <td>drvVipc616</td>
 
@@ -265,11 +269,11 @@ the following structures which can be used here:</dd>
 </tr>
 
 <tr>
-<td NOWRAP><b>Motorola MVME162</b></td>
+<td NOWRAP><b>Motorola MVME162/172</b></td>
 
-<td NOWRAP>drvIpMv162</td>
+<td>drvIpMv162</td>
 
-<td NOWRAP><tt>&amp;ipmv162</tt></td>
+<td><tt>&amp;ipmv162</tt></td>
 </tr>
 </table></center>
 
@@ -282,7 +286,7 @@ String containing board-specific initialisation parameters which is passed
 to the carrier driver. For carrier boards which rely on jumpers to set
 the board address (e.g. the GreenSpring carrier boards), the settings for
 each particular board will be reflected in the parameter settings given
-here when registering that carrier. For boards such as the mv162 where
+here when registering that carrier. For boards such as the MVME162 where
 the addresses can be changed by the driver, this string may be used to
 indicate how the board should be initialised. See the specific documentation
 for each carrier driver (<a href="#section4">section 4</a> below) for the
@@ -480,9 +484,10 @@ the order in which they were registered by calling <tt>ipacAddCarrier</tt>.</dd>
 <tt>ushort_t slot</tt></dt>
 
 <dd>
-Slot number; identifies the particular IP slot on the carrier board. The
-number of slots available varies with the type of the carrier board - the
-VIPC310 provides 2, the VIPC610 and MVME162 each have four slots.</dd>
+Slot number; identifies the particular IP slot on the carrier board, starting
+from zero. The number of slots available varies with the type of the carrier
+board - the VIPC310 and MVME172 provide 2, the VIPC610, VIPC616, ATC40 and
+MVME162 each have four slots.</dd>
 </dl>
 Together these two parameters uniquely identify a specific IPAC module
 in the system, and these are used in this way by all of the following routines.
@@ -1410,11 +1415,11 @@ next of these slot selection characters.</dd>
 <tt>l=<i>level1[</i>,<i>level2]</i></tt></dt>
 
 <dd>
-Sets the interrupt level for the slot interrupters to the decimal values
-given by <i>level1</i> and <i>level2</i> respectively. If the second interrupter
-is not required it can be omitted and the interrupter will be disabled
-for the interrupt. If this parameter setting is not used for a slot both
-interrupts will be disabled.</dd>
+Sets the interrupt level for the slot interrupters to the decimal values given
+by <i>level1</i> and <i>level2</i> respectively. If the second IP interrupt is
+not used by the particular module the <tt>,<i>level2</i></tt> part may be
+omitted and this interrupt will be disabled. The default setting is for both
+interrupts to be disabled.</dd>
 
 <dt>
 <tt>m=<i>base</i>,<i>size</i></tt></dt>
@@ -1422,8 +1427,7 @@ interrupts will be disabled.</dd>
 <dd>
 Enables the slot memory space and sets the base address for the slot to
 the hexadecimal value given by <i>base</i>, with extent given by the
-<i>size</i>
-parameter in kilobytes.</dd>
+<i>size</i> parameter in kilobytes.  NB <i>size</i> cannot be omitted.</dd>
 
 <dt>
 <tt>r=<i>recovery</i></tt></dt>

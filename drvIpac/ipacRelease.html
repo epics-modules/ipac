@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.4 1999-03-09 20:24:33 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.5 1999-07-30 15:50:54 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -21,6 +21,41 @@ the differences in previous releases where I can remember or discover what they
 were by examining the source code.  After version 1.1c the CANbus driver was
 split off as a separate package, hence the CANbus related comments up to and
 including this release. </P><HR>
+
+
+<H2>Version 2.1</H2>
+
+<P>Added:<UL>
+
+<LI>Jeff Hill's driver for the GreenSpring ATC40 ISAbus carrier board,
+including the changes to the main drvIpac software and the other carrier
+drivers which are necessary to support little-endian architectures.  These
+were:<UL>
+
+<LI>Make all accesses to the IP module registers &amp; ID-Prom use short
+(16-bit) read/writes, so the endian problem disappears.  Adjust various
+internal routines to allow for this.</LI>
+
+<LI>Provide a new function pointer (optional may be NULL) in the carrier table
+which is called by ipmIntConnect.  Module drivers should use ipmIntConnect
+instead of vxWorks' intConnect routine to attach their interrupt routine.  This
+makes it possible to use identical module driver code on both VME and ISA bus,
+although the module driver may have to be modified as discussed above to resolve
+the endian issue.</LI></UL></LI>
+
+<LI>Some <TT>printf()<.TT>s in ipacAddCarrier so failures can be seen without
+having to look at the return value.</LI>
+
+<LI>SRCS.c entries to Makefile.Vx so <TT>gnumake depends</TT> works.</LI>
+
+</UL></P>
+
+<P>Bug fixed:<UL>
+
+<LI>Finally tested the MVME162 carrier driver myself - this also works on the
+MVME172.  Changed the checking of m= addresses to use unsigned arithmetic.</LI>
+
+</UL></P><HR>
 
 
 <H2>Version 2.0</H2>
