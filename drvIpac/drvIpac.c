@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.6 2000-02-21 21:35:33 anj Exp $
+    $Id: drvIpac.c,v 1.7 2001-02-14 20:27:29 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -230,7 +230,8 @@ int ipmCheck (
     if ((id->asciiA & 0xff) != 'A') {
 	return S_IPAC_noIpacId;
     }
-    if ((id->asciiC & 0xff) != 'C') {
+    dummy = id->asciiC & 0xff;
+    if ((dummy != 'C') && (dummy != 'H')) {
 	return S_IPAC_noIpacId;
     }
 
