@@ -22,13 +22,14 @@ LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
 
 # MVME162 & MVME172: IPchip carrier driver:
-MYSRCS_68k += drvIpMv162.c
+LIBSRCS_vxWorks-68040 += drvIpMv162.c
+LIBSRCS_vxWorks-68040lc += drvIpMv162.c
 
 # GreenSpring ATC40 Carrier driver: for ISA bus systems only.
-MYSRCS_pcPertium += drvAtc40.c
+LIBSRCS_vxWorks-pentium += drvAtc40.c
 
-LIBSRCS_vxWorks +=  $(MYSRCS_$(ARCH_CLASS))
-
-LIBSRCS += $(SRCS_$(T_A))
+# Normally you add filenames to LIBSRCS_<arch-class>, but this
+# line makes the above LIBSRCS_<target-arch> stuff work:
+LIBSRCS += $(LIBSRCS_$(T_A))
 
 include $(TOP)/configure/RULES
