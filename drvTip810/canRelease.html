@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.6 2001-02-05 17:21:08 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.7 2001-02-14 21:12:51 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -22,7 +22,8 @@ appears at the bottom, with more recent releases above it.</P>
 
 <H2>Version 2.3</H2>
 
-<P>Changed:<UL>
+<P>Changed:</P>
+<UL>
 
 <LI>Removed IPAC-specific comments from the CANbus Release Notes.</LI>
 
@@ -31,14 +32,29 @@ number to be used.  <B>Existing applications must be changed</B> to add this
 parameter (probably only in the startup script), which appears before the
 busRate parameter.</LI>
 
-</UL></P>
+</UL>
 
+<P>Added:</P>
+<UL>
+
+<LI>Carl Lionberger's String In device support for use with the Wiener VME
+crate.  Note that this is <B>not</B> generic stringin support, and has been
+renamed from his original to <TT>devSiWiener.c</TT>.  In deference to the
+existing applications that are using this I have retained the <tt>"CANbus"</TT>
+device type string, although I'd really rather have changed it.</LI>
+
+<LI>The <tt>drvTip810.h</tt> header file is now installed into the
+<tt>$(TOP)/include</tt> directory so applications can get at the
+<tt>t810Status()</tt> routine.</LI>
+
+</UL>
 <HR>
 
 
 <H2>Version 2.2</H2>
 
-<P>Changed:<UL>
+<P>Changed:</P>
+<UL>
 
 <LI>Copyright and license terms.  drvTip810 (and ipac) is now licensed under
 the GNU Lesser General Public License (LGPL), which enables it to be used in
@@ -48,8 +64,7 @@ derivative of it must make the source code available under the LGPL terms.</LI>
 <LI>Various other small modifications to fix compiler warnings and such under
 EPICS Release 3.13.2.</LI>
 
-</UL></P>
-
+</UL>
 <HR>
 
 
@@ -60,13 +75,15 @@ callbacks into a fairly high priority task, rather than doing them in the ISR
 itself.  This allows a higher peak message rate to be handled, although the
 average rate should be essentially unchanged. </P>
 
-<P>Added:<UL>
+<P>Added:</P>
+<UL>
 
 <LI>ISR funnels incoming CAN packets into a Message queue rather than run the
 <TT>canMessage</TT> callbacks directly.  NB: The <TT>canSignal</TT> callbacks
 are still run from the ISR so must be interrupt-safe. </LI>
 
-</UL></P><HR>
+</UL>
+<HR>
 
 
 <H2>Version 2.0</H2>
@@ -75,12 +92,12 @@ are still run from the ISR so must be interrupt-safe. </LI>
 &lt;supporttop&gt; application.  drvIpac module and carrier drivers were split
 off into a separate application directory. </P>
 
-<P>Bug fixed:<UL>
+<P>Bug fixed:</P>
+<UL>
 
 <LI>Gcc compilation warnings attended to.</LI>
 
-</UL></P>
-
+</UL>
 <HR>
 
 
@@ -88,20 +105,21 @@ off into a separate application directory. </P>
 
 <P>Final release from the RGO.  CVS repository transferred to APS. </P>
 
-<P>Bugs fixed, courtesy Carl Lionberger at LBL:<UL>
+<P>Bugs fixed, courtesy Carl Lionberger at LBL:</P>
+<UL>
 
 <LI>Reinstated Bus Errors causing records to go into alarm state with an
 <TT>INVALID_ALARM</TT> severity.  A Bus Off transition is very rarely if ever
 seen, even pulling the cable only causes a Bus Error.</LI>
 
-</UL></P>
-
+</UL>
 <HR>
 
 
 <H2>Version 1.1b</H2>
 
-<P>Added:<UL>
+<P>Added:</P>
+<UL>
 
 <LI>Carl Lionberger's code to <TT>canIoParse</TT> which allows message IDs to
 be calculated as the sum of several numbers.  This makes it possible to use
@@ -109,9 +127,10 @@ templates and text substitution to generate IDs for many device types.</LI>
 
 <LI>These release notes.</LI>
 
-</UL></P>
+</UL>
 
-<P>Bugs fixed:<UL>
+<P>Bugs fixed:</P>
+<UL>
 
 <LI>Changed the alarm severities for Bus Off events and Timeouts to use the
 EPICS standard <TT>INVALID_ALARM</TT> severity.  A Bus Error now does not affect record
@@ -125,25 +144,27 @@ as the CAN device support <TT>init_record</TT> routine was returning
 <TT>OK&nbsp;=>&nbsp;0&nbsp;=>&nbsp;CONVERT</TT>, rather than the correct
 <TT>DO_NOT_CONVERT&nbsp;=>&nbsp;2</TT>.</LI>
 
-</UL></P><HR>
+</UL>
+<HR>
 
 
 <H2>Version 1.1a</H2>
 
-<P>Bugs fixed:<UL>
+<P>Bugs fixed:</P>
+<UL>
 
 <LI>Removed a change introduced in V1.1 to when input records are processed on
 the receipt of interrupts.  Carl Lionberger discovered this change had been a
 mistake...</LI>
 
-</UL></P>
-
+</UL>
 <HR>
 
 
 <H2>Version 1.1</H2>
 
-<P>Added:<UL>
+<P>Added:</P>
+<UL>
 
 <LI>devBoTip810 device support to allow CANbus status bits to be tested from
 within the EPICS database.</LI>
@@ -160,9 +181,10 @@ routines to allow resetting and halting bus operations.</LI>
 
 <LI>HTML Documentation distributed in the release.</LI>
 
-</UL></P>
+</UL>
 
-<P>Bugs fixed:<UL>
+<P>Bugs fixed:</P>
+<UL>
 
 <LI>Significantly reduced the number of callbacks used in the event of a Bus
 Error or Bus Off event, by only using one per device support type rather than
@@ -180,8 +202,7 @@ work on some carrier boards.</LI>
 forever because transmit semaphore was not released when resetting the error.
 </LI>
 
-</UL></P>
-
+</UL>
 <HR>
 
 
