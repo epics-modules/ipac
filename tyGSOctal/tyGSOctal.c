@@ -125,7 +125,7 @@ STATUS tyGSOctalDrv
     tyGSOctalMaxModules = maxModules;
     tyGSOctalLastModule = 0;
 
-    printf("allocating %d structures of %d bytes\n", maxModules,
+    printf("allocating %d structures of %ld bytes\n", maxModules,
            sizeof(QUAD_TABLE));
     
     if (!(tyGSOctalModules =
@@ -191,14 +191,8 @@ LOCAL int tyGSOctalRebootHook(int type)
         for (i=0; i < 8; i++) {
             pty = &qt->port[i];
             if (pty->created) {
-				
-		pty->regs->u.w.acr = 0x80;
+		pty->imr = 0;
 		pty->regs->u.w.imr = 0;
-		pty->chan->u.w.cr = 0x1a; /* disable trans/recv, reset pointer */
-		pty->chan->u.w.cr = 0x20; /* reset recv */
-		pty->chan->u.w.cr = 0x30; /* reset trans */
-		pty->chan->u.w.cr = 0x40; /* reset error status*/
-				
             }
         ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
         ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
@@ -565,11 +559,27 @@ STATUS tyGSOctalIoctl
     int        arg		/* some argument */
     )
 {
-    FAST STATUS  status;
+    SCC2698_CHAN *chan = pTyGSOctalDv->chan;
+    FAST STATUS  status = 0;
+    int oldlevel,baud;
 
     switch (request)
     {
 	case FIOBAUDRATE:
+            oldlevel = intLock ();	/* disable interrupts during init */
+            baud = arg;
+            switch(baud) /* clock select */
+            {
+        	case 1200: chan->u.w.csr=0x66; break; 
+        	case 2400: chan->u.w.csr=0x88; break; 
+        	case 4800: chan->u.w.csr=0x99; break; 
+        	case 9600: chan->u.w.csr=0xbb; break; 
+        	case 38400: chan->u.w.csr=0x22; break; 
+        	default:
+        	case 19200: chan->u.w.csr=0xcc; break; 
+            }
+            intUnlock (oldlevel);
+            break;
 	default:
 	    status = tyIoctl (&pTyGSOctalDv->tyDev, request, arg);
 	    break;
