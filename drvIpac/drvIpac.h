@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.7 2004-12-15 23:00:58 anj Exp $
+    $Id: drvIpac.h,v 1.8 2004-12-15 23:15:27 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -61,18 +61,19 @@ extern "C" {
 #define M_ipac		(600 << 16)
 #endif
 
-#define S_IPAC_badTable   (M_ipac| 1) /*IPAC Carrier Table invalid*/
-#define S_IPAC_tooMany    (M_ipac| 2) /*Too many IPAC carriers, table full*/
-#define S_IPAC_badAddress (M_ipac| 3) /*Bad IPAC carrier or slot number*/
-#define S_IPAC_badDriver  (M_ipac| 4) /*Bad value from IPAC carrier driver*/
-#define S_IPAC_noModule   (M_ipac| 5) /*No IP module installed*/
-#define S_IPAC_noIpacId   (M_ipac| 6) /*IPAC identifier not found*/
-#define S_IPAC_badCRC     (M_ipac| 7) /*IPAC CRC Check failed*/
-#define S_IPAC_badModule  (M_ipac| 8) /*IPAC Manufacturer or model ID wrong*/
+#define S_IPAC_badTable     (M_ipac| 1) /*IPAC Carrier Table invalid*/
+#define S_IPAC_tooMany      (M_ipac| 2) /*Too many IPAC carriers, table full*/
+#define S_IPAC_badAddress   (M_ipac| 3) /*Bad IPAC carrier or slot number*/
+#define S_IPAC_badDriver    (M_ipac| 4) /*Bad value from IPAC carrier driver*/
+#define S_IPAC_noModule     (M_ipac| 5) /*No IP module installed*/
+#define S_IPAC_noIpacId     (M_ipac| 6) /*IPAC identifier not found*/
+#define S_IPAC_badCRC       (M_ipac| 7) /*IPAC CRC Check failed*/
+#define S_IPAC_badModule    (M_ipac| 8) /*IPAC Manufacturer or model ID wrong*/
 #define S_IPAC_notImplemented (M_ipac| 9) /*IPAC Driver command not available*/
-#define S_IPAC_badVector (M_ipac| 10) /*Bad interrupt vector*/
+#define S_IPAC_badVector   (M_ipac| 10) /*Bad interrupt vector*/
 #define S_IPAC_vectorInUse (M_ipac| 11) /*Interrupt vector in use*/
 #define S_IPAC_badIntLevel (M_ipac| 12) /*Bad interrupt level*/
+#define S_IPAC_noMemory   (M_ipac | 13) /*Malloc failed*/
 
 
 /* Maximum size of IP carrier report string */

@@ -17,7 +17,7 @@ Author:
 Created:
     5 July 1995
 Version:
-    $Id: drvVipc310.c,v 1.5 2003-11-04 21:38:30 anj Exp $
+    $Id: drvVipc310.c,v 1.6 2004-12-15 23:15:27 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -171,6 +171,9 @@ LOCAL int initialise (
     mOrig = mBase & ~(mSize * SLOTS - 1);
 
     private = malloc(sizeof (private_t));
+    if (!private)
+	return S_IPAC_noMemory;
+
     for (space = 0; space < IO_SPACES; space++) {
 	for (slot = 0; slot < SLOTS; slot++) {
 	    (*private)[space][slot] = (void *) (ioBase + offset[space][slot]);
