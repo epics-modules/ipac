@@ -10,6 +10,7 @@ SRCS.c += ../devMbbiCan.c
 SRCS.c += ../devMbboCan.c
 SRCS.c += ../devMbbiDirectCan.c
 SRCS.c += ../devMbboDirectCan.c
+SRCS.c += ../devSiWiener.c
 SRCS.c += ../devBiTip810.c
 SRCS.c += ../drvTip810.c
 
@@ -21,6 +22,7 @@ LIBOBJS += devMbbiCan.o
 LIBOBJS += devMbboCan.o
 LIBOBJS += devMbbiDirectCan.o
 LIBOBJS += devMbboDirectCan.o
+LIBOBJS += devSiWiener.o
 LIBOBJS += devBiTip810.o
 LIBOBJS += drvTip810.o
 

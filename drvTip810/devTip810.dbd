@@ -9,6 +9,10 @@ device(mbbo,INST_IO,devMbboCan,"CANbus")
 device(mbbiDirect,INST_IO,devMbbiDirectCan,"CANbus")
 device(mbboDirect,INST_IO,devMbboDirectCan,"CANbus")
 
+# Wiener VME crate special stringin support
+
+device(stringin, INST_IO,devSiWiener,"CANbus")
+
 # Tip810 bus status device support
 device(bi,INST_IO,devBiTip810,"Tip810")
 
