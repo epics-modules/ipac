@@ -1,0 +1,14 @@
+# Makefile.Host
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+
+DBDINSTALL += devTip810.dbd
+
+INC += canBus.h
+
+HTMLS_DIR = .
+HTMLS += devCan.html
+HTMLS += drvTip810.html
+HTMLS += canRelease.html
+
+include $(TOP)/config/RULES.Host

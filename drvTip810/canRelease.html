@@ -1,24 +1,40 @@
 <HTML>
 <HEAD>
-<TITLE>CANbus and IPAC Driver Release Notes</TITLE>
+<TITLE>CANbus Driver Release Notes</TITLE>
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.2 1998-09-29 18:57:02 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.3 1999-03-08 20:00:15 anj Exp $">
 </HEAD>
 <BODY>
 
 <CENTER>
-<H2>CANbus and IPAC Driver Release Notes</H2>
+<H2>CANbus Driver Release Notes</H2>
 <P><I>Andrew Johnson</I></P>
 </CENTER>
 
 <P>This document describes the changes which have been made to my vxWorks/EPICS
-CANbus and IndustryPack drivers as they have evolved since first release.  The
-earliest version appears at the bottom, with more recent releases above it. 
-These release notes first appeared in version 1.1b, but I have attempted to
-describe the differences in previous releases where I can remember or discover
-what they were by examining the source code. </P><HR>
+CANbus driver as it has evolved since first release.  The earliest version
+appears at the bottom, with more recent releases above it.  These release notes
+first appeared in version 1.1b, but I have attempted to describe the
+differences in previous releases where I can remember or discover what they
+were by examining the source code.  After version 1.1c the IPAC driver was
+split off as a separate package (although this is still required for use by the
+Tip810 driver), hence the IPAC related comments up to and including this
+release.  </P><HR>
+
+
+<H2>Version 2.0</H2>
+
+<P>First version since I joined APS, now restructured in an EPICS R3.13.1
+&lt;supporttop&gt; application.  drvIpac module and carrier drivers were split
+off into a separate application directory. </P>
+
+<P>Bug fixed:<UL>
+
+<LI>Gcc compilation warnings attended to.</LI>
+
+</UL></P><HR>
 
 
 <H2>Version 1.1c</H2>

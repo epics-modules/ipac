@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.1.1.1 1997-03-27 12:34:11 anj Exp $
+    $Id: drvIpMv162.c,v 1.2 1999-03-08 20:00:13 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -77,10 +77,10 @@ LOCAL const uchar_t recoveryTime[] = {
 /* Carrier Base Address structure, only one instance can exist! */
 
 LOCAL long mBase[IPAC_ADDR_SPACES][SLOTS] = {
-    PROM_A,  PROM_B, PROM_C,  PROM_D,
-    REGS_A,  REGS_B, REGS_C,  REGS_D,
-    REGS_AB, NULL,   REGS_CD, NULL,
-    NULL,    NULL,   NULL,    NULL
+    { PROM_A,  PROM_B, PROM_C,  PROM_D },
+    { REGS_A,  REGS_B, REGS_C,  REGS_D },
+    { REGS_AB, NULL,   REGS_CD, NULL   },
+    { NULL,    NULL,   NULL,    NULL   }
 };
 
 
@@ -151,7 +151,7 @@ LOCAL int initialise (
 				(void **) &p1, &p2, &next);
 		if (count != 2 ||
 		    p1 < (long) sysMemTop() ||
-		    p1 & 0xffff != 0 ||
+		    (p1 & 0xffff) != 0 ||
 		    p2 < 64 || p2 > 16384 ||
 		    p1 + (p2*1024) > 0xfff00000) {
 		    return S_IPAC_badAddress;

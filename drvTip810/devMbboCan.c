@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbboCan.c,v 1.5 1998-09-29 18:56:36 anj Exp $
+    $Id: devMbboCan.c,v 1.6 1999-03-08 20:00:16 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -152,7 +152,7 @@ LOCAL long init_mbbo (
     	/* Fill it in */
     	pbus->firstPrivate = NULL;
     	pbus->canBusID = pcanMbbo->out.canBusID;
-    	callbackSetCallback(busCallback, &pbus->callback);
+    	callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
     	callbackSetPriority(priorityMedium, &pbus->callback);
     	
     	/* and add it to the list of busses we know about */

@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.7 1998-09-29 18:56:29 anj Exp $
+    $Id: devAiCan.c,v 1.8 1999-03-08 20:00:15 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -191,7 +191,7 @@ LOCAL long init_ai (
     	/* Fill it in */
     	pbus->firstPrivate = NULL;
     	pbus->canBusID = pcanAi->inp.canBusID;
-    	callbackSetCallback(busCallback, &pbus->callback);
+    	callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
     	callbackSetPriority(priorityMedium, &pbus->callback);
     	
     	/* and add it to the list of busses we know about */
@@ -207,7 +207,7 @@ LOCAL long init_ai (
     pbus->firstPrivate = pcanAi;
 
     /* Set the callback parameters for asynchronous processing */
-    callbackSetCallback(aiProcess, &pcanAi->callback);
+    callbackSetCallback((VOIDFUNCPTR) aiProcess, &pcanAi->callback);
     callbackSetPriority(prec->prio, &pcanAi->callback);
 
     /* and create a watchdog for CANbus RTR timeouts */

@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.2 1997-08-21 16:57:40 anj Exp $
+    $Id: devBiTip810.c,v 1.3 1999-03-08 20:00:15 anj Exp $
 
 (c) 1997 Royal Greenwich Observatory
 
@@ -60,15 +60,15 @@ LOCAL long init_bi(
 	char		*string;
 	unsigned long	mask;
     } tipState[] = {
-	"BUS_OFF",	PCA_SR_BS,
-	"BUS_ERROR",	PCA_SR_ES,
-	"DATA_OVERRUN",	PCA_SR_DO,
-	"RECEIVING",	PCA_SR_RS,
-	"RECEIVED",	PCA_SR_RBS,
-	"SENDING",	PCA_SR_TS,
-	"SENT", 	PCA_SR_TCS,
-	"OK_TO_SEND",	PCA_SR_TBS,
-	NULL,
+	{ "BUS_OFF",	PCA_SR_BS },
+	{ "BUS_ERROR",	PCA_SR_ES },
+	{ "DATA_OVERRUN",	PCA_SR_DO },
+	{ "RECEIVING",	PCA_SR_RS },
+	{ "RECEIVED",	PCA_SR_RBS },
+	{ "SENDING",	PCA_SR_TS },
+	{ "SENT", 	PCA_SR_TCS },
+	{ "OK_TO_SEND",	PCA_SR_TBS },
+	{ NULL,		NULL }
     };
 
     char *canString;

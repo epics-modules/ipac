@@ -1,0 +1,11 @@
+IPAC Support Application Structure
+==================================
+
+Sites may wish to edit the Makefile found in this directory to change
+the list of module drivers to be built along with the ipac driver.
+Additional driver directories will have to be added to the Makefile by
+hand.  This is intentional to allow the distribution to include all of
+the standard IP module drivers in the future without requiring every
+site to build them all.
+
+- Andrew Johnson, March 1999

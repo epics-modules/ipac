@@ -1,0 +1,14 @@
+# Makefile.Vx
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+
+LIBOBJS += drvIpac.o
+LIBOBJS += drvVipc310.o
+LIBOBJS += drvVipc610.o
+LIBOBJS += drvVipc610_01.o
+LIBOBJS += drvVipc616.o
+LIBOBJS += drvIpMv162.o
+
+LIBNAME = ipacLib
+
+include $(TOP)/config/RULES.Vx

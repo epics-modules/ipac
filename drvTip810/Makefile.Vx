@@ -1,0 +1,18 @@
+# Makefile.Vx
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+
+LIBOBJS += devAiCan.o
+LIBOBJS += devAoCan.o
+LIBOBJS += devBiCan.o
+LIBOBJS += devBoCan.o
+LIBOBJS += devMbbiCan.o
+LIBOBJS += devMbboCan.o
+LIBOBJS += devMbbiDirectCan.o
+LIBOBJS += devMbboDirectCan.o
+LIBOBJS += devBiTip810.o
+LIBOBJS += drvTip810.o
+
+LIBNAME = tip810Lib
+
+include $(TOP)/config/RULES.Vx

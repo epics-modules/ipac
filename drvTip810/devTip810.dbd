@@ -1,0 +1,19 @@
+# CANbus device support
+
+device(ai,INST_IO,devAiCan,"CANbus")
+device(ao,INST_IO,devAoCan,"CANbus")
+device(bi,INST_IO,devBiCan,"CANbus")
+device(bo,INST_IO,devBoCan,"CANbus")
+device(mbbi,INST_IO,devMbbiCan,"CANbus")
+device(mbbo,INST_IO,devMbboCan,"CANbus")
+device(mbbiDirect,INST_IO,devMbbiDirectCan,"CANbus")
+device(mbboDirect,INST_IO,devMbboDirectCan,"CANbus")
+
+# Tip810 bus status device support
+device(bi,INST_IO,devBiTip810,"Tip810")
+
+# CANbus driver support for the TEWS Tip810 IP module...
+driver(drvTip810)
+# ... which depends on the drvIpac driver
+include "drvIpac.dbd"
+

@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.7 1998-08-20 18:55:49 anj Exp $
+    $Id: drvTip810.c,v 1.8 1999-03-08 20:00:16 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -255,21 +255,21 @@ int t810Create (
 	uchar_t busTiming0;
 	uchar_t busTiming1;
     } rateTable[] = {
-	5,    PCA_BTR0_5K,    PCA_BTR1_5K,
-	10,   PCA_BTR0_10K,   PCA_BTR1_10K,
-	20,   PCA_BTR0_20K,   PCA_BTR1_20K,
-	50,   PCA_BTR0_50K,   PCA_BTR1_50K,
-	100,  PCA_BTR0_100K,  PCA_BTR1_100K,
-	125,  PCA_BTR0_125K,  PCA_BTR1_125K,
-	250,  PCA_BTR0_250K,  PCA_BTR1_250K,
-	500,  PCA_BTR0_500K,  PCA_BTR1_500K,
-	1000, PCA_BTR0_1M0,   PCA_BTR1_1M0,
-	1600, PCA_BTR0_1M6,   PCA_BTR1_1M6,
-	-125, PCA_KVASER_125K, PCA_BTR1_KVASER,
-	-250, PCA_KVASER_250K, PCA_BTR1_KVASER,
-	-500, PCA_KVASER_500K, PCA_BTR1_KVASER,
-	-1000,PCA_KVASER_1M0,  PCA_BTR1_KVASER,
-	0
+	{ 5,    PCA_BTR0_5K,    PCA_BTR1_5K	},
+	{ 10,   PCA_BTR0_10K,   PCA_BTR1_10K	},
+	{ 20,   PCA_BTR0_20K,   PCA_BTR1_20K	},
+	{ 50,   PCA_BTR0_50K,   PCA_BTR1_50K	},
+	{ 100,  PCA_BTR0_100K,  PCA_BTR1_100K	},
+	{ 125,  PCA_BTR0_125K,  PCA_BTR1_125K	},
+	{ 250,  PCA_BTR0_250K,  PCA_BTR1_250K	},
+	{ 500,  PCA_BTR0_500K,  PCA_BTR1_500K	},
+	{ 1000, PCA_BTR0_1M0,   PCA_BTR1_1M0	},
+	{ 1600, PCA_BTR0_1M6,   PCA_BTR1_1M6	},
+	{ -125, PCA_KVASER_125K, PCA_BTR1_KVASER},
+	{ -250, PCA_KVASER_250K, PCA_BTR1_KVASER},
+	{ -500, PCA_KVASER_500K, PCA_BTR1_KVASER},
+	{ -1000,PCA_KVASER_1M0,  PCA_BTR1_KVASER},
+	{ 0,	0,		0		}
     };
     t810Dev_t *pdevice, *plist = (t810Dev_t *) &pt810First;
     int status, rateIndex, id;

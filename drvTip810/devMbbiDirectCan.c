@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devMbbiDirectCan.c,v 1.7 1998-09-29 18:56:34 anj Exp $
+    $Id: devMbbiDirectCan.c,v 1.8 1999-03-08 20:00:16 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -157,7 +157,7 @@ LOCAL long init_mbbiDirect (
       /* Fill it in */
       pbus->firstPrivate = NULL;
       pbus->canBusID = pcanMbbiDirect->inp.canBusID;
-      callbackSetCallback(busCallback, &pbus->callback);
+      callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
       callbackSetPriority(priorityMedium, &pbus->callback);
 
       /* and add it to the list of busses we know about */
@@ -173,7 +173,7 @@ LOCAL long init_mbbiDirect (
     pbus->firstPrivate = pcanMbbiDirect;
 
     /* Set the callback parameters for asynchronous processing */
-    callbackSetCallback(mbbiDirectProcess, &pcanMbbiDirect->callback);
+    callbackSetCallback((VOIDFUNCPTR) mbbiDirectProcess, &pcanMbbiDirect->callback);
     callbackSetPriority(prec->prio, &pcanMbbiDirect->callback);
 
     /* and create a watchdog for CANbus RTR timeouts */

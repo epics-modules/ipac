@@ -17,7 +17,7 @@ Author:
 Created:
     19 July 1995
 Version:
-    $Id: drvVipc610.c,v 1.2 1998-05-29 14:24:32 anj Exp $
+    $Id: drvVipc610.c,v 1.3 1999-03-08 20:00:13 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -26,6 +26,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <vme.h>
 #include <sysLib.h>
 #include "drvIpac.h"
@@ -129,8 +130,8 @@ LOCAL int initialise (
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
-	PROM_A, PROM_B, PROM_C, PROM_D,
-	REGS_A, REGS_B, REGS_C, REGS_D
+	{ PROM_A, PROM_B, PROM_C, PROM_D },
+	{ REGS_A, REGS_B, REGS_C, REGS_D }
     };
 
     if (cardParams == NULL ||
@@ -241,10 +242,10 @@ LOCAL int irqCmd (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	IRQ_A0, IRQ_A1, 
-	IRQ_B0, IRQ_B1,
-	IRQ_C0, IRQ_C1,
-	IRQ_D0, IRQ_D1
+	{ IRQ_A0, IRQ_A1 }, 
+	{ IRQ_B0, IRQ_B1 },
+	{ IRQ_C0, IRQ_C1 },
+	{ IRQ_D0, IRQ_D1 }
     };
 
     switch (cmd) {

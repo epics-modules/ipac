@@ -17,7 +17,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.2 1998-08-19 14:06:40 anj Exp $
+    $Id: drvVipc616.c,v 1.3 1999-03-08 20:00:13 anj Exp $
 
 (c) 1997 Royal Greenwich Observatory
 
@@ -26,6 +26,7 @@ Version:
 #include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <vme.h>
 #include <sysLib.h>
 #include "drvIpac.h"
@@ -166,6 +167,7 @@ LOCAL int initialise (
     if (params == 1) {
     	/* No memory, just the A16 I/O space */
 	mSize = 0;
+	mOrig = 0;
     } else if (params == 2) {
 	/* A32 space, 8Mb allocated per module */
 	memStatus = sysBusToLocalAdrs(VME_AM_EXT_SUP_DATA, 

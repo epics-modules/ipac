@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBiCan.c,v 1.7 1998-09-29 18:56:31 anj Exp $
+    $Id: devBiCan.c,v 1.8 1999-03-08 20:00:15 anj Exp $
 
 (c) 1995,1997 Royal Greenwich Observatory
 
@@ -156,7 +156,7 @@ LOCAL long init_bi (
     	/* Fill it in */
     	pbus->firstPrivate = NULL;
     	pbus->canBusID = pcanBi->inp.canBusID;
-    	callbackSetCallback(busCallback, &pbus->callback);
+    	callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
     	callbackSetPriority(priorityMedium, &pbus->callback);
     	
     	/* and add it to the list of busses we know about */
@@ -172,7 +172,7 @@ LOCAL long init_bi (
     pbus->firstPrivate = pcanBi;
 
     /* Set the callback parameters for asynchronous processing */
-    callbackSetCallback(biProcess, &pcanBi->callback);
+    callbackSetCallback((VOIDFUNCPTR) biProcess, &pcanBi->callback);
     callbackSetPriority(prec->prio, &pcanBi->callback);
 
     /* and create a watchdog for CANbus RTR timeouts */
