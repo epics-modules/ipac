@@ -58,6 +58,7 @@
 #include <taskLib.h>
 #include <tyLib.h>
 #include <sioLib.h>
+#include <vxLib.h>
 
 #include "ip_modules.h"     /* GreenSpring IP modules */
 #include "scc2698.h"        /* SCC 2698 UART register map */
@@ -211,7 +212,7 @@ LOCAL int tyGSOctalRebootHook(int type)
  * For example:
  * .CS
  *    int idx;
- *    idx = tyGSOctalModuleInit("GSIP_OCTAL232", 0x60, 0, 1);
+ *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
  * .CE
  *
  *
@@ -310,7 +311,8 @@ int tyGSOctalModuleInit
     /* Create a new quad table entry if not there */
     if (i >= tyGSOctalLastModule) {
 	void *addrIO;
-	uint16_t *addrMem;
+	char *addrMem;
+	uint16_t intNum = int_num;
 	SCC2698 *r;
 	SCC2698_CHAN *c;
 	int block;
@@ -341,14 +343,19 @@ int tyGSOctalModuleInit
         for (i = 0; i < 4; i++) qt->imr[i] = 0;
         
         /* set up the single interrupt vector */
-        addrMem = (uint16_t *) ipmBaseAddr(carrier, module, ipac_addrMem);
+        addrMem = (char *) ipmBaseAddr(carrier, module, ipac_addrMem);
 	if (addrMem == NULL) {
 	    logMsg("%s: No memory allocated for carrier %d slot %d",
 		   (int)fn_nm, carrier, module,
 		   NULL,NULL,NULL);
             return(ERROR);
 	}
-	*addrMem = int_num;
+	if (vxMemProbe(addrMem, VX_WRITE, 2, (char *) &intNum) == ERROR) {
+	    logMsg("%s: Bus Error writing interrupt vector to address %#x",
+		   (int)fn_nm, (int) addrMem,
+		   NULL,NULL,NULL,NULL);
+            return(ERROR);
+	}
 	
         if (ipmIntConnect(carrier, module, int_num, 
 	    		  tyGSOctalInt, tyGSOctalLastModule)) {
@@ -377,7 +384,7 @@ int tyGSOctalModuleInit
  * sizes of 512 bytes, the proper calls would be:
  * .CS
  *    int idx, dev;
- *    idx = tyGSOctalModuleInit("GSIP_OCTAL232", 0x60, 0, 1);
+ *    idx = tyGSOctalModuleInit("232", 0x60, 0, 1);
  *    dev = tyGSOctalDevCreate ("/tyGSOctal/0/1/3", idx, 3, 512, 512);
  * .CE
  *
