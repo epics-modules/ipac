@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.c,v 1.8 1999-03-08 20:00:16 anj Exp $
+    $Id: drvTip810.c,v 1.9 1999-03-09 20:25:28 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -40,6 +40,10 @@ Version:
 
 #define T810_INT_VEC_BASE 0x60
 #define T810_MAGIC_NUMBER 81001
+
+/* These two numbers are the IPAC IDs */
+#define IP_MANUFACTURER_TEWS 0xb3 
+#define IP_MODEL_TEWS_TIP810 0x01
 
 
 #ifndef NO_EPICS
