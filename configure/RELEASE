@@ -2,5 +2,5 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-SUPPORT=/usr/local/iocapps/R3.14.2/support
-EPICS_BASE=/home/phoebus/NORUME/src/EPICS/base_R3_14_2_branch
+IOCAPPS=/usr/local/iocapps/R3.14.7
+EPICS_BASE=$(IOCAPPS)/base/3-14-7-asd1
