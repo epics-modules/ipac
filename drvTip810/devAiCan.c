@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.2 1997-06-19 16:57:14 anj Exp $
+    $Id: devAiCan.c,v 1.3 1997-10-17 12:56:58 anj Exp $
 
 (c) 1995 Royal Greenwich Observatory
 
@@ -368,7 +368,7 @@ LOCAL void aiMessage (
     if (pcanAi->prec->scan == SCAN_IO_EVENT) {
 	pcanAi->status = NO_ALARM;
 	scanIoRequest(pcanAi->ioscanpvt);
-    } else if (pcanAi->status == TIMEOUT_ALARM) {
+    } else {
 	pcanAi->status = NO_ALARM;
 	wdCancel(pcanAi->wdId);
 	callbackRequest(&pcanAi->callback);
