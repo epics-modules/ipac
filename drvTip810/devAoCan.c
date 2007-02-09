@@ -14,7 +14,7 @@ Author:
 Created:
     9 August 1995
 Version:
-    $Id: devAoCan.c,v 1.13 2003-10-29 20:46:29 anj Exp $
+    $Id: devAoCan.c,v 1.14 2007-02-09 21:55:16 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -57,6 +57,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include "devSup.h"
 #include "dbCommon.h"
 #include "aoRecord.h"
+#include "menuConvert.h"
 #include "canBus.h"
 #include "epicsExport.h"
 
@@ -357,7 +358,7 @@ LOCAL long special_linconv (
     int after
 ) {
     if (after) {
-	if (prec->linr == 1) {
+	if (prec->linr == menuConvertLINEAR) {
 	    ulong_t fsd;
 	    aoCanPrivate_t *pcanAo = (aoCanPrivate_t *) prec->dpvt;
 	    fsd = abs(pcanAo->out.parameter);

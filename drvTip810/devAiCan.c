@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.15 2003-10-29 20:46:29 anj Exp $
+    $Id: devAiCan.c,v 1.16 2007-02-09 21:55:16 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -56,6 +56,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include "devSup.h"
 #include "dbCommon.h"
 #include "aiRecord.h"
+#include "menuConvert.h"
 #include "canBus.h"
 #include "epicsExport.h"
 
@@ -345,7 +346,7 @@ LOCAL long special_linconv (
     int after
 ) {
     if (after) {
-        if (prec->linr == 1) {
+        if (prec->linr == menuConvertLINEAR) {
 	    ulong_t fsd;
 	    aiCanPrivate_t *pcanAi = (aiCanPrivate_t *) prec->dpvt;
 
