@@ -134,8 +134,7 @@ STATUS tyGSOctalDrv
 
     if (!tyGSOctalModules) {
         logMsg("%s: Memory allocation failed!",
-               (int)fn_nm,
-               NULL,NULL,NULL,NULL,NULL);
+               (int)fn_nm, 2,3,4,5,6);
         return (ERROR);
     }
     rebootHookAdd(tyGSOctalRebootHook);    
@@ -262,8 +261,7 @@ int tyGSOctalModuleInit
         modelID = GSIP_OCTAL485;
     else {
         logMsg("%s: Unsupported module type: %s",
-               (int)fn_nm, (int)type,
-               NULL,NULL,NULL,NULL);
+               (int)fn_nm, (int)type, 3,4,5,6);
         errnoSet(EINVAL);
         return ERROR;
     }
@@ -274,38 +272,34 @@ int tyGSOctalModuleInit
     if ((status = ipmValidate(carrier, module, GREEN_SPRING_ID, modelID))
         != 0) {
         logMsg("%s: Unable to validate IP module\n",
-               (int)fn_nm,
-               NULL,NULL,NULL,NULL,NULL);
+               (int)fn_nm, 2,3,4,5,6);
         logMsg("%s: carrier:%d module:%d modelID:%d\n",
-                (int)fn_nm, carrier, module, modelID,
-                NULL,NULL);
+                (int)fn_nm, carrier, module, modelID, 5,6);
         
         switch(status) {
             case S_IPAC_badAddress:
                 logMsg("%s: Bad carrier or module number\n",
-                       (int)fn_nm,
-                       NULL,NULL,NULL,NULL,NULL);
+                       (int)fn_nm, 2,3,4,5,6);
                 break;
             case S_IPAC_noModule:
                 logMsg("%s: No module installed\n",
-                       (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
+                       (int)fn_nm, 2,3,4,5,6);
                 break;
             case S_IPAC_noIpacId:
                 logMsg("%s: IPAC identifier not found\n",
-                       (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
+                       (int)fn_nm, 2,3,4,5,6);
                 break;
             case S_IPAC_badCRC:
                 logMsg("%s: CRC Check failed\n",
-                       (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
+                       (int)fn_nm, 2,3,4,5,6);
                 break;
             case S_IPAC_badModule:
                 logMsg("%s: Manufacturer or model IDs wrong\n",
-                      (int)fn_nm,NULL,NULL,NULL,NULL,NULL);
+                      (int)fn_nm, 2,3,4,5,6);
                 break;
             default:
                 logMsg("%s: Bad error code: 0x%x\n",
-                       (int)fn_nm, status,
-                       NULL,NULL,NULL,NULL);
+                       (int)fn_nm, status, 3,4,5,6);
                 break;
         }
         errnoSet(status);
@@ -330,8 +324,7 @@ int tyGSOctalModuleInit
 	
         if (tyGSOctalLastModule >= tyGSOctalMaxModules) {
             logMsg("%s: Maximum module count exceeded!",
-                   (int)fn_nm,
-                   NULL,NULL,NULL,NULL,NULL);
+                   (int)fn_nm, 2,3,4,5,6);
             errnoSet(ENOSPC);
             return ERROR;
         }
@@ -360,22 +353,19 @@ int tyGSOctalModuleInit
         addrMem = (char *) ipmBaseAddr(carrier, module, ipac_addrMem);
 	if (addrMem == NULL) {
 	    logMsg("%s: No IPAC memory allocated for carrier %d slot %d",
-		   (int)fn_nm, carrier, module,
-		   NULL,NULL,NULL);
+		   (int)fn_nm, carrier, module, 4,5,6);
             return ERROR;
 	}
 	if (vxMemProbe(addrMem, VX_WRITE, 2, (char *) &intNum) == ERROR) {
 	    logMsg("%s: Bus Error writing interrupt vector to address %#x",
-		   (int)fn_nm, (int) addrMem,
-		   NULL,NULL,NULL,NULL);
+		   (int)fn_nm, (int) addrMem, 3,4,5,6);
             return ERROR;
 	}
 	
         if (ipmIntConnect(carrier, module, int_num, 
 			  tyGSOctalInt, tyGSOctalLastModule)) {
             logMsg("%s: Unable to connect ISR",
-                   (int)fn_nm,
-                   NULL,NULL,NULL,NULL,NULL);
+                   (int)fn_nm, 2,3,4,5,6);
             return ERROR;
         }
         ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
@@ -625,8 +615,7 @@ LOCAL int tyGSOctalWrite
      */
     if ( !pTyGSOctalDv ) {
 	logMsg( "%s: (%s) DEVICE DESCRIPTOR INVALID\n",
-	        (int)fn_nm, (int)taskName( taskIdSelf() ),
-		NULL,NULL,NULL,NULL );
+	        (int)fn_nm, (int)taskName( taskIdSelf() ), 3,4,5,6 );
         return (-1);
     } else {
         if (pTyGSOctalDv->mode == RS485)
@@ -810,7 +799,7 @@ void tyGSOctalConfig (
 
     if (!pTyGSOctalDv) {
 	logMsg("%s: Device %s not found\n",
-	       (int)fn_nm, (int)name, NULL,NULL,NULL,NULL);
+	       (int)fn_nm, (int)name, 3,4,5,6);
 	return;
     }
 
@@ -887,13 +876,12 @@ void tyGSOctalInt
             {
                 inChar = chan->u.r.rhr;
                 if (tyGSOctalDebug)
-                    logMsg("%d/%dR%02x %02x\n", idx, i, inChar,
-                           isr, NULL, NULL);
+                    logMsg("%d/%dR%02x %02x\n", idx, i, inChar, isr, 5,6);
 
                 if (tyIRd(&(pTyGSOctalDv->tyDev), inChar) != OK)
                     if (tyGSOctalDebug)
                         logMsg("tyIRd failed!\n",
-                               NULL,NULL,NULL,NULL,NULL, NULL);
+                               1,2,3,4,5,6);
             }
 
             if (isr & 0x01) /* a byte needs to be sent */
@@ -915,8 +903,7 @@ void tyGSOctalInt
                     
                     if (tyGSOctalDebug)
                         logMsg("TxInt disabled: %d/%d isr=%02x\n",
-                               idx, i, isr,
-                               NULL, NULL, NULL);
+                               idx, i, isr, 4,5,6);
                     
                 }
             }
@@ -925,8 +912,7 @@ void tyGSOctalInt
             {
                 if (tyGSOctalDebug)
                     logMsg("%d/%dE% 02x\n",
-                       idx, i,
-                       sr, NULL, NULL, NULL);
+                       idx, i, sr, 4,5,6);
                        
                 /* reset error status */
                 chan->u.w.cr = 0x40;
@@ -964,8 +950,7 @@ LOCAL int tyGSOctalStartup
     }
     else
         logMsg("%s: tyITX ERROR, sr=%02x",
-               (int)fn_nm, chan->u.r.sr,
-               NULL, NULL, NULL, NULL);
+               (int)fn_nm, chan->u.r.sr, 3,4,5,6);
 
     return (0);
 }

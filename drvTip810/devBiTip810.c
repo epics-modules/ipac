@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.8 2003-10-29 20:46:30 anj Exp $
+    $Id: devBiTip810.c,v 1.9 2007-02-09 22:09:55 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -87,7 +87,7 @@ LOCAL long init_bi(
 	{ "SENDING",	PCA_SR_TS },
 	{ "SENT", 	PCA_SR_TCS },
 	{ "OK_TO_SEND",	PCA_SR_TBS },
-	{ NULL,		NULL }
+	{ NULL,		0 }
     };
 
     char *canString;

@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.8 2003-11-04 21:38:30 anj Exp $
+    $Id: drvIpMv162.c,v 1.9 2007-02-09 22:09:51 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -97,8 +97,8 @@ LOCAL const uchar_t recoveryTime[] = {
 LOCAL long mBase[IPAC_ADDR_SPACES][SLOTS] = {
     { PROM_A,  PROM_B, PROM_C,  PROM_D },
     { REGS_A,  REGS_B, REGS_C,  REGS_D },
-    { REGS_AB, NULL,   REGS_CD, NULL   },
-    { NULL,    NULL,   NULL,    NULL   }
+    { REGS_AB, 0   ,   REGS_CD, 0      },
+    { 0   ,    0   ,   0   ,    0      }
 };
 
 
