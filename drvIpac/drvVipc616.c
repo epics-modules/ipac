@@ -19,7 +19,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.8 2004-12-15 23:15:27 anj Exp $
+    $Id: drvVipc616.c,v 1.9 2007-05-15 20:59:49 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -39,16 +39,15 @@ Copyright (c) 1995-2003 Andrew Johnson
 
 *******************************************************************************/
 
-#include <vxWorks.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <vme.h>
-#include <sysLib.h>
+
+#include <devLib.h>
+#include <epicsExport.h>
+#include <iocsh.h>
 
 #include "drvIpac.h"
-#include "epicsExport.h"
-#include "iocsh.h"
 
 
 /* Characteristics of the card */
@@ -56,6 +55,7 @@ Copyright (c) 1995-2003 Andrew Johnson
 #define SLOTS 4
 #define IO_SPACES 2	/* Address spaces in A16 */
 #define IPAC_IRQS 2	/* Interrupts per module */
+#define EXTENT 0x400	/* Register size in A16 */
 
 
 /* Offsets from base address in VME A16 */
@@ -162,8 +162,8 @@ LOCAL int initialise (
     void **pprivate,
     ushort_t carrier
 ) {
-    int params, ioStatus, memStatus = OK, mSize = 0;
-    ulong_t ioBase, mOrig, mBase, addr;
+    int params, status, mSize = 0;
+    ulong_t ioBase, mOrig = 0, mBase, mEnd, addr;
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
@@ -178,8 +178,7 @@ LOCAL int initialise (
 	mBase = 0xd0000000;
 	params = 2;	/* Pretend, mBase is in A32 space */
     } else {
-	params = sscanf(cardParams, "%p,%p,%i", 
-			(void **) &ioBase, (void **) &mBase, &mSize);
+	params = sscanf(cardParams, "%i,%i,%i", &ioBase, &mBase, &mSize);
 	if (params < 1 || params > 3 ||
 	    ioBase > 0xfc00 || ioBase & 0x03ff ||
 	    (params == 2 && mBase & 0x01ffffff) ||
@@ -189,27 +188,32 @@ LOCAL int initialise (
 	}
     }
 
-    ioStatus = sysBusToLocalAdrs(VME_AM_SUP_SHORT_IO, 
-				(char *) ioBase, (char **) &ioBase);
+    if (devRegisterAddress("VIPC616", atVMEA16, ioBase, EXTENT,
+				  (volatile void **)&ioBase)) {
+	return S_IPAC_badAddress;
+    }
+
     if (params == 1) {
-    	/* No memory, just the A16 I/O space */
+	/* No memory, just the A16 I/O space */
 	mSize = 0;
-	mOrig = 0;
+	status = OK;
     } else if (params == 2) {
 	/* A32 space, 8Mb allocated per module */
-	memStatus = sysBusToLocalAdrs(VME_AM_EXT_SUP_DATA, 
-				    (char *) mBase, (char **) &mBase);
 	mSize = 8 << 20;
+	status = devRegisterAddress("VIPC616", atVMEA32, mBase,
+				       mSize * SLOTS, (volatile void **)&mBase);
 	mOrig = mBase;
-    } else {
-	/* A24 space, variable size per module */
-	memStatus = sysBusToLocalAdrs(VME_AM_STD_SUP_DATA, 
-				    (char *) mBase, (char **) &mBase);
-    	mSize = mSize << 10;	    /* Convert size from K to Bytes */
-    	mOrig = mBase & ~(mSize * SLOTS - 1);
-
+      } else {
+	/* A24 space, module size given, some slots may be hidden */
+	mSize = mSize << 10;	    /* Convert size from K to Bytes */
+	mEnd = (mBase & ~(mSize * SLOTS - 1)) + mSize * SLOTS;
+	if (mSize) {
+	    status = devRegisterAddress("VIPC616", atVMEA24, mBase,
+					mEnd - mBase, (volatile void **)&mBase);
+	    mOrig = mBase & ~(mSize * SLOTS - 1);
+	}
     }
-    if (ioStatus || memStatus) {
+    if (status) {
 	return S_IPAC_badAddress;
     }
 
@@ -301,7 +305,7 @@ LOCAL int irqCmd (
 	    return irqLevel[slot][irqNumber];
 
 	case ipac_irqEnable:
-	    sysIntEnable(irqLevel[slot][irqNumber]);
+	    devEnableInterruptLevel(intVME, irqLevel[slot][irqNumber]);
 	    return OK;
 
 	default:

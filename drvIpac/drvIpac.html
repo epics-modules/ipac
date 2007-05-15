@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.15 2007-02-09 21:56:39 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.16 2007-05-15 20:59:49 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -14,7 +14,7 @@
 <h1>
 drvIpac - Industry Pack Driver</h1>
 
-Version 2.8
+Version 2.9
 
 <address>
 Andrew Johnson</address></center>
@@ -227,9 +227,7 @@ header <b><tt>#include</tt></b>s the vxWorks ANSI header file <i>types.h</i>
 thus a <b><tt>-I</tt></b> option to the C pre-processor must be used to
 indicate the location of the vxWorks header files.</p>
 
-<p>If it is necessary to build a copy of the driver for use without EPICS, the
-<i>drvIpac.c</i> file should be compiled with the <b><tt>-DNO_EPICS</tt></b>
-compiler switch to disable the EPICS-specific code.</p>
+<p>This software can no longer be built for use without EPICS.</p>
 
 <hr>
 
@@ -369,7 +367,7 @@ ipacAddCarrier(&amp;vipc310, "0x6800");</pre>
 <p>
 Gets the carrier number of the most recently added carrier board.</p>
 
-<pre>ushort_t ipacLatestCarrier(void);</pre>
+<pre>int ipacLatestCarrier(void);</pre>
 
 <h4>
 Description</h4>
@@ -387,7 +385,7 @@ Returns</h4>
 
 <dl>
 <dt>
-<tt>ushort_t</tt></dt>
+<tt>int</tt></dt>
 
 <dd>
 <table BORDER=2>
@@ -538,14 +536,14 @@ Manufacturer and Model ID codes.</p>
 <p>
 Returns Base CPU address of selected IP address space</p>
 
-<pre>void *ipmBaseAddr(ushort_t carrier, ushort_t slot, ipac_addr_t space);</pre>
+<pre>void *ipmBaseAddr(int carrier, int slot, ipac_addr_t space);</pre>
 
 <h4>
 Parameters</h4>
 
 <dl>
 <dt>
-<a NAME="carrierSlot"></a><tt>ushort_t carrier</tt></dt>
+<a NAME="carrierSlot"></a><tt>int carrier</tt></dt>
 
 <dd>
 Carrier number; identifies a particular carrier board in the system. The
@@ -553,7 +551,7 @@ carriers are given numbers sequentially starting from zero according to
 the order in which they were registered by calling <tt>ipacAddCarrier</tt>.</dd>
 
 <dt>
-<tt>ushort_t slot</tt></dt>
+<tt>int slot</tt></dt>
 
 <dd>
 Slot number; identifies the particular IP slot on the carrier board, starting
@@ -652,14 +650,14 @@ or NULL pointer.</dd>
 Check on the presence of an IPAC module at the given carrier and slot
 number.</p>
 
-<pre>int ipmCheck(ushort_t carrier, ushort_t slot);</pre>
+<pre>int ipmCheck(int carrier, int slot);</pre>
 
 <h4>
 Parameters</h4>
 
 <dl>
 <dt>
-<tt>ushort_t carrier, ushort_t slot</tt></dt>
+<tt>int carrier, int slot</tt></dt>
 
 <dd>
 Module identification - see <a href="#carrierSlot">above</a></dd>
@@ -730,7 +728,7 @@ Returns</h4>
 Validates a particular IPAC module type at the given carrier &amp; slot
 number.</p>
 
-<pre>int ipmValidate(ushort_t carrier, ushort_t slot,
+<pre>int ipmValidate(int carrier, int slot,
                 uchar_t manufacturerId, uchar_t modelId);</pre>
 
 <h4>
@@ -738,7 +736,7 @@ Parameters</h4>
 
 <dl>
 <dt>
-<tt>ushort_t carrier, ushort_t slot</tt></dt>
+<tt>int carrier, int slot</tt></dt>
 
 <dd>
 Module identification - see <a href="#carrierSlot">above</a></dd>
@@ -844,21 +842,21 @@ Returns</h4>
 <p>
 Manipulate the carrier board interrupt controller.</p>
 
-<pre>int ipmIrqCmd(ushort_t carrier, ushort_t slot,
-              ushort_t irqNumber, ipac_irqCmd_t cmd);</pre>
+<pre>int ipmIrqCmd(int carrier, int slot,
+              int irqNumber, ipac_irqCmd_t cmd);</pre>
 
 <h4>
 Parameters</h4>
 
 <dl>
 <dt>
-<tt>ushort_t carrier, ushort_t slot</tt></dt>
+<tt>int carrier, int slot</tt></dt>
 
 <dd>
 Module identification - see <a href="#carrierSlot">above</a></dd>
 
 <dt>
-<tt>ushort_t irqNumber</tt></dt>
+<tt>int irqNumber</tt></dt>
 
 <dd>
 The IPAC specification provides two interrupt lines for each module. This
@@ -1064,7 +1062,7 @@ used.</p></dd>
 Connects a module driver Interrupt Service Routine to a particular interrupt
 vector number.</p>
 
-<pre>int ipmIntConnect (ushort_t carrier, ushort_t slot, ushort_t vecNum, 
+<pre>int ipmIntConnect (int carrier, int slot, int vecNum, 
                    void (*routine)(int parameter), int parameter);</pre>
 
 <h4>
@@ -1072,13 +1070,13 @@ Parameters</h4>
 
 <dl>
 <dt>
-<tt>ushort_t carrier, ushort_t slot</tt></dt>
+<tt>int carrier, int slot</tt></dt>
 
 <dd>
 Module identification - see <a href="#carrierSlot">above</a></dd>
 
 <dt>
-<tt>ushort_t vecNum</tt></dt>
+<tt>int vecNum</tt></dt>
 
 <dd>
 Interrupt vector number</dd>
@@ -1155,14 +1153,14 @@ used.</p></dd>
 
 Returns a printable string giving the status/settings of the given slot.
 
-<pre>char *ipmReport(ushort_t carrier, ushort_t slot);</pre>
+<pre>char *ipmReport(int carrier, int slot);</pre>
 
 <h4>
 Parameters</h4>
 
 <dl>
 <dt>
-<tt>ushort_t carrier, ushort_t slot</tt></dt>
+<tt>int carrier, int slot</tt></dt>
 
 <dd>
 Module identification - see <a href="#carrierSlot">above</a></dd>
@@ -1993,7 +1991,7 @@ routine. This is defined as follows:</p>
 <blockquote>
 <pre>typedef struct {
     char *carrierType;                 <i>/* String describing carrier board type */</i>
-    ushort_t numberSlots;              <i>/* Number of IPAC devices this carrier can hold */</i>
+    int numberSlots;                   <i>/* Number of IPAC devices this carrier can hold */</i>
     int (*initialise)(char *cardParams, void **cPrivate, ushort_t carrier);
                                        <i>/* Initialise carrier and return *cPrivate */</i>
     char *(*report)(void *cPrivate, ushort_t slot);

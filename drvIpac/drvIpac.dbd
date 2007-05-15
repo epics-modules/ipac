@@ -1,6 +1,7 @@
 # IPAC Driver support
 
 driver(drvIpac)
+registrar(ipacRegistrar)
 
 # Register your carrier driver(s) with these
 #registrar(mv162ipRegistrar)

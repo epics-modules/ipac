@@ -1,7 +1,7 @@
 /*******************************************************************************
 
 Project:
-    CAN Bus Driver for EPICS
+    IndustryPack Driver Interface for EPICS
 
 File:
     drvIpac.h
@@ -16,9 +16,9 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.9 2004-12-15 23:19:19 anj Exp $
+    $Id: drvIpac.h,v 1.10 2007-05-15 20:59:49 anj Exp $
 
-Copyright (c) 1995-2000 Andrew Johnson
+Copyright (c) 1995-2007 Andrew Johnson
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -40,11 +40,27 @@ Copyright (c) 1995-2000 Andrew Johnson
 #ifndef INCdrvIpacH
 #define INCdrvIpacH
 
-#include <types.h>
-
-#ifndef NO_EPICS
+#include <epicsTypes.h>
 #include <errMdef.h>
+
+/* These types are being defined here for compatibility reasons - in vxWorks
+ * they are standard types, replacing them with OSI versions would break the
+ * IPAC carrier drivers that are outside of the drvIpac distribution.  They
+ * are #defined to use explicitly-sized types from epicsTypes.h instead (we
+ * can't use a typedef because that could fail on vxWorks).
+ */
+#ifndef uchar_t
+#define uchar_t epicsUInt8
 #endif
+
+#ifndef ushort_t
+#define ushort_t epicsUInt16
+#endif
+
+#ifndef ulong_t
+#define ulong_t epicsUInt32
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,19 +100,19 @@ extern "C" {
 /* Structure of the IPAC ID Prom, located in the pack ID space. */
 
 typedef volatile struct {
-    uint16_t asciiI;
-    uint16_t asciiP;
-    uint16_t asciiA;
-    uint16_t asciiC;
-    uint16_t manufacturerId;
-    uint16_t modelId;
-    uint16_t revision;
-    uint16_t reserved;
-    uint16_t driverIdLow;
-    uint16_t driverIdHigh;
-    uint16_t bytesUsed;
-    uint16_t CRC;
-    uint16_t packSpecific[52];
+    epicsUInt16 asciiI;
+    epicsUInt16 asciiP;
+    epicsUInt16 asciiA;
+    epicsUInt16 asciiC;
+    epicsUInt16 manufacturerId;
+    epicsUInt16 modelId;
+    epicsUInt16 revision;
+    epicsUInt16 reserved;
+    epicsUInt16 driverIdLow;
+    epicsUInt16 driverIdHigh;
+    epicsUInt16 bytesUsed;
+    epicsUInt16 CRC;
+    epicsUInt16 packSpecific[52];
 } ipac_idProm_t;
 
 
@@ -173,19 +189,18 @@ typedef struct {
 
 extern int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
 extern int ipacReport(int interest);
-extern int ipacInitialise(int after);
 
 
 /* Functions for use in IPAC module drivers */
 
-extern int ipmCheck(ushort_t carrier, ushort_t slot);
-extern int ipmValidate(ushort_t carrier, ushort_t slot,
-		uchar_t manufacturerId, uchar_t modelId);
-extern char *ipmReport(ushort_t carrier, ushort_t slot);
-extern void *ipmBaseAddr(ushort_t carrier, ushort_t slot, ipac_addr_t space);
-extern int ipmIrqCmd(ushort_t carrier, ushort_t slot, 
-		ushort_t irqNumber, ipac_irqCmd_t cmd);
-extern int ipmIntConnect(ushort_t carrier, ushort_t slot, ushort_t vector, 
+extern int ipmCheck(int carrier, int slot);
+extern int ipmValidate(int carrier, int slot,
+		int manufacturerId, int modelId);
+extern char *ipmReport(int carrier, int slot);
+extern void *ipmBaseAddr(int carrier, int slot, ipac_addr_t space);
+extern int ipmIrqCmd(int carrier, int slot, 
+		int irqNumber, ipac_irqCmd_t cmd);
+extern int ipmIntConnect(int carrier, int slot, int vector, 
 		void (*routine)(int parameter), int parameter);
 
 

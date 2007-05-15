@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.14 2004-12-15 23:19:19 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.15 2007-05-15 20:59:49 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -17,6 +17,22 @@
 IndustryPack driver as it has evolved since first release.  The earliest
 version appears at the bottom, with more recent releases above it.</P>
 
+<HR>
+
+<H2>Version 2.9</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Converted drvIpac and the VIPC and TVME200 carrier drivers to use EPICS OSI
+calls instead of native vxWorks ones, and they will now be built on all IOC
+architectures, not just for vxWorks.  As a result this version can only be built
+as an EPICS driver support layer, but I don't know anyone who is still using it
+outside of EPICS (I haven't heard from UKIRT in years).  The MVME162 and ATC40
+carrier drivers are still built for vxWorks only, although they probably could
+be converted too if someone needs them (very unlikely).</LI>
+
+</UL>
 <HR>
 
 <H2>Version 2.8</H2>
