@@ -2,5 +2,4 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-IOCAPPS=/usr/local/iocapps/R3.14.7
-EPICS_BASE=$(IOCAPPS)/base/3-14-7-asd1
+EPICS_BASE=/home/phoebus/ANJ/epics/base/3-14-dev
