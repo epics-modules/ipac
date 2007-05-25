@@ -22,7 +22,7 @@ Author:
 Created:
     10 December 2004
 Version:
-    $Id: drvTvme200.c,v 1.2 2007-05-15 20:59:49 anj Exp $
+    $Id: drvTvme200.c,v 1.3 2007-05-25 20:33:46 anj Exp $
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -167,6 +167,7 @@ LOCAL int initialise (
 ) {
     int s3, s4, mAM;
     ulong_t switches, ioBase, mSize, mBase;
+    volatile void *ptr;
     int space, slot;
     private_t *settings;
 
@@ -183,9 +184,9 @@ LOCAL int initialise (
     if ((ioBase & 0x0300) || s3 >= SETTINGS)
 	return S_IPAC_badAddress;
 
-    if (devRegisterAddress("TVME200", atVMEA16, ioBase, EXTENT,
-			   (volatile void **) &ioBase))
+    if (devRegisterAddress("TVME200", atVMEA16, ioBase, EXTENT, &ptr))
 	return S_IPAC_badAddress;
+    ioBase = (ulong_t) ptr;
 
     for (slot = 0; slot < SLOTS; slot++) {
 	ctrl_t *ctrl = (ctrl_t *) (ioBase + tvmeCtrls[slot]);
@@ -224,10 +225,10 @@ LOCAL int initialise (
 
     if (mSize &&
 	(((mSize * SLOTS - 1) & mBase) || 	/* address must match size */
-	devRegisterAddress("TVME200", mAM, mBase, mSize * SLOTS,
-			   (volatile void **) &mBase))) {
+	devRegisterAddress("TVME200", mAM, mBase, mSize * SLOTS,  &ptr))) {
 	return S_IPAC_badAddress;
     }
+    mBase = (ulong_t) ptr;
 
     settings = (private_t *)malloc(sizeof (private_t));
     if (!settings)

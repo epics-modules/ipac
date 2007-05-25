@@ -19,7 +19,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.9 2007-05-15 20:59:49 anj Exp $
+    $Id: drvVipc616.c,v 1.10 2007-05-25 20:33:46 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -164,6 +164,7 @@ LOCAL int initialise (
 ) {
     int params, status, mSize = 0;
     ulong_t ioBase, mOrig = 0, mBase, mEnd, addr;
+    volatile void *ptr;
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
@@ -188,10 +189,10 @@ LOCAL int initialise (
 	}
     }
 
-    if (devRegisterAddress("VIPC616", atVMEA16, ioBase, EXTENT,
-				  (volatile void **)&ioBase)) {
+    if (devRegisterAddress("VIPC616", atVMEA16, ioBase, EXTENT, &ptr)) {
 	return S_IPAC_badAddress;
     }
+    ioBase = (ulong_t) ptr;
 
     if (params == 1) {
 	/* No memory, just the A16 I/O space */
@@ -201,7 +202,8 @@ LOCAL int initialise (
 	/* A32 space, 8Mb allocated per module */
 	mSize = 8 << 20;
 	status = devRegisterAddress("VIPC616", atVMEA32, mBase,
-				       mSize * SLOTS, (volatile void **)&mBase);
+				       mSize * SLOTS, &ptr);
+	mBase = (ulong_t) ptr;
 	mOrig = mBase;
       } else {
 	/* A24 space, module size given, some slots may be hidden */
@@ -209,8 +211,11 @@ LOCAL int initialise (
 	mEnd = (mBase & ~(mSize * SLOTS - 1)) + mSize * SLOTS;
 	if (mSize) {
 	    status = devRegisterAddress("VIPC616", atVMEA24, mBase,
-					mEnd - mBase, (volatile void **)&mBase);
+					mEnd - mBase, &ptr);
+	    mBase = (ulong_t) ptr;
 	    mOrig = mBase & ~(mSize * SLOTS - 1);
+	} else {
+	    status = 0;
 	}
     }
     if (status) {

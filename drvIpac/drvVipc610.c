@@ -19,7 +19,7 @@ Author:
 Created:
     19 July 1995
 Version:
-    $Id: drvVipc610.c,v 1.9 2007-05-15 20:59:49 anj Exp $
+    $Id: drvVipc610.c,v 1.10 2007-05-25 20:33:46 anj Exp $
 
 Copyright (c) 1995-2003 Andrew Johnson
 
@@ -158,6 +158,7 @@ LOCAL int initialise (
 ) {
     int params, mSize = 0;
     ulong_t ioBase, mOrig, mBase, mEnd, addr;
+    volatile void *ptr;
     ushort_t space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
@@ -181,19 +182,19 @@ LOCAL int initialise (
     mBase = ioBase << 8;	/* Fixed by the VIPC610 card */
     ioBase = ioBase & 0xfc00;	/* Clear A09 */
 
-    if (devRegisterAddress("VIPC610", atVMEA16, ioBase, EXTENT,
-				  (volatile void **)&ioBase)) {
+    if (devRegisterAddress("VIPC610", atVMEA16, ioBase, EXTENT, &ptr)) {
 	return S_IPAC_badAddress;
     }
+    ioBase = (ulong_t) ptr;
 
     mSize = mSize << 10;	/* Convert size from K to Bytes */
     mEnd = (mBase & ~(mSize * SLOTS - 1)) + mSize * SLOTS;
 
     if (mSize &&
-	devRegisterAddress("VIPC610", atVMEA24, mBase, mEnd - mBase,
-			   (volatile void **)&mBase)) {
+	devRegisterAddress("VIPC610", atVMEA24, mBase, mEnd - mBase, &ptr)) {
 	return S_IPAC_badAddress;
     }
+    mBase = (ulong_t) ptr;
     mOrig = mBase & ~(mSize * SLOTS - 1);
 
     private = malloc(sizeof (private_t));
