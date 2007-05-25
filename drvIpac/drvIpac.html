@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.16 2007-05-15 20:59:49 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.17 2007-05-25 21:51:38 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -116,7 +116,7 @@ RS485)</a></li>
 
 <p>
 This document describes the software interface to a generic Industry Pack
-(IPAC) driver module for vxWorks, written as part of a 
+(IPAC) driver module for EPICS, which was originaly written as part of a 
 <a href="drvTip810.html">CANbus EPICS device driver</a> for the
 <a href="http://www.gemini.edu/">Gemini</a> and UKIRT telescopes. The
 original purpose of the generic IPAC driver was to ensure that the CANbus
@@ -137,24 +137,20 @@ Carrier drivers are available for most of the common IP carrier boards.</p>
 <p>
 At present the IPAC driver is limited (by the size of an internal array) to
 controlling a maximum of 21 carrier boards, but this limitation should be easy
-to dispense with completely without altering any of its interfaces. Although
-designed primarily to be used from within an EPICS system, the software has
-been written to allow it to be used independent of the presence of EPICS in
-other vxWorks-based applications.</p>
+to dispense with completely without altering any of its interfaces.</p>
 
 <h3>
 <a NAME="Installation"></a>Installation</h3>
 
 <p>
-From version 2.0 onwards the drvIpac subsystem has been separated from the
-CANbus driver but provided within an EPICS &lt;supporttop&gt; application which
+The drvIpac subsystem is an EPICS &lt;supporttop&gt; application which
 can also be used to build IPAC module drivers. To install and use the the ipac
 support, obtain a copy of the tar file or (if you have remote CVS permissions
 at APS) export the software from the CVS repository where it resides as
 <tt>epics/modules/bus/ipac</tt> - CVS tags of the form `<b><tt>V2-1</tt></b>'
 mark the particular file versions required for each release. These instructions
 assume you already have EPICS R3.14.x installed and built (this software should
-work with EPICS R3.14.3 and later). Two steps are then required to install and
+work with EPICS R3.14.4 and later). Two steps are then required to install and
 build the software:</p>
 
 <ol>
@@ -203,7 +199,7 @@ hardware interrupts, although the IndustryPack standard does require that any
 IP module that generates interrupts should provide a vector. On ISA bus
 carriers this vector can be read by the carrier driver to work out which module
 caused the interrupt. A module driver should not need to know about the
-particular bus type its carrier is on, thus ipac now provides the routine <a
+particular bus type its carrier is on, thus Ipac now provides the routine <a
 href="#ipmIntConnect">ipmIntConnect()</a> to allow it to pass such issues off to
 the carrier driver to handle. The interface to this is very similar to the
 standard vxWorks intConnect() routine.</p>
