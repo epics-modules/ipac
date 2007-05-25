@@ -1,22 +1,24 @@
 <HTML>
 <HEAD>
    <TITLE>devCan - CAN Bus Device Support</TITLE>
-   <META NAME="Author" CONTENT="Andrew Johnson">
-   <META NAME="Description" CONTENT="User Documentation for the EPICS CANbus device support software">
-   <META NAME="KeyWords" CONTENT="CANbus, EPICS, Tip810">
-   <META NAME="Version" CONTENT="$Id: devCan.html,v 1.8 2007-02-09 21:56:44 anj Exp $">
+   <META NAME="Author" CONTENT="Andrew Johnson" />
+   <META NAME="Description"
+      CONTENT="User Documentation for the EPICS CANbus device support" />
+   <META NAME="KeyWords" CONTENT="CANbus, EPICS, TIP810" />
+   <META NAME="Version"
+      CONTENT="$Id: devCan.html,v 1.9 2007-05-25 19:42:14 anj Exp $" />
 </HEAD>
 <BODY>
 
 <H1 ALIGN=CENTER>devCan - CAN Bus Device Support</H1>
 
-<CENTER><P>Developed for Gemini and UKIRT <BR>
-CANbus Device Support for EPICS <BR>
-Version 2.5</P></CENTER>
+<P ALIGN=CENTER>CANbus Device Support for EPICS <BR>
+Version 2.9</P>
 
-<CENTER><ADDRESS>Andrew Johnson 
-<A HREF="mailto:anj@aps.anl.gov">&lt;anj@aps.anl.gov&gt;</A>
-</ADDRESS></CENTER>
+<P ALIGN=CENTER><I>Andrew Johnson
+<A HREF="mailto:anj@aps.anl.gov">&lt;anj@aps.anl.gov&gt;</A></I></P>
+
+<H2>Contents</H2>
 
 <UL>
 <LI><A HREF="#section1">Introduction</A></LI>
@@ -43,39 +45,38 @@ Version 2.5</P></CENTER>
 <LI><A HREF="#multiBitBinaryRecords">Multi-Bit Binary Records</A></LI>
 </UL>
 
-<LI><B>NEW: </B><A HREF="#biTip810">Tip810 Module Status Records</A></LI>
+<LI><A HREF="#biTip810">Tip810 Module Status Records</A></LI>
 </UL>
 
-<P><HR></P>
+<HR>
 
 <H2><A NAME="section1"></A>1. Introduction</H2>
 
-<P>This document describes the device support provided with the 
-<A HREF="http://www.gemini.edu/">Gemini</A>/UKIRT
-CANbus driver under EPICS. There are two related documents which describe
-the lower levels of software which are also required to provide the interface
-to the CANbus: <A HREF="drvTip810.html">drvTip810 - CAN Bus Driver</A>
-and <A HREF="drvIpac.html">drvIpac - Industry Pack Driver</A>. </P>
+<P>This document describes the device support provided with the TEWS TIP810
+Industry-Pack CANbus driver under EPICS. There are two related documents which
+describe the lower levels of software which are also required to provide the
+interface to the CANbus: <A HREF="drvTip810.html">drvTip810 - CAN Bus Driver</A>
+and <A HREF="drvIpac.html">drvIpac - Industry Pack Driver</A>.</P>
 
 <P>Device Support routines have been provided for the following record
-types: </P>
+types:</P>
 
 <UL>
-<LI>Analogue Records (ai, ao) </LI>
+<LI>Analogue Records (ai, ao)</LI>
 
-<LI>Binary Records (bi, bo) </LI>
+<LI>Binary Records (bi, bo)</LI>
 
-<LI>Multi-Bit Binary Records (mbbi, mbbo) </LI>
+<LI>Multi-Bit Binary Records (mbbi, mbbo)</LI>
 
-<LI>Multi-Bit Binary Direct Records (mbbiDirect, mbboDirect) </LI>
+<LI>Multi-Bit Binary Direct Records (mbbiDirect, mbboDirect)</LI>
 </UL>
 
 <P>The device support behaviour for these record types is substantially
 the same. The differences are discussed individually for each record type
 in <A HREF="#section3">section 3</A> below.</P>
 
-<P>Also available with version&nbsp;2 of the driver software is the ability
-to check the status of the Tip810 CANbus interface, using:</P>
+<P>Also available is the ability to check the status of the Tip810 CANbus
+interface, using:</P>
 
 <UL>
 <LI>Binary Input Records to access the TIP810 module status (bi)</LI>
@@ -84,40 +85,40 @@ to check the status of the Tip810 CANbus interface, using:</P>
 <P>The support for this record type is significantly different to the others
 so is described seperately in <A HREF="#biTip810">section 4</A>.</P>
 
-<P><HR></P>
+<HR>
 
 <H2><A NAME="section2"></A>2. Common Issues</H2>
 
 <P>All communication with the CANbus hardware is performed using the routines
 defined in the generic header file <I>canBus.h</I>, thus these device support
-routines can be used with hardware other than just the Tews TIP810 Industry-Pack
-module if a suitable driver is written. </P>
+routines can be used with hardware other than the Tews TIP810 Industry-Pack
+module if a suitable driver is written. It is not currently possible for two
+such CANbus drivers to co-exist in the same IOC however.</P>
 
 <P>Each record is associated with a single message identifier on a particular
-CANbus, although an identifier can be used for more than one record simultaneously.
-This allows several items of input data to be encoded into one message
-and each record just picks out the relevant part of the message data for
-its own use. This technique cannot be used for output records however,
-for obvious reasons. </P>
+CANbus, although any identifier can be used for more than one record
+simultaneously. This allows several items of input data to be encoded into one
+message and each record just picks out the relevant part of the message data for
+its own use. This technique cannot be used for output records however, for
+obvious reasons.</P>
 
 <H3><A NAME="hardwareAddressing"></A>Hardware Addressing</H3>
 
-<P>Records should have their Device Type (<B><TT>DTYP</TT></B>) field set
-to &quot;<B><TT>CANbus</TT></B>&quot; for which the hardware address field
-(<B><TT>INP</TT></B> or <B><TT>OUT</TT></B>) is an Instrument I/O type
-(<B><TT>INST_IO</TT></B>), which provides for a single address string.
+<P>Records should have their Device Type (<TT>DTYP</TT>) field set
+to <Q><TT>CANbus</TT></Q> for which the hardware address field
+(<TT>INP</TT> or <TT>OUT</TT>) is an Instrument I/O type
+(<TT>INST_IO</TT>), which provides for a single address string.
 This contains a number of elements, some of which are optional, and is
-formatted as follows: </P>
+formatted as follows:</P>
 
 <UL>
 <PRE><B>@</B><I>busName</I>[<B>/</B><I>timeout</I>]<B>:</B><I>identifier</I>[<B>+</B><I>n</I>..][<B>.</B><I>offset</I>]<I>parameter</I></PRE>
 </UL>
 
-<P>The first element after the &quot;<B><TT>@</TT></B>&quot; is the bus
-name, which should consist of alphanumeric characters only. The name starts
-with the first non-white-space character, and is terminated immediately
-before the first &quot;<B><TT>/</TT></B>&quot; or &quot;<B><TT>:</TT></B>&quot;
-character in the string. </P>
+<P>The first element after the <Q><TT>@</TT></Q> is the bus name, which should
+consist of alphanumeric characters only. The name starts with the first
+non-white-space character, and is terminated immediately before the first
+<Q><TT>/</TT></Q> or <Q><TT>:</TT></Q> character in the string.</P>
 
 <P>An oblique stroke after the bus name introduces an optional timeout
 element, which is an integer number of milli-seconds to wait for a response
@@ -131,47 +132,47 @@ recovers.</P>
 of the legal CANbus identifiers in the range 0 through 2047 (with holes).  The
 identifier itself can be specified as a single number, or in several parts
 separated by plus signs, which are all summed.  The numbers here can be given
-in decimal, hex or octal as desired using the standard 'C' syntax. </P>
+in decimal, hex or octal as desired using the standard 'C' syntax.</P>
 
 <P>If the identifier is followed by a decimal point, the following element
 is an optional byte offset into the CANbus message where the data may be
 found. The offset is a number from zero to seven, and defaults to zero
 if the element is omitted. Note that for output records this offset is
-not used. </P>
+not used.</P>
 
 <P>The final parameter element is usually a signed integer introduced by a
 space or tab character, and is used in different ways by the various different
-record types (see <A HREF="#section3">below</A>). </P>
+record types (see <A HREF="#section3">below</A>).</P>
 
 <H3><A NAME="asynchronousProcessing"></A>Asynchronous Processing</H3>
 
 <P>All input record types support asynchronous processing. This is necessary
 because there may be a significant delay between sending a Remote Transmission
-Request message out on the CANbus and the addressed device returning a value.
-With asynchronous processing support this delay will not hold up other EPICS
-activities which do not depend on the results returned to the input record
+Request (RTR) message out on the CANbus and the addressed device returning a
+value. With asynchronous processing support this delay will not hold up other
+EPICS activities which do not depend on the results returned to the input record
 (i.e. records in a different lock-set). The timeout address field is used to
-set a watchdog timer, and if no response is received within the given period
-the record is set to the <B><TT>TIMEOUT_ALARM</TT></B> status with a severity
-of <B><TT>INVALID_ALARM</TT></B>. </P>
+start a timer when the RTR is sent, and if no response is received within the
+given period the record is put in the <TT>TIMEOUT_ALARM</TT> status with a
+severity of <TT>INVALID_ALARM</TT>.</P>
 
 
 <H3><A NAME="recordScanTypes"></A>Record Scan Types</H3>
 
 <P>The CANbus messages handled and generated by the device support routines
-depend on the setting of the <B><TT>SCAN</TT></B> field of the particular
+depend on the setting of the <TT>SCAN</TT> field of the particular
 record. When a passive or periodically scanned input record is processed,
 a CANbus Remote Transmission Request message is sent and record processing
 is suspended until the relevant reply is received. A passive or periodically
 scanned output record causes a CANbus message to be generated each time
-it is processed. </P>
+it is processed.</P>
 
 <P>All record types support the I/O Interrupt scan type. Records which
 use this scan mechanism will be processed whenever a CANbus message is
 received with the relevant identifier. For an output record, the message
 received must be a Remote Transmission Request, and an EPICS processing
 chain can be used to obtain the value to be returned in response to this
-request. </P>
+request.</P>
 
 <P>It is obviously desirable to avoid unnecessary CANbus message traffic,
 thus if several input data items are encoded in the same CANbus message
@@ -179,21 +180,20 @@ identifier which are destined for several input records, all of the records
 except one should be set to I/O Interrupt scanning. When it is processed
 this record will generate a single CANbus RTR message to ask for the data
 from the remote node. The reply will be distributed to all of the records
-waiting on this particular message identifier. </P>
+waiting on this particular message identifier.</P>
 
 <H3><A NAME="alarmStatus"></A>Alarm Status</H3>
 
-<P>Records will be placed in an alarm state in the event of the CANbus
-interface signalling a Bus Error or Bus Off event, or if the remote CAN device
-does not respond to an RTR message within the specified timeout interval (Bus
-Error alarms were disabled in Version 1.1b but have been reinstated in V1.1c). 
-The alarm status and severity meanings are given in the following table: </P>
+<P>Records will be placed in an alarm state in the event of the CANbus interface
+signalling a Bus Error or Bus Off event, or if the remote CAN device does not
+respond to an RTR message within the specified timeout interval. The alarm
+status and severity meanings are given in the following table:</P>
 
-<CENTER><TABLE BORDER=1 >
+<BLOCKQUOTE><TABLE BORDER=1>
 <TR BGCOLOR="#FFFFFF">
-<TD><B><I>Status</I></B></TD>
-<TD><B><I>Severity</I></B></TD>
-<TD><B><I>Description</I></B></TD>
+<TH>Status</TH>
+<TH>Severity</TH>
+<TH>Description</TH>
 </TR>
 
 <TR>
@@ -213,30 +213,30 @@ The alarm status and severity meanings are given in the following table: </P>
 <TD><TT>INVALID_ALARM</TT></TD>
 <TD>Internal Error</TD>
 </TR>
-</TABLE></CENTER>
+</TABLE></BLOCKQUOTE>
 
-<P><HR></P>
+<HR>
 
 <H2><A NAME="section3"></A>3. Record-Specific Behaviour</H2>
 
 <P>The major difference between the various record types supported is in
 the use of the miscellaneous address parameter which defines how the CANbus
-message data is interpreted. </P>
+message data is interpreted.</P>
 
 <H3><A NAME="analogueRecords"></A>Analogue Records</H3>
 
 <P>For Analogue records, the address parameter may be a signed number which
 specifies the maximum value of the raw data within the CANbus message, or the
-string &quot;<B><TT>float</TT></B>&quot; or &quot;<B><TT>double</TT></B>&quot;.
+string <Q><TT>float</TT></Q> or <Q><TT>double</TT></Q>.
 The latter formats imply that the CAN message contains an IEEE floating-point
 number in the same format as that used by the IOC's CPU - no byte swapping or
 other format conversion is provided other than converting a float to the double
-value used by the record.  Note that no engineering units conversion is
-performed when these formats are selected. </P>
+value used by the record. Note that no engineering units conversion is
+performed when either of these formats is selected.</P>
 
 <P>A numeric parameter specifies a raw integer value with arbitrary width up to
 32 bits, but note that the data's LSB must be aligned to the LSB of a message
-byte. If the parameter is negative the raw data values are taken to be
+byte. If the parameter given is negative the raw data values are taken to be
 2s-complement numbers with the given range and centred about zero, otherwise
 the value is taken to be unsigned, ranging from zero up to the value given. In
 both cases if the parameter value is a power of two it will be rounded down by
@@ -244,18 +244,18 @@ one (64 becomes 63, 0x800 becomes 0x7ff etc). The range is not limited to just
 powers of two however - e.g. the value 1999 might be used if the data
 originated from a 3&frac12; digit BCD number (although it must have been
 converted from BCD to 2s-complement binary before being transmitted in the CAN
-message). </P>
+message).</P>
 
 <P>Analogue records include the ability to perform an automatic engineering
-units conversion, depending on the setting of the record's <B><TT>LINR</TT></B>
-field. If this is set to &quot;<B><TT>NO CONVERSION</TT></B>&quot; the record
+units conversion, depending on the setting of the record's <TT>LINR</TT>
+field. If this is set to <Q><TT>NO&nbsp;CONVERSION</TT></Q> the record
 value will be identical to the raw value read from the CAN message. When set to
-&quot;<B><TT>LINEAR</TT></B>&quot; the input range specified by the address
+<Q><TT>LINEAR</TT></Q> the input range specified by the address
 parameter will be mapped directly to the range given by the
-<B><TT>EGUL</TT></B> and <B><TT>EGUF</TT></B> fields. This applies even if the
+<TT>EGUL</TT> and <TT>EGUF</TT> fields. This applies even if the
 input range is 2s-complement such that the most negative input will give return
-the value given by <B><TT>EGUL</TT></B> and the most positive will return
-<B><TT>EGUF</TT></B>. </P>
+the value given by <TT>EGUL</TT> and the most positive will return
+<TT>EGUF</TT>.</P>
 
 <H3><A NAME="binaryRecords"></A>Binary Records</H3>
 
@@ -263,53 +263,48 @@ the value given by <B><TT>EGUL</TT></B> and the most positive will return
 the byte which holds the binary value, where 0 refers to the least significant
 bit and 7 the most significant. The address offset parameter must be used
 to select which byte in the message is to be examined, although this byte
-offset is ignored by the binary output record support. </P>
+offset is ignored by the binary output record support.</P>
 
 <H3><A NAME="multiBitBinaryRecords"></A>Multi-Bit Binary Records</H3>
 
-<P>For the various multi-bit binary records, the address parameter specifies
-the bit number (0 to 7) of the least significant bit in the bit-field (the
-number of bits is specified in the record's <B><TT>NOBT</TT></B> field).
-The address offset parameter is used to select which byte in the message
-is used, although this is ignored by the output record types. It is not
-possible for the bit-field to cross a byte boundary, thus the record behaviour
-is undefined when the sum of the address parameter and <B><TT>NOBT</TT></B>
-exceeds 8. </P>
+<P>For the various multi-bit binary records, the address parameter specifies the
+bit number (0 to 7) of the least significant bit in the bit-field (the number of
+bits is specified in the record's <TT>NOBT</TT> field). The address offset
+parameter is used to select which byte in the message is used, although this is
+ignored by the output record types. It is not possible for the bit-field to
+cross a byte boundary, thus the record behaviour is undefined when the sum of
+the address parameter and <TT>NOBT</TT> exceeds 8.</P>
 
-<P><HR></P>
+<HR>
 
 <H2><A NAME="biTip810"></A>4. Tip810 Module Status Records</H2>
 
-<P>Version 1.1 of the CANbus driver software adds the ability to monitor
-the status bits of the Tip810 CANbus interface chip using Binary Input
-records. I do not regard these records as necessarily applying to any type
-of CANbus interface which is why I have made them specifically named for
-the Tip810. The main use of this device support will be for the Bus Status,
-Error Status and Data Overrun bits, although all of the status bits can
-be accessed. <I>[Note: if there is sufficient demand, the various message
-counters could also be made available via the database; at present these
-can only be seen by using the t810Report shell command.]</I></P>
+<P>The Tip810 module driver software also provides the ability to monitor the
+status of the CANbus interface chip using Binary Input records. The main use of
+this device support will be for the Bus Status, Error Status and Data Overrun
+bits, although any of the status bits can be accessed. This device support is
+very specific to the Tip810 device, which is why it is not provided as a
+general-purpose CANbus device support.</P>
 
-<P>The Device Type (<B><TT>DTYP</TT></B>) field of the Binary Input records
-should be set to &quot;<B><TT>Tip810</TT></B>&quot; for which the hardware
-address (<B><TT>INP</TT></B>) field is an Instrument I/O type
-(<B><TT>INST_IO</TT></B>) and provides addressing information in the following
-format:</P>
+<P>The Device Type (<TT>DTYP</TT>) field of the Binary Input records should be
+set to <Q><TT>Tip810</TT></Q> for which the hardware address (<TT>INP</TT>)
+field is an Instrument I/O type (<TT>INST_IO</TT>) and provides addressing
+information in the following format:</P>
 
 <UL>
 <PRE><B>@</B><I>busName</I><B>:</B><I>signalName</I></PRE>
 </UL>
 
-<P>The busName identifies the Tip810 card which is to be monitored, as
-used for the other CANbus record types described <A HREF="#hardwareAddressing">above</A>.
-The signalName element after the &quot;<B><TT>:</TT></B>&quot; character
-should be one of the following strings which identify the status bit which
-this record is to read:</P>
+<P>The busName identifies the Tip810 card which is to be monitored, as used for
+the other CANbus record types described <A HREF="#hardwareAddressing">above</A>.
+The signalName element after the <Q><TT>:</TT></Q> character should be one of
+the following strings which identify the status bit which this record is to
+read:</P>
 
-<CENTER><TABLE BORDER=1 >
+<BLOCKQUOTE><TABLE BORDER=1 >
 <TR BGCOLOR="#FFFFFF">
-<TD><B><I><TT>signalName</TT></I></B></TD>
-<TD><B><I>Meaning when Set (1)</I></B></TD>
+<TH>signalName</TH>
+<TH>Meaning when Set (1)</TH>
 </TR>
 
 <TR>
@@ -351,17 +346,17 @@ this record is to read:</P>
 <TD><TT>OK_TO_SEND</TT></TD>
 <TD>Transmit buffer is free to accept another message</TD>
 </TR>
-</TABLE></CENTER>
+</TABLE></BLOCKQUOTE>
 
 <P>I/O Interrupt scanning is not supported by this device support, thus
-these records will probably be processed periodically to monitor the status
-of the bus. Note that the <B><TT>BUS_OFF</TT></B> signal may never be seen
+these records should probably be processed periodically to monitor the status
+of the bus. Note that the <TT>BUS_OFF</TT> signal may never be seen
 as the Tip810 driver software automatically resets the CAN chip when it
 goes into the Bus Off state. If it does appear it probably means that the
 bus is unterminated or disconnected completely, or that there are no other
 devices connected on it.</P>
 
-<P><HR></P>
+<HR>
 
 <ADDRESS>Andrew Johnson 
 <A HREF="mailto:anj@aps.anl.gov">&lt;anj@aps.anl.gov&gt;</A>

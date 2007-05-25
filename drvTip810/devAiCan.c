@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.16 2007-02-09 21:55:16 anj Exp $
+    $Id: devAiCan.c,v 1.17 2007-05-25 19:42:13 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -35,30 +35,28 @@ Copyright (c) 1995-2000 Andrew Johnson
 *******************************************************************************/
 
 
-#include <vxWorks.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wdLib.h>
-#include <logLib.h>
 
-#include "errMdef.h"
-#include "devLib.h"
-#include "dbDefs.h"
-#include "dbAccess.h"
-#include "dbScan.h"
-#include "callback.h"
-#include "cvtTable.h"
-#include "link.h"
-#include "alarm.h"
-#include "recGbl.h"
-#include "recSup.h"
-#include "devSup.h"
-#include "dbCommon.h"
-#include "aiRecord.h"
-#include "menuConvert.h"
+#include <errMdef.h>
+#include <devLib.h>
+#include <dbDefs.h>
+#include <dbAccess.h>
+#include <dbScan.h>
+#include <callback.h>
+#include <cvtTable.h>
+#include <link.h>
+#include <alarm.h>
+#include <recGbl.h>
+#include <recSup.h>
+#include <devSup.h>
+#include <dbCommon.h>
+#include <aiRecord.h>
+#include <menuConvert.h>
+#include <epicsExport.h>
+
 #include "canBus.h"
-#include "epicsExport.h"
 
 
 #define CONVERT 0
@@ -66,35 +64,35 @@ Copyright (c) 1995-2000 Andrew Johnson
 
 
 typedef struct aiCanPrivate_s {
-    CALLBACK callback;		/* This *must* be first member */
+    CALLBACK callback;
     struct aiCanPrivate_s *nextPrivate;
-    WDOG_ID wdId;
+    epicsTimerId timId;
     IOSCANPVT ioscanpvt;
-    struct aiRecord *prec;
+    dbCommon *prec;
     canIo_t inp;
-    ulong_t mask;
-    ulong_t sign;
-    long data;
+    epicsUInt32 mask;
+    epicsUInt32 sign;
+    epicsUInt32 data;
     double dval;
     int status;
 } aiCanPrivate_t;
 
 typedef struct aiCanBus_s {
-    CALLBACK callback;		/* This *must* be first member */
+    CALLBACK callback;
     struct aiCanBus_s *nextBus;
     aiCanPrivate_t *firstPrivate;
     void *canBusID;
     int status;
 } aiCanBus_t;
 
-LOCAL long init_ai(struct aiRecord *prec);
-LOCAL long get_ioint_info(int cmd, struct aiRecord *prec, IOSCANPVT *ppvt);
-LOCAL long read_ai(struct aiRecord *prec);
-LOCAL long special_linconv(struct aiRecord *prec, int after);
-LOCAL void aiProcess(aiCanPrivate_t *pcanAi);
-LOCAL void aiMessage(aiCanPrivate_t *pcanAi, canMessage_t *pmessage);
-LOCAL void busSignal(aiCanBus_t *pbus, int status);
-LOCAL void busCallback(aiCanBus_t *pbus);
+static long init_ai(struct aiRecord *prec);
+static long get_ioint_info(int cmd, struct aiRecord *prec, IOSCANPVT *ppvt);
+static long read_ai(struct aiRecord *prec);
+static long special_linconv(struct aiRecord *prec, int after);
+static void ProcessCallback(CALLBACK *pcallback);
+static void aiMessage(void *private, const canMessage_t *pmessage);
+static void busSignal(void *private, int status);
+static void busCallback(CALLBACK *pCallback);
 
 struct {
     long number;
@@ -115,28 +113,29 @@ struct {
 };
 epicsExportAddress(dset, devAiCan);
 
-LOCAL aiCanBus_t *firstBus;
+static aiCanBus_t *firstBus;
 
-LOCAL long init_ai (
+
+static long init_ai (
     struct aiRecord *prec
 ) {
     aiCanPrivate_t *pcanAi;
     aiCanBus_t *pbus;
     int status;
-    ulong_t fsd;
+    epicsUInt32 fsd;
 
     if (prec->inp.type != INST_IO) {
-	recGblRecordError(S_db_badField, (void *) prec,
+	recGblRecordError(S_db_badField, prec,
 			  "devAiCan (init_record) Illegal INP field");
 	return S_db_badField;
     }
 
-    pcanAi = (aiCanPrivate_t *) malloc(sizeof(aiCanPrivate_t));
+    pcanAi = malloc(sizeof(aiCanPrivate_t));
     if (pcanAi == NULL) {
 	return S_dev_noMemory;
     }
     prec->dpvt = pcanAi;
-    pcanAi->prec = prec;
+    pcanAi->prec = (dbCommon *) prec;
     pcanAi->ioscanpvt = NULL;
     pcanAi->status = NO_ALARM;
 
@@ -146,9 +145,9 @@ LOCAL long init_ai (
 	if (canSilenceErrors) {
 	    pcanAi->inp.canBusID = NULL;
 	    prec->pact = TRUE;
-	    return OK;
+	    return 0;
 	} else {
-	    recGblRecordError(S_can_badAddress, (void *) prec,
+	    recGblRecordError(S_can_badAddress, prec,
 			      "devAiCan (init_record) bad CAN address");
 	    return S_can_badAddress;
 	}
@@ -187,7 +186,7 @@ LOCAL long init_ai (
 	    pcanAi->sign = 0;
 	}
 
-	if (prec->linr == 1) {
+	if (prec->linr == menuConvertLINEAR) {
 	    prec->roff = pcanAi->sign;
 	    prec->eslo = (prec->eguf - prec->egul) / fsd;
 	} else {
@@ -208,58 +207,60 @@ LOCAL long init_ai (
 	printf("  fsd=%ld, eslo=%g, roff = %ld, mask=%#lx, sign=%lu\n", 
 		fsd, prec->eslo, prec->roff, pcanAi->mask, pcanAi->sign);
     #endif
-    
+
     /* Find the bus matching this record */
     for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
-    	if (pbus->canBusID == pcanAi->inp.canBusID) break;
+	if (pbus->canBusID == pcanAi->inp.canBusID) break;
     }
-    
+
     /* If not found, create one */
     if (pbus == NULL) {
-    	pbus = malloc(sizeof (aiCanBus_t));
-    	if (pbus == NULL) return S_dev_noMemory;
-    	
-    	/* Fill it in */
-    	pbus->firstPrivate = NULL;
-    	pbus->canBusID = pcanAi->inp.canBusID;
-    	callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
-    	callbackSetPriority(priorityMedium, &pbus->callback);
-    	
-    	/* and add it to the list of busses we know about */
-    	pbus->nextBus = firstBus;
-    	firstBus = pbus;
-    	
-    	/* Ask driver for error signals */
-    	canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+	pbus = malloc(sizeof (aiCanBus_t));
+	if (pbus == NULL) return S_dev_noMemory;
+
+	/* Fill it in */
+	pbus->firstPrivate = NULL;
+	pbus->canBusID = pcanAi->inp.canBusID;
+	callbackSetUser(pbus, &pbus->callback);
+	callbackSetCallback(busCallback, &pbus->callback);
+	callbackSetPriority(priorityMedium, &pbus->callback);
+
+	/* and add it to the list of busses we know about */
+	pbus->nextBus = firstBus;
+	firstBus = pbus;
+
+	/* Ask driver for error signals */
+	canSignal(pbus->canBusID, busSignal, pbus);
     }
-    
+
     /* Insert private record structure into linked list for this CANbus */
     pcanAi->nextPrivate = pbus->firstPrivate;
     pbus->firstPrivate = pcanAi;
 
     /* Set the callback parameters for asynchronous processing */
-    callbackSetCallback((VOIDFUNCPTR) aiProcess, &pcanAi->callback);
+    callbackSetUser(prec, &pcanAi->callback);
+    callbackSetCallback(ProcessCallback, &pcanAi->callback);
     callbackSetPriority(prec->prio, &pcanAi->callback);
 
-    /* and create a watchdog for CANbus RTR timeouts */
-    pcanAi->wdId = wdCreate();
-    if (pcanAi->wdId == NULL) {
+    /* and create a timer for CANbus RTR timeouts */
+    pcanAi->timId = epicsTimerQueueCreateTimer(canTimerQ,
+		(epicsTimerCallback) callbackRequest, pcanAi);
+    if (pcanAi->timId == NULL) {
 	return S_dev_noMemory;
     }
 
     /* Register the message handler with the Canbus driver */
-    canMessage(pcanAi->inp.canBusID, pcanAi->inp.identifier, 
-	       (canMsgCallback_t *) aiMessage, pcanAi);
+    canMessage(pcanAi->inp.canBusID, pcanAi->inp.identifier, aiMessage, pcanAi);
 
-    return OK;
+    return 0;
 }
 
-LOCAL long get_ioint_info (
+static long get_ioint_info (
     int cmd,
     struct aiRecord *prec, 
     IOSCANPVT *ppvt
 ) {
-    aiCanPrivate_t *pcanAi = (aiCanPrivate_t *) prec->dpvt;
+    aiCanPrivate_t *pcanAi = prec->dpvt;
 
     if (pcanAi->ioscanpvt == NULL) {
 	scanIoInit(&pcanAi->ioscanpvt);
@@ -270,13 +271,13 @@ LOCAL long get_ioint_info (
     #endif
 
     *ppvt = pcanAi->ioscanpvt;
-    return OK;
+    return 0;
 }
 
-LOCAL long read_ai (
+static long read_ai (
     struct aiRecord *prec
 ) {
-    aiCanPrivate_t *pcanAi = (aiCanPrivate_t *) prec->dpvt;
+    aiCanPrivate_t *pcanAi = prec->dpvt;
 
     if (pcanAi->inp.canBusID == NULL) {
 	return DO_NOT_CONVERT;
@@ -299,7 +300,7 @@ LOCAL long read_ai (
 		    printf("canAi %s: message id=%#x, data=%#lx\n", 
 			    prec->name, pcanAi->inp.identifier, pcanAi->data);
 		#endif
-		
+
 		if ((pcanAi->mask == 0) && pcanAi->sign) {
 		    #ifdef DEBUG
 			printf("canAi %s: VAL=%g\n", prec->name, pcanAi->dval);
@@ -328,9 +329,7 @@ LOCAL long read_ai (
 		prec->pact = TRUE;
 		pcanAi->status = TIMEOUT_ALARM;
 
-		callbackSetPriority(prec->prio, &pcanAi->callback);
-		wdStart(pcanAi->wdId, pcanAi->inp.timeout, 
-			(FUNCPTR) callbackRequest, (int) pcanAi);
+		epicsTimerStartDelay(pcanAi->timId, pcanAi->inp.timeout);
 		canWrite(pcanAi->inp.canBusID, &message, pcanAi->inp.timeout);
 		return CONVERT;
 	    }
@@ -341,14 +340,14 @@ LOCAL long read_ai (
     }
 }
 
-LOCAL long special_linconv (
+static long special_linconv (
     struct aiRecord *prec,
     int after
 ) {
     if (after) {
         if (prec->linr == menuConvertLINEAR) {
-	    ulong_t fsd;
-	    aiCanPrivate_t *pcanAi = (aiCanPrivate_t *) prec->dpvt;
+	    epicsUInt32 fsd;
+	    aiCanPrivate_t *pcanAi = prec->dpvt;
 
 	    fsd = abs(pcanAi->inp.parameter);
 	    if (fsd > 0) {
@@ -365,33 +364,37 @@ LOCAL long special_linconv (
     return 0;
 }
 
-LOCAL void aiProcess (
-    aiCanPrivate_t *pcanAi
-) {
-    dbScanLock((struct dbCommon *) pcanAi->prec);
-    (*((struct rset *) pcanAi->prec->rset)->process)(pcanAi->prec);
-    dbScanUnlock((struct dbCommon *) pcanAi->prec);
+static void ProcessCallback(CALLBACK *pcallback)
+{
+    dbCommon *pRec;
+
+    callbackGetUser(pRec, pcallback);
+    dbScanLock(pRec);
+    (*pRec->rset->process)(pRec);
+    dbScanUnlock(pRec);
 }
 
-LOCAL void aiMessage (
-    aiCanPrivate_t *pcanAi,
-    canMessage_t *pmessage
+static void aiMessage (
+    void *private,
+    const canMessage_t *pmessage
 ) {
-    if (!interruptAccept) return;
-    
-    if (pmessage->rtr == RTR) {
-	return;		/* Ignore RTRs */
+    aiCanPrivate_t *pcanAi = private;
+
+    if (!interruptAccept ||
+	pmessage->rtr == RTR) {
+	return;
     }
 
     if (pcanAi->mask == 0) {
+	/* FIXME: These have FP format problems... */
 	float ival;
 	switch (pcanAi->sign) {
-	case 4:
-	    memcpy((void*) &ival, (void*) &pmessage->data[pcanAi->inp.offset], 4);
+	case 4: 	/* float */
+	    memcpy(&ival, &pmessage->data[pcanAi->inp.offset], sizeof(float));
 	    pcanAi->dval = ival;
 	    break;
-	case 8:
-	    memcpy((void*) &pcanAi->dval, (void*) &pmessage->data[0], 8);
+	case 8: 	/* double */
+	    memcpy(&pcanAi->dval, &pmessage->data[0], sizeof(double));
 	    break;
 	default:
 	    pcanAi->data = 0;
@@ -417,46 +420,49 @@ LOCAL void aiMessage (
 	scanIoRequest(pcanAi->ioscanpvt);
     } else if (pcanAi->status == TIMEOUT_ALARM) {
 	pcanAi->status = NO_ALARM;
-	wdCancel(pcanAi->wdId);
+	epicsTimerCancel(pcanAi->timId);
 	callbackRequest(&pcanAi->callback);
     }
 }
 
-LOCAL void busSignal (
-    aiCanBus_t *pbus,
+static void busSignal (
+    void *private,
     int status
 ) {
+    aiCanBus_t *pbus = private;
+
     if (!interruptAccept) return;
-    
+
     switch(status) {
 	case CAN_BUS_OK:
-	    logMsg("devAiCan: Bus Ok event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = NO_ALARM;
 	    break;
 	case CAN_BUS_ERROR:
-	    logMsg("devAiCan: Bus Error event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
 	case CAN_BUS_OFF:
-	    logMsg("devAiCan: Bus Off event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
     }
 }
 
-LOCAL void busCallback (
-    aiCanBus_t *pbus
+static void busCallback (
+    CALLBACK *pCallback
 ) {
-    aiCanPrivate_t *pcanAi = pbus->firstPrivate;
-    
+    aiCanBus_t *pbus;
+    aiCanPrivate_t *pcanAi;
+
+    callbackGetUser(pbus, pCallback);
+    pcanAi = pbus->firstPrivate;
+
     while (pcanAi != NULL) {
+	dbCommon *prec = pcanAi->prec;
 	pcanAi->status = pbus->status;
-	aiProcess(pcanAi);
+	dbScanLock(prec);
+	prec->rset->process(prec);
+	dbScanUnlock(prec);
 	pcanAi = pcanAi->nextPrivate;
     }
 }

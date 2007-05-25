@@ -4,8 +4,8 @@ include $(TOP)/configure/CONFIG
 
 DBD += devTip810.dbd
 
-INC_vxWorks += canBus.h
-INC_vxWorks += drvTip810.h
+INC += canBus.h
+INC += drvTip810.h
 
 HTMLS_DIR = .
 HTMLS += devCan.html
@@ -24,7 +24,8 @@ LIBSRCS += devSiWiener.c
 LIBSRCS += devBiTip810.c
 LIBSRCS += drvTip810.c
 
-LIBRARY_IOC_vxWorks = Tip810
-Tip810_LIBS += Ipac
+LIBRARY_IOC = Tip810
+
+Tip810_LIBS = Ipac $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES

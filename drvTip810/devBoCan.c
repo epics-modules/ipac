@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBoCan.c,v 1.13 2003-10-29 20:46:30 anj Exp $
+    $Id: devBoCan.c,v 1.14 2007-05-25 19:42:14 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -35,27 +35,25 @@ Copyright (c) 1995-2000 Andrew Johnson
 *******************************************************************************/
 
 
-#include <vxWorks.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wdLib.h>
-#include <logLib.h>
 
-#include "errMdef.h"
-#include "devLib.h"
-#include "dbAccess.h"
-#include "dbScan.h"
-#include "callback.h"
-#include "cvtTable.h"
-#include "link.h"
-#include "alarm.h"
-#include "recGbl.h"
-#include "recSup.h"
-#include "devSup.h"
-#include "dbCommon.h"
-#include "boRecord.h"
+#include <errMdef.h>
+#include <devLib.h>
+#include <dbAccess.h>
+#include <dbScan.h>
+#include <callback.h>
+#include <cvtTable.h>
+#include <link.h>
+#include <alarm.h>
+#include <recGbl.h>
+#include <recSup.h>
+#include <devSup.h>
+#include <dbCommon.h>
+#include <boRecord.h>
+#include <epicsExport.h>
+
 #include "canBus.h"
-#include "epicsExport.h"
 
 
 #define DO_NOT_CONVERT	2
@@ -64,26 +62,26 @@ Copyright (c) 1995-2000 Andrew Johnson
 typedef struct boCanPrivate_s {
     struct boCanPrivate_s *nextPrivate;
     IOSCANPVT ioscanpvt;
-    struct boRecord *prec;
+    dbCommon *prec;
     canIo_t out;
-    long data;
+    epicsUInt32 data;
     int status;
 } boCanPrivate_t;
 
 typedef struct boCanBus_s {
-    CALLBACK callback;		/* This *must* be first member */
+    CALLBACK callback;
     struct boCanBus_s *nextBus;
     boCanPrivate_t *firstPrivate;
     void *canBusID;
     int status;
 } boCanBus_t;
 
-LOCAL long init_bo(struct boRecord *prec);
-LOCAL long get_ioint_info(int cmd, struct boRecord *prec, IOSCANPVT *ppvt);
-LOCAL long write_bo(struct boRecord *prec);
-LOCAL void boMessage(boCanPrivate_t *pcanBo, canMessage_t *pmessage);
-LOCAL void busSignal(boCanBus_t *pbus, int status);
-LOCAL void busCallback(boCanBus_t *pbus);
+static long init_bo(struct boRecord *prec);
+static long get_ioint_info(int cmd, struct boRecord *prec, IOSCANPVT *ppvt);
+static long write_bo(struct boRecord *prec);
+static void boMessage(void *private, const canMessage_t *pmessage);
+static void busSignal(void *private, int status);
+static void busCallback(CALLBACK *pCallback);
 
 struct {
     long number;
@@ -102,10 +100,10 @@ struct {
 };
 epicsExportAddress(dset, devBoCan);
 
-LOCAL boCanBus_t *firstBus;
+static boCanBus_t *firstBus;
 
 
-LOCAL long init_bo (
+static long init_bo (
     struct boRecord *prec
 ) {
     boCanPrivate_t *pcanBo;
@@ -113,17 +111,17 @@ LOCAL long init_bo (
     int status;
 
     if (prec->out.type != INST_IO) {
-	recGblRecordError(S_db_badField, (void *) prec,
+	recGblRecordError(S_db_badField, prec,
 			  "devBoCan (init_record) Illegal OUT field");
 	return S_db_badField;
     }
 
-    pcanBo = (boCanPrivate_t *) malloc(sizeof(boCanPrivate_t));
+    pcanBo = malloc(sizeof(boCanPrivate_t));
     if (pcanBo == NULL) {
 	return S_dev_noMemory;
     }
     prec->dpvt = pcanBo;
-    pcanBo->prec = prec;
+    pcanBo->prec = (dbCommon *) prec;
     pcanBo->ioscanpvt = NULL;
     pcanBo->status = NO_ALARM;
 
@@ -137,7 +135,7 @@ LOCAL long init_bo (
 	    prec->pact = TRUE;
 	    return DO_NOT_CONVERT;
 	} else {
-	    recGblRecordError(S_can_badAddress, (void *) prec,
+	    recGblRecordError(S_can_badAddress, prec,
 			      "devBoCan (init_record) bad CAN address");
 	    return S_can_badAddress;
 	}
@@ -161,43 +159,43 @@ LOCAL long init_bo (
     for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
     	if (pbus->canBusID == pcanBo->out.canBusID) break;
     }
-    
+
     /* If not found, create one */
     if (pbus == NULL) {
-    	pbus = malloc(sizeof (boCanBus_t));
-    	if (pbus == NULL) return S_dev_noMemory;
-    	
-    	/* Fill it in */
-    	pbus->firstPrivate = NULL;
-    	pbus->canBusID = pcanBo->out.canBusID;
-    	callbackSetCallback((VOIDFUNCPTR) busCallback, &pbus->callback);
-    	callbackSetPriority(priorityMedium, &pbus->callback);
-    	
-    	/* and add it to the list of busses we know about */
-    	pbus->nextBus = firstBus;
-    	firstBus = pbus;
-    	
-    	/* Ask driver for error signals */
-    	canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+	pbus = malloc(sizeof (boCanBus_t));
+	if (pbus == NULL) return S_dev_noMemory;
+
+	/* Fill it in */
+	pbus->firstPrivate = NULL;
+	pbus->canBusID = pcanBo->out.canBusID;
+	callbackSetUser(pbus, &pbus->callback);
+	callbackSetCallback(busCallback, &pbus->callback);
+	callbackSetPriority(priorityMedium, &pbus->callback);
+
+	/* and add it to the list of busses we know about */
+	pbus->nextBus = firstBus;
+	firstBus = pbus;
+
+	/* Ask driver for error signals */
+	canSignal(pbus->canBusID, busSignal, pbus);
     }
-    
+
     /* Insert private record structure into linked list for this CANbus */
     pcanBo->nextPrivate = pbus->firstPrivate;
     pbus->firstPrivate = pcanBo;
 
     /* Register the message handler with the Canbus driver */
-    canMessage(pcanBo->out.canBusID, pcanBo->out.identifier, 
-	       (canMsgCallback_t *) boMessage, pcanBo);
+    canMessage(pcanBo->out.canBusID, pcanBo->out.identifier, boMessage, pcanBo);
 
     return DO_NOT_CONVERT;
 }
 
-LOCAL long get_ioint_info (
+static long get_ioint_info (
     int cmd,
     struct boRecord *prec, 
     IOSCANPVT *ppvt
 ) {
-    boCanPrivate_t *pcanBo = (boCanPrivate_t *) prec->dpvt;
+    boCanPrivate_t *pcanBo = prec->dpvt;
 
     if (pcanBo->ioscanpvt == NULL) {
 	scanIoInit(&pcanBo->ioscanpvt);
@@ -208,16 +206,16 @@ LOCAL long get_ioint_info (
     #endif
 
     *ppvt = pcanBo->ioscanpvt;
-    return OK;
+    return 0;
 }
 
-LOCAL long write_bo (
+static long write_bo (
     struct boRecord *prec
 ) {
-    boCanPrivate_t *pcanBo = (boCanPrivate_t *) prec->dpvt;
+    boCanPrivate_t *pcanBo = prec->dpvt;
 
     if (pcanBo->out.canBusID == NULL) {
-	return ERROR;
+	return -1;
     }
 
     #ifdef DEBUG
@@ -228,7 +226,7 @@ LOCAL long write_bo (
 	case COMM_ALARM:
 	    recGblSetSevr(prec, pcanBo->status, INVALID_ALARM);
 	    pcanBo->status = NO_ALARM;
-	    return ERROR;
+	    return -1;
 
 	case NO_ALARM:
 	    {
@@ -258,23 +256,25 @@ LOCAL long write_bo (
 		    #endif
 
 		    recGblSetSevr(prec, TIMEOUT_ALARM, INVALID_ALARM);
-		    return ERROR;
+		    return -1;
 		}
-		return OK;
+		return 0;
 	    }
 	default:
 	    recGblSetSevr(prec, UDF_ALARM, INVALID_ALARM);
 	    pcanBo->status = NO_ALARM;
-	    return ERROR;
+	    return -1;
     }
 }
 
-LOCAL void boMessage (
-    boCanPrivate_t *pcanBo,
-    canMessage_t *pmessage
+static void boMessage (
+    void *private,
+    const canMessage_t *pmessage
 ) {
+    boCanPrivate_t *pcanBo = private;
+
     if (!interruptAccept) return;
-    
+
     if (pcanBo->prec->scan == SCAN_IO_EVENT &&
 	pmessage->rtr == RTR) {
 	pcanBo->status = NO_ALARM;
@@ -282,43 +282,44 @@ LOCAL void boMessage (
     }
 }
 
-LOCAL void busSignal (
-    boCanBus_t *pbus,
+static void busSignal (
+    void *private,
     int status
 ) {
+    boCanBus_t *pbus = private;
+
     if (!interruptAccept) return;
-    
+
     switch(status) {
 	case CAN_BUS_OK:
-	    logMsg("devBoCan: Bus Ok event from %s\n",
-	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = NO_ALARM;
 	    break;
 	case CAN_BUS_ERROR:
-	    logMsg("devBoCan: Bus Error event from %s\n",
-	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
 	case CAN_BUS_OFF:
-	    logMsg("devBoCan: Bus Ok event from %s\n",
-	    	   (int) pbus->firstPrivate->out.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
     }
 }
 
-LOCAL void busCallback (
-    boCanBus_t *pbus
+static void busCallback (
+    CALLBACK *pCallback
 ) {
-    boCanPrivate_t *pcanBo = pbus->firstPrivate;
-    
+    boCanBus_t *pbus;
+    boCanPrivate_t *pcanBo;
+
+    callbackGetUser(pbus, pCallback);
+    pcanBo = pbus->firstPrivate;
+
     while (pcanBo != NULL) {
+	dbCommon *prec = pcanBo->prec;
 	pcanBo->status = pbus->status;
-	dbScanLock((struct dbCommon *) pcanBo->prec);
-	(*((struct rset *) pcanBo->prec->rset)->process)(pcanBo->prec);
-	dbScanUnlock((struct dbCommon *) pcanBo->prec);
+	dbScanLock(prec);
+	prec->rset->process(pcanBo->prec);
+	dbScanUnlock(prec);
 	pcanBo = pcanBo->nextPrivate;
     }
 }

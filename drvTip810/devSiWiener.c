@@ -16,7 +16,7 @@ Authors:
 Created:
     25 August 1998
 Version:
-    $Id: devSiWiener.c,v 1.6 2003-10-29 20:46:33 anj Exp $
+    $Id: devSiWiener.c,v 1.7 2007-05-25 19:42:14 anj Exp $
 
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
@@ -38,56 +38,54 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 *******************************************************************************/
 
 
-#include <vxWorks.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wdLib.h>
-#include <logLib.h>
+#include <string.h>
 
-#include "errMdef.h"
-#include "devLib.h"
-#include "dbAccess.h"
-#include "dbScan.h"
-#include "callback.h"
-#include "cvtTable.h"
-#include "link.h"
-#include "alarm.h"
-#include "recGbl.h"
-#include "recSup.h"
-#include "devSup.h"
-#include "dbCommon.h"
-#include "stringinRecord.h"
+#include <errMdef.h>
+#include <devLib.h>
+#include <dbAccess.h>
+#include <dbScan.h>
+#include <callback.h>
+#include <cvtTable.h>
+#include <link.h>
+#include <alarm.h>
+#include <recGbl.h>
+#include <recSup.h>
+#include <devSup.h>
+#include <dbCommon.h>
+#include <stringinRecord.h>
+#include <epicsExport.h>
+
 #include "canBus.h"
-#include "string.h"
-#include "epicsExport.h"
 
 
 typedef struct siCanPrivate_s {
-    CALLBACK callback;		/* This *must* be first member */
+    CALLBACK callback;
     struct siCanPrivate_s *nextPrivate;
-    WDOG_ID wdId;
+    epicsTimerId timId;
     IOSCANPVT ioscanpvt;
-    struct stringinRecord *prec;
+    dbCommon *prec;
     canIo_t inp;
     char data[CAN_DATA_SIZE + 1];
     int status;
 } siCanPrivate_t;
 
 typedef struct siCanBus_s {
-    CALLBACK callback;		/* This *must* be first member */
+    CALLBACK callback;
     struct siCanBus_s *nextBus;
     siCanPrivate_t *firstPrivate;
     void *canBusID;
     int status;
 } siCanBus_t;
 
-LOCAL long init_si(struct stringinRecord *prec);
-LOCAL long get_ioint_info(int cmd, struct stringinRecord *prec, IOSCANPVT *ppvt);
-LOCAL long read_si(struct stringinRecord *prec);
-LOCAL void siProcess(siCanPrivate_t *pcanSi);
-LOCAL void siMessage(siCanPrivate_t *pcanSi, canMessage_t *pmessage);
-LOCAL void busSignal(siCanBus_t *pbus, int status);
-LOCAL void busCallback(siCanBus_t *pbus);
+static long init_si(struct stringinRecord *prec);
+static long get_ioint_info(int cmd, struct stringinRecord *prec, IOSCANPVT *ppvt);
+static long read_si(struct stringinRecord *prec);
+static void ProcessCallback(CALLBACK *pcallback);
+static void siMessage(void *private, const canMessage_t *pmessage);
+static void busSignal(void *private, int status);
+static void busCallback(CALLBACK *pCallback);
 
 struct {
     long number;
@@ -106,10 +104,9 @@ struct {
 };
 epicsExportAddress(dset, devSiWiener);
 
-LOCAL siCanBus_t *firstBus;
+static siCanBus_t *firstBus;
 
-
-LOCAL long init_si (
+static long init_si (
     struct stringinRecord *prec
 ) {
     siCanPrivate_t *pcanSi;
@@ -117,17 +114,17 @@ LOCAL long init_si (
     int status;
 
     if (prec->inp.type != INST_IO) {
-	recGblRecordError(S_db_badField, (void *) prec,
+	recGblRecordError(S_db_badField, prec,
 			  "devSiCan (init_record) Illegal INP field");
 	return S_db_badField;
     }
 
-    pcanSi = (siCanPrivate_t *) malloc(sizeof(siCanPrivate_t));
+    pcanSi = malloc(sizeof(siCanPrivate_t));
     if (pcanSi == NULL) {
 	return S_dev_noMemory;
     }
     prec->dpvt = pcanSi;
-    pcanSi->prec = prec;
+    pcanSi->prec = (dbCommon *) prec;
     pcanSi->ioscanpvt = NULL;
     pcanSi->status = NO_ALARM;
 
@@ -137,9 +134,9 @@ LOCAL long init_si (
 	if (canSilenceErrors) {
 	    pcanSi->inp.canBusID = NULL;
 	    prec->pact = TRUE;
-	    return OK;
+	    return 0;
 	} else {
-	    recGblRecordError(S_can_badAddress, (void *) prec,
+	    recGblRecordError(S_can_badAddress, prec,
 			      "devSiCan (init_record) bad CAN address");
 	    return S_can_badAddress;
 	}
@@ -147,61 +144,63 @@ LOCAL long init_si (
 
     #ifdef DEBUG
 	printf("siCan %s: Init bus=%s, id=%#x, off=%d, parm=%ld\n",
-		    prec->name, pcanSi->inp.busName, pcanSi->inp.identifier,
-		    pcanSi->inp.offset, pcanSi->inp.parameter);
+		prec->name, pcanSi->inp.busName, pcanSi->inp.identifier,
+		pcanSi->inp.offset, pcanSi->inp.parameter);
     #endif
 
     /* Find the bus matching this record */
     for (pbus = firstBus; pbus != NULL; pbus = pbus->nextBus) {
     	if (pbus->canBusID == pcanSi->inp.canBusID) break;
     }
-    
+
     /* If not found, create one */
     if (pbus == NULL) {
-    	pbus = malloc(sizeof (siCanBus_t));
-    	if (pbus == NULL) return S_dev_noMemory;
-    	
-    	/* Fill it in */
-    	pbus->firstPrivate = NULL;
-    	pbus->canBusID = pcanSi->inp.canBusID;
-    	callbackSetCallback((CALLBACKFUNC)busCallback, &pbus->callback);
-    	callbackSetPriority(priorityMedium, &pbus->callback);
-    	
-    	/* and add it to the list of busses we know about */
-    	pbus->nextBus = firstBus;
-    	firstBus = pbus;
-    	
-    	/* Ask driver for error signals */
-    	canSignal(pbus->canBusID, (canSigCallback_t *) busSignal, pbus);
+	pbus = malloc(sizeof (siCanBus_t));
+	if (pbus == NULL) return S_dev_noMemory;
+
+	/* Fill it in */
+	pbus->firstPrivate = NULL;
+	pbus->canBusID = pcanSi->inp.canBusID;
+	callbackSetUser(pbus, &pbus->callback);
+	callbackSetCallback(busCallback, &pbus->callback);
+	callbackSetPriority(priorityMedium, &pbus->callback);
+
+	/* and add it to the list of busses we know about */
+	pbus->nextBus = firstBus;
+	firstBus = pbus;
+
+	/* Ask driver for error signals */
+	canSignal(pbus->canBusID, busSignal, pbus);
     }
-    
+
     /* Insert private record structure into linked list for this CANbus */
     pcanSi->nextPrivate = pbus->firstPrivate;
     pbus->firstPrivate = pcanSi;
 
     /* Set the callback parameters for asynchronous processing */
-    callbackSetCallback((CALLBACKFUNC)siProcess, &pcanSi->callback);
+    callbackSetUser(prec, &pcanSi->callback);
+    callbackSetCallback(ProcessCallback, &pcanSi->callback);
     callbackSetPriority(prec->prio, &pcanSi->callback);
 
-    /* and create a watchdog for CANbus RTR timeouts */
-    pcanSi->wdId = wdCreate();
-    if (pcanSi->wdId == NULL) {
+    /* and create a timer for CANbus RTR timeouts */
+    pcanSi->timId = epicsTimerQueueCreateTimer(canTimerQ,
+		(epicsTimerCallback) callbackRequest, pcanSi);
+    if (pcanSi->timId == NULL) {
 	return S_dev_noMemory;
     }
 
     /* Register the message handler with the Canbus driver */
-    canMessage(pcanSi->inp.canBusID, pcanSi->inp.identifier, 
-	       (canMsgCallback_t *) siMessage, pcanSi);
+    canMessage(pcanSi->inp.canBusID, pcanSi->inp.identifier, siMessage, pcanSi);
 
-    return OK;
+    return 0;
 }
 
-LOCAL long get_ioint_info (
+static long get_ioint_info (
     int cmd,
     struct stringinRecord *prec, 
     IOSCANPVT *ppvt
 ) {
-    siCanPrivate_t *pcanSi = (siCanPrivate_t *) prec->dpvt;
+    siCanPrivate_t *pcanSi = prec->dpvt;
 
     if (pcanSi->ioscanpvt == NULL) {
 	scanIoInit(&pcanSi->ioscanpvt);
@@ -212,16 +211,16 @@ LOCAL long get_ioint_info (
     #endif
 
     *ppvt = pcanSi->ioscanpvt;
-    return OK;
+    return 0;
 }
 
-LOCAL long read_si (
+static long read_si (
     struct stringinRecord *prec
 ) {
-    siCanPrivate_t *pcanSi = (siCanPrivate_t *) prec->dpvt;
+    siCanPrivate_t *pcanSi = prec->dpvt;
 
     if (pcanSi->inp.canBusID == NULL) {
-	return ERROR;
+	return -1;
     }
 
     #ifdef DEBUG
@@ -233,7 +232,7 @@ LOCAL long read_si (
 	case COMM_ALARM:
 	    recGblSetSevr(prec, pcanSi->status, INVALID_ALARM);
 	    pcanSi->status = NO_ALARM;
-	    return ERROR;
+	    return -1;
 
 	case NO_ALARM:
 	    if (prec->pact || prec->scan == SCAN_IO_EVENT) {
@@ -243,7 +242,7 @@ LOCAL long read_si (
 		#endif
 
                 strcpy(prec->val, pcanSi->data);
-		return OK;
+		return 0;
 	    } else {
 		canMessage_t message;
 
@@ -259,35 +258,36 @@ LOCAL long read_si (
 		prec->pact = TRUE;
 		pcanSi->status = TIMEOUT_ALARM;
 
-		callbackSetPriority(prec->prio, &pcanSi->callback);
-		wdStart(pcanSi->wdId, pcanSi->inp.timeout, 
-			(FUNCPTR) callbackRequest, (int) pcanSi);
+		epicsTimerStartDelay(pcanSi->timId, pcanSi->inp.timeout);
 		canWrite(pcanSi->inp.canBusID, &message, pcanSi->inp.timeout);
-		return OK;
+		return 0;
 	    }
 	default:
 	    recGblSetSevr(prec, UDF_ALARM, INVALID_ALARM);
 	    pcanSi->status = NO_ALARM;
-	    return ERROR;
+	    return -1;
     }
 }
 
-LOCAL void siProcess (
-    siCanPrivate_t *pcanSi
-) {
-    dbScanLock((struct dbCommon *) pcanSi->prec);
-    (*((struct rset *) pcanSi->prec->rset)->process)(pcanSi->prec);
-    dbScanUnlock((struct dbCommon *) pcanSi->prec);
+static void ProcessCallback(CALLBACK *pcallback)
+{
+    dbCommon *pRec;
+
+    callbackGetUser(pRec, pcallback);
+    dbScanLock(pRec);
+    (*pRec->rset->process)(pRec);
+    dbScanUnlock(pRec);
 }
 
-LOCAL void siMessage (
-    siCanPrivate_t *pcanSi,
-    canMessage_t *pmessage
+static void siMessage (
+    void *private,
+    const canMessage_t *pmessage
 ) {
-    if (!interruptAccept) return;
+    siCanPrivate_t *pcanSi = private;
 
-    if (pmessage->rtr == RTR) {
-	return;		/* Ignore RTRs */
+    if (!interruptAccept ||
+	pmessage->rtr == RTR) {
+	return;
     }
 
     if ((pcanSi->inp.offset == 1) &&
@@ -303,46 +303,49 @@ LOCAL void siMessage (
 	scanIoRequest(pcanSi->ioscanpvt);
     } else if (pcanSi->status == TIMEOUT_ALARM) {
 	pcanSi->status = NO_ALARM;
-	wdCancel(pcanSi->wdId);
+	epicsTimerCancel(pcanSi->timId);
 	callbackRequest(&pcanSi->callback);
     }
 }
 
-LOCAL void busSignal (
-    siCanBus_t *pbus,
+static void busSignal (
+    void *private,
     int status
 ) {
+    siCanBus_t *pbus = private;
+
     if (!interruptAccept) return;
-    
+
     switch(status) {
 	case CAN_BUS_OK:
-	    logMsg("devSiCan: Bus Ok event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = NO_ALARM;
 	    break;
 	case CAN_BUS_ERROR:
-	    logMsg("devSiCan: Bus Error event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
 	case CAN_BUS_OFF:
-	    logMsg("devSiCan: Bus Off event from %s\n", 
-	    	   (int) pbus->firstPrivate->inp.busName, 0, 0, 0, 0, 0);
 	    pbus->status = COMM_ALARM;
 	    callbackRequest(&pbus->callback);
 	    break;
     }
 }
 
-LOCAL void busCallback (
-    siCanBus_t *pbus
+static void busCallback (
+    CALLBACK *pCallback
 ) {
-    siCanPrivate_t *pcanSi = pbus->firstPrivate;
-    
+    siCanBus_t *pbus;
+    siCanPrivate_t *pcanSi;
+
+    callbackGetUser(pbus, pCallback);
+    pcanSi = pbus->firstPrivate;
+
     while (pcanSi != NULL) {
+	dbCommon *prec = pcanSi->prec;
 	pcanSi->status = pbus->status;
-	siProcess(pcanSi);
+	dbScanLock(prec);
+	prec->rset->process(prec);
+	dbScanUnlock(prec);
 	pcanSi = pcanSi->nextPrivate;
     }
 }

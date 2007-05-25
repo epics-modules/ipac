@@ -15,7 +15,7 @@ Author:
 Created:
     19 July 1995
 Version:
-    $Id: pca82c200.h,v 1.2 2000-02-21 21:36:10 anj Exp $
+    $Id: pca82c200.h,v 1.3 2007-05-25 19:42:14 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -39,7 +39,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #ifndef INCpca82c200H
 #define INCpca82c200H
 
-#include <types.h>
+#include <epicsTypes.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -158,41 +158,43 @@ extern "C" {
 /* Message Buffers */
 
 typedef struct {
-    uchar_t pad0;
-    uchar_t descriptor0;
-    uchar_t pad1;
-    uchar_t descriptor1;
-    ushort_t data[8];
+    epicsUInt8 pad0;
+    epicsUInt8 descriptor0;
+    epicsUInt8 pad1;
+    epicsUInt8 descriptor1;
+    epicsUInt16 data[8];
 } msgBuffer_t;
 
 
 /* Chip Registers */
 
 typedef volatile struct {
-    uchar_t pad00;
-    uchar_t control;
-    uchar_t pad01;
-    uchar_t command;
-    uchar_t pad02;
-    uchar_t status;
-    uchar_t pad03;
-    uchar_t interrupt;
-    uchar_t pad04;
-    uchar_t acceptanceCode;
-    uchar_t pad05;
-    uchar_t acceptanceMask;
-    uchar_t pad06;
-    uchar_t busTiming0;
-    uchar_t pad07;
-    uchar_t busTiming1;
-    uchar_t pad08;
-    uchar_t outputControl;
-    uchar_t pad09;
-    uchar_t test;
+    epicsUInt8 pad00;
+    epicsUInt8 control;
+    epicsUInt8 pad01;
+    epicsUInt8 command;
+    epicsUInt8 pad02;
+    epicsUInt8 status;
+    epicsUInt8 pad03;
+    epicsUInt8 interrupt;
+    epicsUInt8 pad04;
+    epicsUInt8 acceptanceCode;
+    epicsUInt8 pad05;
+    epicsUInt8 acceptanceMask;
+    epicsUInt8 pad06;
+    epicsUInt8 busTiming0;
+    epicsUInt8 pad07;
+    epicsUInt8 busTiming1;
+    epicsUInt8 pad08;
+    epicsUInt8 outputControl;
+    epicsUInt8 pad09;
+    epicsUInt8 test;
     msgBuffer_t txBuffer;
     msgBuffer_t rxBuffer;
-    uchar_t pad31;
-    uchar_t clockDivider;
+    epicsUInt8 pad30;
+    epicsUInt8 notImpl;
+    epicsUInt8 pad31;
+    epicsUInt8 clockDivider;
 } pca82c200_t;
 
 

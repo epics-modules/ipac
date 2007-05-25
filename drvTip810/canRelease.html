@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS CANbus and IPAC driver software">
 <META NAME="KeyWords" CONTENT="CANbus, vxWorks, IPAC, EPICS, Tip810">
-<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.10 2003-11-13 21:41:32 anj Exp $">
+<META NAME="Version" CONTENT="$Id: canRelease.html,v 1.11 2007-05-25 19:42:13 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -13,12 +13,33 @@
 <P><I>Andrew Johnson</I></P>
 </CENTER>
 
-<P>This document describes the changes which have been made to my vxWorks/EPICS
-CANbus driver as it has evolved since first release.  The earliest version
-appears at the bottom, with more recent releases above it.</P>
+<P>This document describes the changes which have been made to the EPICS CANbus
+driver as it has evolved since first release. The earliest version appears at
+the bottom, with more recent releases above it. Missing version numbers merely
+imply that changes were made elsewhere in the drvIpac package without any
+changes to the CANbus driver.</P>
 
 <HR>
 
+<H2>Version 2.9</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Converted all vxWorks calls to use the equivalent EPICS OSI layer routines,
+which makes this driver cross-platform to any OS that provides a suitable
+drvIpac carrier driver.</LI>
+
+</UL>
+
+<P>Added:</P>
+<UL>
+
+<LI>Registration with iocsh for the canBusReset, canBusStop and canBusRestart
+commands.</LI>
+
+</UL>
+<HR>
 
 <H2>Version 2.6</H2>
 
