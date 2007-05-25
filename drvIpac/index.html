@@ -5,13 +5,13 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="The drvIpac IndustryPack software">
    <meta name="KeyWords" content="EPICS, IndustryPack, ipac, driver support">
-   <meta name="Version" content="$Id: index.html,v 1.11 2007-02-09 21:56:39 anj Exp $">
-   <title>EPICS ipac Module</title>
+   <meta name="Version" content="$Id: index.html,v 1.12 2007-05-25 19:22:37 anj Exp $">
+   <title>EPICS Ipac Module</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
 <img src="http://www.aps.anl.gov/epics/icons/logo101.gif" alt="EPICS" hspace=5 height=101 width=101 align=right>
 <h1>
-EPICS ipac Module</h1>
+EPICS Ipac Module</h1>
 
 <dl>
 <dt>
@@ -22,14 +22,14 @@ Module Owner:</dt>
 </dl>
 
 <p>
-This page is the home of the EPICS ipac module, which provides a standard
-interface for Industry Pack carrier boards under vxWorks, and ensures that
+This page is the home of the EPICS Ipac module, which provides a standard
+EPICS interface for Industry Pack carrier boards, and ensures that
 drivers for individual IP modules do not need to understand or control the
-carrier board they are installed in.  Also included with this software are
-several IP module drivers that use the ipac carrier layer.</p>
+carrier board they are installed in. Also included with this software are
+several IP module drivers that use the Ipac carrier layer.</p>
 
 <p>
-This web-site gives access to the ipac source code, information on other
+This web-site gives access to the Ipac source code, information on other
 modules which are needed to install and run it, and documentation on the how to
 include and use it in your EPICS applications. Please email any comments,
 questions or bug reports <a href="mailto:anj@aps.anl.gov">to me</a>.</p>
@@ -80,8 +80,8 @@ Where to Find it</h2>
 <ul>
 
 <li>
-The official URL for this home page is
-<a href="http://www.aps.anl.gov/asd/people/anj/ipac">http://www.aps.anl.gov/asd/people/anj/ipac</a>.</li>
+The canonical URL for this page is
+<a href="http://www.aps.anl.gov/epics/modules/bus/ipac">http://www.aps.anl.gov/epics/modules/bus/ipac</a>.</li>
 
 <li>
 The software is available for download from the links given in the table
@@ -102,24 +102,13 @@ Filename</th>
 
 <tr>
 <td align=center>
-1.1c</td>
-
-<td>
-R3.12.2, UAE</td>
-
-<td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/can-1.1c.tar.gz">can-1.1c.tar.gz</a></td>
-</tr>
-
-<tr>
-<td align=center>
 2.0</td>
 
 <td>
 R3.13.x</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.0.tar.gz">ipac-2.0.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.0.tar.gz">ipac-2.0.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -130,7 +119,7 @@ R3.13.x</td>
 R3.13.x</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.1.tar.gz">ipac-2.1.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.1.tar.gz">ipac-2.1.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -141,7 +130,7 @@ R3.13.x</td>
 R3.13.x</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.2.tar.gz">ipac-2.2.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.2.tar.gz">ipac-2.2.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -152,7 +141,7 @@ R3.13.x</td>
 R3.13.x</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -163,7 +152,7 @@ R3.13.x</td>
 R3.13.x</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -174,7 +163,7 @@ R3.13.x</td>
 R3.14.2</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -182,10 +171,10 @@ R3.14.2</td>
 2.6</td>
 
 <td>
-R3.14.3 or later</td>
+R3.14.4 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -193,10 +182,10 @@ R3.14.3 or later</td>
 2.7</td>
 
 <td>
-R3.14.3 or later</td>
+R3.14.4 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.7.tar.gz">ipac-2.7.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.7a.tar.gz">ipac-2.7a.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -204,10 +193,21 @@ R3.14.3 or later</td>
 2.8</td>
 
 <td>
-R3.14.3 or later</td>
+R3.14.4 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/asd/people/anj/tar/ipac-2.8.tar.gz">ipac-2.8.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.8.tar.gz">ipac-2.8.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.9</td>
+
+<td>
+R3.14.9 or later</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.9.tar.gz">ipac-2.9.tar.gz</a></td>
 </tr>
 
 </table>
@@ -388,80 +388,107 @@ The following documentation is available:</p>
 <th>Title</th><th>Release Version</th></tr>
 
 <tr>
+<td>Index - Read first</td>
+<td>
+<a href="../R2.3/index.html">2.3</a>
+<a href="../R2.4/index.html">2.4</a>
+<a href="../R2.5/index.html">2.5</a>
+<a href="../R2.6/index.html">2.6</a>
+<a href="../R2.7/index.html">2.7</a>
+<a href="../R2.8/index.html">2.8</a>
+<a href="index.html">2.9</a>
+</td>
+</tr>
+
+<tr>
 <td>drvIpac - Industry Pack Driver</td>
-<td><!--
-<a href="R2.3/drvIpac.html">2.3</a>
-<a href="R2.4/drvIpac.html">2.4</a>
-<a href="R2.5/drvIpac.html">2.5</a>
-<a href="R2.6/drvIpac.html">2.6</a>
-<a href="R2.7/drvIpac.html">2.7</a> -->
-<a href="drvIpac.html">2.8</a></td>
+<td>
+<a href="../R2.3/drvIpac.html">2.3</a>
+<a href="../R2.4/drvIpac.html">2.4</a>
+<a href="../R2.5/drvIpac.html">2.5</a>
+<a href="../R2.6/drvIpac.html">2.6</a>
+<a href="../R2.7/drvIpac.html">2.7</a>
+<a href="../R2.8/drvIpac.html">2.8</a>
+<a href="drvIpac.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>IPAC Driver Release Notes</td>
-<td><!--
-<a href="R2.3/ipacRelease.html">2.3</a>
-<a href="R2.4/ipacRelease.html">2.4</a>
-<a href="R2.5/ipacRelease.html">2.5</a>
-<a href="R2.6/ipacRelease.html">2.6</a>
-<a href="R2.7/ipacRelease.html">2.7</a> -->
-<a href="ipacRelease.html">2.8</a></td>
+<td>
+<a href="../R2.3/ipacRelease.html">2.3</a>
+<a href="../R2.4/ipacRelease.html">2.4</a>
+<a href="../R2.5/ipacRelease.html">2.5</a>
+<a href="../R2.6/ipacRelease.html">2.6</a>
+<a href="../R2.7/ipacRelease.html">2.7</a>
+<a href="../R2.8/ipacRelease.html">2.8</a>
+<a href="ipacRelease.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>drvTip810 - CAN Bus Driver</td>
-<td><!--
-<a href="R2.3/drvTip810.html">2.3</a>
-<a href="R2.4/drvTip810.html">2.4</a>
-<a href="R2.5/drvTip810.html">2.5</a>
-<a href="R2.6/drvTip810.html">2.6</a>
-<a href="R2.7/drvTip810.html">2.7</a> -->
-<a href="drvTip810.html">2.8</a></td>
+<td>
+<a href="../R2.3/drvTip810.html">2.3</a>
+<a href="../R2.4/drvTip810.html">2.4</a>
+<a href="../R2.5/drvTip810.html">2.5</a>
+<a href="../R2.6/drvTip810.html">2.6</a>
+<a href="../R2.7/drvTip810.html">2.7</a>
+<a href="../R2.8/drvTip810.html">2.8</a>
+<a href="drvTip810.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>devCan - CAN Bus Device Support</td>
-<td><!--
-<a href="R2.3/devCan.html">2.3</a>
-<a href="R2.4/devCan.html">2.4</a>
-<a href="R2.5/devCan.html">2.5</a>
-<a href="R2.6/devCan.html">2.6</a>
-<a href="R2.7/devCan.html">2.7</a> -->
-<a href="devCan.html">2.8</a></td>
+<td>
+<a href="../R2.3/devCan.html">2.3</a>
+<a href="../R2.4/devCan.html">2.4</a>
+<a href="../R2.5/devCan.html">2.5</a>
+<a href="../R2.6/devCan.html">2.6</a>
+<a href="../R2.7/devCan.html">2.7</a>
+<a href="../R2.8/devCan.html">2.8</a>
+<a href="devCan.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>CANbus Driver Release Notes</td>
-<td><!--
-<a href="R2.3/canRelease.html">2.3</a>
-<a href="R2.4/canRelease.html">2.4</a>
-<a href="R2.5/canRelease.html">2.5</a>
-<a href="R2.6/canRelease.html">2.6</a>
-<a href="R2.7/canRelease.html">2.7</a> -->
-<a href="canRelease.html">2.8</a></td>
+<td>
+<a href="../R2.3/canRelease.html">2.3</a>
+<a href="../R2.4/canRelease.html">2.4</a>
+<a href="../R2.5/canRelease.html">2.5</a>
+<a href="../R2.6/canRelease.html">2.6</a>
+<a href="../R2.7/canRelease.html">2.7</a>
+<a href="../R2.8/canRelease.html">2.8</a>
+<a href="canRelease.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>SBS OctalUart IP Module Support</td>
-<td><!--
-<a href="R2.3/tyGSOctal.html">2.3</a>
-<a href="R2.4/tyGSOctal.html">2.4</a>
-<a href="R2.5/tyGSOctal.html">2.5</a>
-<a href="R2.6/tyGSOctal.html">2.6</a>
-<a href="R2.7/tyGSOctal.html">2.7</a> -->
-<a href="tyGSOctal.html">2.8</a></td>
+<td>
+<a href="../R2.3/tyGSOctal.html">2.3</a>
+<a href="../R2.4/tyGSOctal.html">2.4</a>
+<a href="../R2.5/tyGSOctal.html">2.5</a>
+<a href="../R2.6/tyGSOctal.html">2.6</a>
+<a href="../R2.7/tyGSOctal.html">2.7</a>
+<a href="../R2.8/tyGSOctal.html">2.8</a>
+<a href="tyGSOctal.html">2.9</a>
+</td>
 </tr>
 
 <tr>
 <td>SBS Octal Serial Driver Release Notes</td>
-<td><!--
-<a href="R2.3/tyGSOctalRelease.html">2.3</a>
-<a href="R2.4/tyGSOctalRelease.html">2.4</a>
-<a href="R2.5/tyGSOctalRelease.html">2.5</a>
-<a href="R2.6/tyGSOctalRelease.html">2.6</a>
-<a href="R2.7/tyGSOctalRelease.html">2.7</a> -->
-<a href="tyGSOctalRelease.html">2.8</a></td>
+<td>
+<a href="../R2.3/tyGSOctalRelease.html">2.3</a>
+<a href="../R2.4/tyGSOctalRelease.html">2.4</a>
+<a href="../R2.5/tyGSOctalRelease.html">2.5</a>
+<a href="../R2.6/tyGSOctalRelease.html">2.6</a>
+<a href="../R2.7/tyGSOctalRelease.html">2.7</a>
+<a href="../R2.8/tyGSOctalRelease.html">2.8</a>
+<a href="tyGSOctalRelease.html">2.9</a>
+</td>
 </tr>
 
 </table>
