@@ -15,6 +15,9 @@
 
 #ifndef __SCC2698_H
 #define __SCC2698_H
+
+#include <epicsTypes.h>
+
 /*
  * SCC2698 UART MANAGEMENT
  *
@@ -26,20 +29,20 @@
 struct scc2698_chan {
     union {
         struct {
-            UCHAR d0,mr;	/* a mode register 1/2 (R/W) */
-            UCHAR d1,sr;	/* a status (R), a clock select (W) */
-            UCHAR d2,r1;	/* a command (W) */
-            UCHAR d3,rhr;	/* a receiver hold (R), a transmitter
+            epicsUInt8 d0,mr;	/* a mode register 1/2 (R/W) */
+            epicsUInt8 d1,sr;	/* a status (R), a clock select (W) */
+            epicsUInt8 d2,r1;	/* a command (W) */
+            epicsUInt8 d3,rhr;	/* a receiver hold (R), a transmitter
                                  hold (W) */
-            UCHAR junk[8];	/* other stuff for block control */
+            epicsUInt8 junk[8];	/* other stuff for block control */
         } r;
         struct {
-            UCHAR d0,mr;	/* a mode register 1/2 (R/W) */
-            UCHAR d1,csr;	/* a status (R), a clock select (W) */
-            UCHAR d2,cr;	/* a command (W) */
-            UCHAR d3,thr;	/* a receiver hold (R), a transmitter
+            epicsUInt8 d0,mr;	/* a mode register 1/2 (R/W) */
+            epicsUInt8 d1,csr;	/* a status (R), a clock select (W) */
+            epicsUInt8 d2,cr;	/* a command (W) */
+            epicsUInt8 d3,thr;	/* a receiver hold (R), a transmitter
                                  hold (W) */
-            UCHAR junk[8];	/* other stuff for block control */
+            epicsUInt8 junk[8];	/* other stuff for block control */
         } w;
     } u;
 };
@@ -52,50 +55,50 @@ typedef volatile struct scc2698_chan SCC2698_CHAN;
 struct scc2698 {
     union {
         struct {
-            UCHAR d0,mra;	/* a mode register 1/2 (R/W) */
-            UCHAR d1,sra;	/* a status (R), a clock select (W) */
-            UCHAR d2,r1;	/* reserved */
-            UCHAR d3,rhra;	/* a receiver hold (R), a transmitter
+            epicsUInt8 d0,mra;	/* a mode register 1/2 (R/W) */
+            epicsUInt8 d1,sra;	/* a status (R), a clock select (W) */
+            epicsUInt8 d2,r1;	/* reserved */
+            epicsUInt8 d3,rhra;	/* a receiver hold (R), a transmitter
                                  hold (W) */
-            UCHAR d4,ipcr;	/* a Aux cntl (W), a input port change
+            epicsUInt8 d4,ipcr;	/* a Aux cntl (W), a input port change
                                  (R) */ 
-            UCHAR d5,isr;	/* a Interrupt status (R), a Interrupt
+            epicsUInt8 d5,isr;	/* a Interrupt status (R), a Interrupt
                                  mask (W) */
-            UCHAR d6,ctur;	/* a Counter timer upper (R/W) */
-            UCHAR d7,ctlr;	/* a Counter timer upper (R/W) */
-            UCHAR d8,mrb;	/* b mode register 1/2 (R/W) */
-            UCHAR d9,srb;	/* b status (R), b clock select (W) */
-            UCHAR da,r2;	/* reserved */
-            UCHAR db,rhrb;	/* b receiver hold (R), b transmitter
+            epicsUInt8 d6,ctur;	/* a Counter timer upper (R/W) */
+            epicsUInt8 d7,ctlr;	/* a Counter timer upper (R/W) */
+            epicsUInt8 d8,mrb;	/* b mode register 1/2 (R/W) */
+            epicsUInt8 d9,srb;	/* b status (R), b clock select (W) */
+            epicsUInt8 da,r2;	/* reserved */
+            epicsUInt8 db,rhrb;	/* b receiver hold (R), b transmitter
                                  hold (W) */
-            UCHAR dc,r3;	/* reserved */
-            UCHAR dd,ip;	/* a output port conf (W), a input
+            epicsUInt8 dc,r3;	/* reserved */
+            epicsUInt8 dd,ip;	/* a output port conf (W), a input
                                  port (R) */
-            UCHAR de,ctg;	/* start counter timer a (R) */
-            UCHAR df,cts;	/* stop counter timer a (R) */
+            epicsUInt8 de,ctg;	/* start counter timer a (R) */
+            epicsUInt8 df,cts;	/* stop counter timer a (R) */
         } r;
         struct {
-            UCHAR d0,mra;	/* a mode register 1/2 (R/W) */
-            UCHAR d1,csra;	/* a status (R), a clock select (W) */
-            UCHAR d2,cra;	/* a command (W) */
-            UCHAR d3,thra;	/* a receiver hold (R), a transmitter
+            epicsUInt8 d0,mra;	/* a mode register 1/2 (R/W) */
+            epicsUInt8 d1,csra;	/* a status (R), a clock select (W) */
+            epicsUInt8 d2,cra;	/* a command (W) */
+            epicsUInt8 d3,thra;	/* a receiver hold (R), a transmitter
                                  hold (W) */
-            UCHAR d4,acr;	/* a Aux cntl (W), a input port change
+            epicsUInt8 d4,acr;	/* a Aux cntl (W), a input port change
                                  (R) */
-            UCHAR d5,imr;	/* a Interrupt status (R), a Interrupt
+            epicsUInt8 d5,imr;	/* a Interrupt status (R), a Interrupt
                                  mask (W) */
-            UCHAR d6,ctu;	/* a Counter timer upper (R/W) */
-            UCHAR d7,ctl;	/* a Counter timer upper (R/W) */
-            UCHAR d8,mrb;	/* b mode register 1/2 (R/W) */
-            UCHAR d9,csrb;	/* b status (R), b clock select (W) */
-            UCHAR da,crb;	/* b command (W) */
-            UCHAR db,thrb;	/* b receiver hold (R), b receiver
+            epicsUInt8 d6,ctu;	/* a Counter timer upper (R/W) */
+            epicsUInt8 d7,ctl;	/* a Counter timer upper (R/W) */
+            epicsUInt8 d8,mrb;	/* b mode register 1/2 (R/W) */
+            epicsUInt8 d9,csrb;	/* b status (R), b clock select (W) */
+            epicsUInt8 da,crb;	/* b command (W) */
+            epicsUInt8 db,thrb;	/* b receiver hold (R), b receiver
                                  hold (W) */
-            UCHAR dc,r3;	/* reserved */
-            UCHAR dd,opcr;	/* a output port conf (W), a input
+            epicsUInt8 dc,r3;	/* reserved */
+            epicsUInt8 dd,opcr;	/* a output port conf (W), a input
                                  port (R) */
-            UCHAR de,r4;	/* start counter timer a (R) */
-            UCHAR df,r5;	/* start counter timer a (R) */
+            epicsUInt8 de,r4;	/* start counter timer a (R) */
+            epicsUInt8 df,r5;	/* start counter timer a (R) */
         } w;
     } u;
 };

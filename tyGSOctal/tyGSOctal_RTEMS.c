@@ -44,26 +44,13 @@
  ANJ  11/11/03  Significant cleanup, added ioc shell stuff
 **************************************************************************/
 
-/*
- * vxWorks includes
- */ 
-#include <vxWorks.h>
-#include <iv.h>
-#include <rebootLib.h>
-#include <intLib.h>
-#include <errnoLib.h>
-#include <sysLib.h>
-#include <tickLib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <logLib.h>
-#include <taskLib.h>
-#include <tyLib.h>
-#include <sioLib.h>
-#include <vxLib.h>
+#include <epicsStdio.h>
+#include <epicsStdlib.h>
+#include <epicsString.h>
 #include <epicsTypes.h>
+#include <ctype.h>
+
+#define TY_DEV short
 
 #include "ip_modules.h"     /* GreenSpring IP modules */
 #include "scc2698.h"        /* SCC 2698 UART register map */
@@ -78,22 +65,22 @@ int tyGSOctalLastModule;
 
 int tyGSOctalDebug = 0;
                
-LOCAL int tyGSOctalDrvNum;  /* driver number assigned to this driver */
+static int tyGSOctalDrvNum;  /* driver number assigned to this driver */
 
 /*
  * forward declarations
  */
 void         tyGSOctalInt(int);
-LOCAL void   tyGSOctalInitChannel(QUAD_TABLE *, int);
-LOCAL int    tyGSOctalRebootHook(int);
-LOCAL QUAD_TABLE * tyGSOctalFindQT(const char *);
-LOCAL int    tyGSOctalOpen(TY_GSOCTAL_DEV *, const char *, int);
-LOCAL int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
-LOCAL STATUS tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
-LOCAL int    tyGSOctalStartup(TY_GSOCTAL_DEV *);
-LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *, int);
-LOCAL void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts);
-LOCAL void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
+static void   tyGSOctalInitChannel(QUAD_TABLE *, int);
+static int    tyGSOctalRebootHook(int);
+static QUAD_TABLE * tyGSOctalFindQT(const char *);
+static int    tyGSOctalOpen(TY_GSOCTAL_DEV *, const char *, int);
+static int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
+static int tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
+static int    tyGSOctalStartup(TY_GSOCTAL_DEV *);
+static int tyGSOctalBaudSet(TY_GSOCTAL_DEV *, int);
+static void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts);
+static void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
 
 /******************************************************************************
  *
@@ -117,26 +104,19 @@ LOCAL void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
  *
  * SEE ALSO: tyGSOctalDevCreate()
 */
-STATUS tyGSOctalDrv
+int tyGSOctalDrv
     (
     int maxModules
     )
 {
-    static  char    *fn_nm = "tyGSOctalDrv";
-    
-    /* check if driver already installed */
-
-    if (tyGSOctalDrvNum > 0)
-	return (OK);
+    if (tyGSOctalDrvNum > 0) return (0);
     
     tyGSOctalMaxModules = maxModules;
     tyGSOctalLastModule = 0;
     tyGSOctalModules = (QUAD_TABLE *)calloc(maxModules, sizeof(QUAD_TABLE));
-
     if (!tyGSOctalModules) {
-        logMsg("%s: Memory allocation failed!",
-               (int)fn_nm, 2,3,4,5,6);
-        return (ERROR);
+        printf("tyGSOctalDrv: Memory allocation failed!");
+        return (-1);
     }
     rebootHookAdd(tyGSOctalRebootHook);    
 
@@ -144,12 +124,12 @@ STATUS tyGSOctalDrv
     tyGSOctalDrvNum = iosDrvInstall (tyGSOctalOpen,
                                 (FUNCPTR) NULL,
                                 tyGSOctalOpen,
-				(FUNCPTR) NULL,
+                                (FUNCPTR) NULL,
                                 tyRead,
                                 tyGSOctalWrite,
                                 tyGSOctalIoctl);
 
-    return (tyGSOctalDrvNum == ERROR ? ERROR : OK);
+    return (tyGSOctalDrvNum == -1 ? -1 : 0);
 }
 
 void tyGSOctalReport()
@@ -175,7 +155,7 @@ void tyGSOctalReport()
     }
 }
 
-LOCAL int tyGSOctalRebootHook(int type)
+static int tyGSOctalRebootHook(int type)
 {
     QUAD_TABLE *qt;
     int i, n;
@@ -463,7 +443,7 @@ const char * tyGSOctalDevCreate
  *
  * SEE ALSO: tyGSOctalDrv(), tyGSOctalDevCreate()
  */
-STATUS tyGSOctalDevCreateAll
+int tyGSOctalDevCreateAll
     (
     const char * base,           /* base name for these devices      */
     const char * moduleID,       /* module identifier from the
@@ -513,7 +493,7 @@ STATUS tyGSOctalDevCreateAll
  *
  * NOMANUAL
  */
-LOCAL QUAD_TABLE * tyGSOctalFindQT
+static QUAD_TABLE * tyGSOctalFindQT
     (
     const char *      moduleID
     )
@@ -536,7 +516,7 @@ LOCAL QUAD_TABLE * tyGSOctalFindQT
  *
  * NOMANUAL
  */
-LOCAL void tyGSOctalInitChannel
+static void tyGSOctalInitChannel
     (
         QUAD_TABLE *qt,
         int port
@@ -565,7 +545,7 @@ LOCAL void tyGSOctalInitChannel
  * 9600 baud, no parity, 1 stop bit, 8 bits per char, no flow control
  */
     tyGSOctalBaudSet(pTyGSOctalDv, 9600);
-    tyGSOctalOptsSet(pTyGSOctalDv, CS8 | CLOCAL);
+    tyGSOctalOptsSet(pTyGSOctalDv, CS8 | Cstatic);
 
 /*
  * enable everything, really only Rx interrupts
@@ -584,7 +564,7 @@ LOCAL void tyGSOctalInitChannel
  *
  * NOMANUAL
  */
-LOCAL int tyGSOctalOpen
+static int tyGSOctalOpen
     (
 	TY_GSOCTAL_DEV *pTyGSOctalDv,
 	const char * name,
@@ -600,7 +580,7 @@ LOCAL int tyGSOctalOpen
  *
  * NOMANUAL
  */
-LOCAL int tyGSOctalWrite
+static int tyGSOctalWrite
     (
 	TY_GSOCTAL_DEV * pTyGSOctalDv,	/* device descriptor block */
 	char *     write_bfr,           /* ptr to an output buffer */
@@ -644,7 +624,7 @@ LOCAL int tyGSOctalWrite
  * NOMANUAL
  */
 
-LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
+static void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     SCC2698 *regs = pTyGSOctalDv->regs;
     QUAD_TABLE *qt = pTyGSOctalDv->qt;
@@ -675,7 +655,7 @@ LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
  * NOMANUAL
  */
 
-LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
+static void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
 {
     epicsUInt8 mr1 = 0, mr2 = 0;
     
@@ -697,13 +677,13 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
     if (opts & PARODD) {
 	mr1|=0x04;
     }
-    if (!(opts & CLOCAL)) {
+    if (!(opts & Cstatic)) {
 	mr1|=0x80;	/* Control RTS from RxFIFO */
 	mr2|=0x10;	/* Enable Tx using CTS */
     }
 
     tyGSOctalSetmr(pTyGSOctalDv, mr1, mr2);
-    pTyGSOctalDv->opts = opts & (CSIZE|STOPB|PARENB|PARODD|CLOCAL);
+    pTyGSOctalDv->opts = opts & (CSIZE|STOPB|PARENB|PARODD|Cstatic);
 }
 
 /******************************************************************************
@@ -713,7 +693,7 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
  * NOMANUAL
  */
 
-LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
+static int tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
 {
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     switch(baud)
@@ -739,14 +719,14 @@ LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
  *
  * RETURNS: OK, or ERROR if invalid input.
  */
-LOCAL STATUS tyGSOctalIoctl
+static int tyGSOctalIoctl
     (
     TY_GSOCTAL_DEV *pTyGSOctalDv,	/* device to control */
     int        request,		/* request code */
     int        arg		/* some argument */
     )
 {
-    STATUS status = 0;
+    int status = 0;
     int oldlevel;
 
     switch (request)
@@ -813,7 +793,7 @@ void tyGSOctalConfig (
     }
 
     if (stop == 2)                   opts |= STOPB;
-    if (tolower(flow) != 'h')        opts |= CLOCAL;
+    if (tolower(flow) != 'h')        opts |= Cstatic;
     if (tolower(parity) == 'e')      opts |= PARENB;
     else if (tolower(parity) == 'o') opts |= PARENB | PARODD;
 
@@ -930,7 +910,7 @@ void tyGSOctalInt
  *
  * Call interrupt level character output routine.
 */
-LOCAL int tyGSOctalStartup
+static int tyGSOctalStartup
     (
     TY_GSOCTAL_DEV *pTyGSOctalDv 		/* ty device to start up */
     )
