@@ -16,11 +16,12 @@ LIBRARY_IOC = Ipac
 
 LIBSRCS += drvIpac.c
 
-# Any VMEbus: SBS VIPC carrier drivers
+# Any VMEbus: VIPC/TVME/XVME carrier drivers
 LIBSRCS += drvVipc310.c
 LIBSRCS += drvVipc610.c
 LIBSRCS += drvVipc616.c
 LIBSRCS += drvTvme200.c
+LIBSRCS += drvXy9660.c
 
 # MVME162 & MVME172: IPchip carrier driver
 LIBSRCS_vxWorks += drvIpMv162.c

@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.16 2007-05-25 19:22:37 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.17 2007-08-20 17:49:07 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -20,6 +20,16 @@ version appears at the bottom, with more recent releases above it.</P>
 <HR>
 
 <H2>Version 2.9</H2>
+
+<P>Added:</P>
+<UL>
+
+<LI>Carrier driver for the Xycom XVME-9660 and XVME-9670 boards; this was
+actually a complete rewrite of Andy Foster's driver since his didn't support
+configuring the slot memory through the board registers, and I had to convert it
+to use devLib and provide command registration any way.</LI>
+
+</UL>
 
 <P>Changed:</P>
 <UL>
