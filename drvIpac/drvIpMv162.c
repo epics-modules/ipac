@@ -16,7 +16,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: drvIpMv162.c,v 1.9 2007-02-09 22:09:51 anj Exp $
+    $Id: drvIpMv162.c,v 1.10 2007-08-20 15:42:25 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -142,7 +142,7 @@ LOCAL int initialise (
 	return S_IPAC_tooMany;
     }
 
-    if (vxMemProbe((void *)&ipic->chipId, READ, 1, &dummy) || 
+    if (vxMemProbe((void *)&ipic->chipId, READ, 1, &dummy) ||
 	ipic->chipId != IPIC_CHIP_ID) {
 	return S_IPAC_badDriver;
     }
@@ -150,8 +150,9 @@ LOCAL int initialise (
     if (*cardParams == 'R') {
 	/* Module reset requested */
 	ipic->ipReset = IPIC_IP_RESET;
-	taskDelay(sysClkRateGet() / 16 + 2);
+	taskDelay(sysClkRateGet() / 20 + 2);
 	ipic->ipReset = 0;
+	taskDelay(sysClkRateGet() / 10 + 2);
 	cardParams++;
     }
     
@@ -175,7 +176,7 @@ LOCAL int initialise (
 
 	    case 'm':
 		p1 = p2 = 0;
-		count = sscanf(cardParams, "=%p,%ld%n", 
+		count = sscanf(cardParams, "= %p, %ld %n",
 				(void **) &p1, &p2, &next);
 		if (count != 2 ||
 		    (char *) p1 < sysMemTop() ||
@@ -194,7 +195,7 @@ LOCAL int initialise (
 
 	    case 'l':
 		p1 = p2 = 0;
-		count = sscanf(cardParams, "=%ld%n,%ld%n", &p1, &next, &p2, &next);
+		count = sscanf(cardParams, "= %ld %n , %ld %n", &p1, &next, &p2, &next);
 		if (count < 1 || count > 2 ||
 		    p1 < 0 || p1 > 7 ||
 		    p2 < 0 || p2 > 7) {
@@ -210,7 +211,7 @@ LOCAL int initialise (
 
 	    case 'r':
 		p1 = 0;
-		count = sscanf(cardParams, "=%ld%n", &p1, &next);
+		count = sscanf(cardParams, "= %ld %n", &p1, &next);
 		if (count != 1 ||
 		    p1 < 0 || p1 > 8) {
 		    return S_IPAC_badAddress;
@@ -223,7 +224,7 @@ LOCAL int initialise (
 	    
 	    case 'w':
 		p1 = 0;
-		count = sscanf(cardParams, "=%ld%n", &p1, &next);
+		count = sscanf(cardParams, "= %ld %n", &p1, &next);
 		if (count != 1) {
 		    return S_IPAC_badAddress;
 		}
