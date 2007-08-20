@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.17 2007-05-25 21:51:38 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.18 2007-08-20 17:19:40 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -89,6 +89,9 @@ Andrew Johnson</address></center>
 
 <li>
 <a href="#MVME162">Motorola MVME162/172</a></li>
+
+<li>
+<a href="#XVME9660">Xycom XVME-9660/9670</a></li>
 </ul></li>
 
 <li>
@@ -1634,7 +1637,6 @@ Configuration Commands and Parameter</h4>
 <pre>int ipacAddTVME200(const char *cardParams);</pre>
 
 <p>
-
 The parameter string must contain exactly 6 hexadecimal digits (without any
 leading 0x or 0X) which are the settings of the six rotary switches on the
 board, in order from S1 through S6. The board's silk-screen printing shows the
@@ -1959,6 +1961,86 @@ the commands are:</p>
 
 <hr>
 
+
+<h3>
+<a NAME="XVME9660"></a>Xycom XVME-9660/9670</h3>
+
+<p>
+
+These boards are four-slot, 6U VME carriers which are also sold by Acromag asthe AVME-9660/9670. On the 9660 board the IP module signal wiring is brought out
+through front panel connectors, whereas the 9670 boards make signal wiring
+available through the VME64x P2 and P0 connectors. A single bank of jumpers
+provide the only hardware configuration, setting the base address of the board
+in VME A16 space; module memory locations in VME A24 space are configured in
+software using the board registers.</p>
+
+<p>
+The IPAC Carrier driver is found in the file <i>drvXy9660.c</i> and implements
+the command <tt>ipacAddXy9660</tt> that registers an XVME-9660 board with
+drvIpac. It also exports a registrar routine <tt>xy9660Registrar</tt> that adds
+the above command to the iocsh and will link the driver into a final IOC
+executable, for which it must be listed in the IOC's .dbd file thus:</p>
+
+<blockquote><pre>registrar(xy9660Registrar)</pre></blockquote>
+
+<h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddXy9660(const char *cardParams);</pre>
+
+<p>
+The parameter string starts with a hex number (a leading 0x is optional) which
+sets the I/O base address of the card in the VME A16 address space (the factory
+default is 0x0000). Next must come a comma, followed by the VME interrupt level
+(0 through 7, although 0 means all interrupts are disabled) to be used for this
+carrier (all module interrupts share the same interrupt level from this
+board).</p>
+
+<p>
+A letter <tt>R</tt> may appear at this point, which causes a carrier soft reset
+to be generated before any further configuration occurs.</p>
+
+<p>
+Finally if any module drivers need to access the memory space on their module,
+the relevent slots must have their memory size and base address configured,
+which is done like this for each slot:</p>
+
+<dl>
+<dt>
+<tt><i>slot</i> = <i>size</i>, <i>address</i></tt></dt>
+
+<dd>
+Configures one slot on the card, setting the size and base address of the slot's
+memory space in VME A24 space. The <i>slot</i> parameter is one of the letters
+<tt>A</tt> through <tt>D</tt> and selects which slot is to be configured. The
+<i>size</i> is a single digit <tt>1</tt>, <tt>2</tt>, <tt>4</tt> or <tt>8</tt>
+which gives the memory size to be used, expressed in MegaBytes. The
+<i>address</i> is a 6-digit hexadecimal number (a leading <tt>0x</tt> is
+optional) which must be compatible with the selected memory size. Slots may be
+configured in any order, but cannot be programmed to overlap.</dd>
+
+</dl>
+
+<h4>
+Configuration Examples</h4>
+
+<blockquote>
+<pre>ipacAddXy9660("0x6000,4 R")</pre>
+</blockquote>
+
+<p>
+This indicates that the carrier board has its I/O base set to A16:6000 and that
+it generates interrupts on VME IRQ4. None of the slots are configured for
+memory, and modules are reset at initialization.</p>
+
+<blockquote>
+<pre>ipacAddXy9660("C000,3 A=2,800000 C=1,A00000")</pre>
+</blockquote>
+
+<p>
+The carrier is at A16:C000 and generates level 3 interrupts. Slot A is
+configured for 2MB of memory space at A24:800000 and Slot C for 1MB of memory
+space at A24:A00000.</p>
 
 <h2>
 <a NAME="section5"></a>5. Interface to IPAC Carrier Drivers</h2>
