@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.13 2007-05-15 20:59:49 anj Exp $
+    $Id: drvIpac.c,v 1.14 2007-08-20 21:16:21 anj Exp $
 
 Copyright (c) 1995-2007 Andrew Johnson
 
@@ -36,12 +36,12 @@ Copyright (c) 1995-2007 Andrew Johnson
 *******************************************************************************/
 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 
 #include <drvSup.h>
+#include <epicsStdio.h>
 #include <epicsExport.h>
 #include <cantProceed.h>
 #include <devLib.h>
@@ -235,7 +235,7 @@ Returns:
     0 = OK,
     S_IPAC_badAddress = Bad carrier or slot number,
     S_IPAC_noModule = No module installed,
-    S_IPAC_noIpacId = "IPAC" identifier not found
+    S_IPAC_noIpacId = "IPAC"/"VITA4 " identifier not found
 
 */
 
@@ -244,7 +244,7 @@ int ipmCheck (
     int slot
 ) {
     ipac_idProm_t *id;
-    epicsUInt16 dummy;
+    epicsUInt16 word;
 
     if (carrier < 0 ||
 	carrier >= carriers.number ||
@@ -258,27 +258,35 @@ int ipmCheck (
 	return S_IPAC_badDriver;
     }
 
-    if (devReadProbe(sizeof(dummy), (void *)&id->asciiI, (char *)&dummy)) {
+    if (devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)) {
 	return S_IPAC_noModule;
     }
-    
-    /*
-     * The following code is deliberately de-optimized to fix a problem with
-     * a particular GPIB module which can't handle the back-to-back accesses
-     * that the compiler generates if you combine the conditions in one if.
-     */
-    
-    if ((id->asciiI & 0xff) != 'I') {
+    if ((word & 0xff) != 'I') {
 	return S_IPAC_noIpacId;
     }
+
+    /*
+     * The Format-1 check is deliberately de-optimized to fix a problem with
+     * one particular IP module which can't handle the back-to-back accesses
+     * that the cc68k compiler generates if the "IPAC" ID is tested in a
+     * single if() statement.  Format-2 modules should be Ok though.
+     */
+
     if ((id->asciiP & 0xff) != 'P') {
+	/* Format-2 ID Prom? */
+	ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
+	if (id2->asciiVI == ('V' << 8 | 'I') &&
+	    id2->asciiTA == ('T' << 8 | 'A') &&
+	    id2->ascii4_ == ('4' << 8 | ' ') ) {
+	    return OK;
+	}
 	return S_IPAC_noIpacId;
     }
     if ((id->asciiA & 0xff) != 'A') {
 	return S_IPAC_noIpacId;
     }
-    dummy = id->asciiC & 0xff;
-    if ((dummy != 'C') && (dummy != 'H')) {
+    word = id->asciiC & 0xff;
+    if ((word != 'C') && (word != 'H')) {
 	return S_IPAC_noIpacId;
     }
 
@@ -289,23 +297,23 @@ int ipmCheck (
 /*******************************************************************************
 
 Routine:
-    checkCRC
+    checkCRC_8
 
 Function:
-    Calculate the CRC of the IDprom at the given address.
+    Calculate the CRC of the Format-1 IDprom at the given address.
 
 Description:
     Generates an industry standard CRC of the ID Prom data as described  in the
     Industry Pack specification.  The CRC byte in the Prom (at address 0x17)
-    is set to zero for the purpose of calculating  the CRC.
+    is read as zero for the purpose of calculating  the CRC.
 
 Returns:
     The low 8 bits of the calculated CRC value.
 
 */
 
-LOCAL int checkCRC (
-    epicsUInt16 *data, 
+LOCAL int checkCRC_8 (
+    epicsUInt16 *data,
     int length
 ) {
     int i;
@@ -318,15 +326,59 @@ LOCAL int checkCRC (
 	    if ((data[i] & mask) && (i != 0xb)) {
 		crc ^= 0x8000;
 	    }
-	    crc += crc;
-	    if (crc > 0xffff) {
-		crc = (crc & 0xffff) ^ 0x1021;
+	    crc <<= 1;
+	    if (crc & 0x10000) {
+		crc ^= 0x11021;
 	    }
 	    mask >>= 1;
 	}
     }
 
     return (~crc) & 0xff;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    checkCRC16
+
+Function:
+    Calculate the CRC of the Format-2 IDprom at the given address.
+
+Description:
+    Generates an industry standard CRC of the ID Prom data as described  in the
+    Industry Pack specification.  The CRC word in the Prom (at address 0x18)
+    is read as zero for the purpose of calculating  the CRC.
+
+Returns:
+    The low 16 bits of the calculated CRC value.
+
+*/
+
+LOCAL int checkCRC16 (
+    epicsUInt16 *data,
+    int length
+) {
+    int i;
+    epicsUInt32 crc = 0xffff;
+    epicsUInt16 mask;
+
+    for (i = 0; i < length; i++) {
+	mask = 0x8000;
+	while (mask) {
+	    if ((data[i] & mask) && (i != 0xc)) {
+		crc ^= 0x8000;
+	    }
+	    crc <<= 1;
+	    if (crc & 0x10000) {
+		crc ^= 0x11021;
+	    }
+	    mask >>= 1;
+	}
+    }
+
+    return (~crc) & 0xffff;
 }
 
 
@@ -348,20 +400,19 @@ Returns:
     0 = OK,
     S_IPAC_badAddress = Bad carrier or slot number,
     S_IPAC_noModule = No module installed,
-    S_IPAC_noIpacId = "IPAC" identifier not found
+    S_IPAC_noIpacId = "IPAC"/"VITA4" identifier not found
     S_IPAC_badCRC = CRC Check failed,
     S_IPAC_badModule = Manufacturer or model IDs wrong
 
 */
 
 int ipmValidate (
-    int carrier, 
+    int carrier,
     int slot,
-    int manufacturerId, 
+    int manufacturerId,
     int modelId
 ) {
     ipac_idProm_t *id;
-    int crc;
     int status;
 
     status = ipmCheck(carrier, slot);
@@ -370,14 +421,31 @@ int ipmValidate (
     }
 
     id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-    crc = checkCRC((epicsUInt16 *) id, id->bytesUsed & 0xff);
-    if (crc != (id->CRC & 0xff)) {
-	return S_IPAC_badCRC;
-    }
+    if (id->asciiP == 'P') {
+	/* Format-1 ID Prom */
+	int crc = checkCRC_8((epicsUInt16 *) id, id->bytesUsed & 0xff);
+	if (crc != (id->CRC & 0xff)) {
+	    return S_IPAC_badCRC;
+	}
 
-    if ((id->manufacturerId & 0xff)!= manufacturerId ||
-	(id->modelId & 0xff) != modelId) {
-	return S_IPAC_badModule;
+	if ((id->manufacturerId & 0xff)!= manufacturerId ||
+	    (id->modelId & 0xff) != modelId) {
+	    return S_IPAC_badModule;
+	}
+    } else {
+	/* Format-2 ID Prom, CRC optional */
+	ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
+	int crc = id2->CRC;
+	if (crc &&
+	    crc != checkCRC16((epicsUInt16 *) id2, id2->bytesUsed)) {
+	    return S_IPAC_badCRC;
+	}
+
+	if (((id2->manufacturerIdHigh & 0xff) << 16 | id2->manufacturerIdLow)
+	        != manufacturerId ||
+	    id2->modelId != modelId) {
+	    return S_IPAC_badModule;
+	}
     }
 
     return OK;
@@ -423,14 +491,27 @@ char *ipmReport (
 
     if (status == S_IPAC_noModule) {
 	strcat(report, "No Module");
+    } else if (status == S_IPAC_noIpacId) {
+	strcat(report, "No IPAC ID");
     } else {
 	ipac_idProm_t *id;
-	char module[16];
 
 	id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-	sprintf(module, "%#2.2hx/%#2.2hx", id->manufacturerId & 0xff,
-		id->modelId & 0xff);
-	strcat(report, module);
+	if (id->asciiP == 'P') {
+	    /* Format-1 ID Prom */
+	    char module[10];
+	    epicsSnprintf(module, sizeof(module), "0x%2.2x/0x%2.2x",
+			  id->manufacturerId & 0xff, id->modelId & 0xff);
+	    strcat(report, module);
+	} else {
+	    /* Format-2 ID Prom */
+	    char module[16];
+	    ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
+	    epicsSnprintf(module, sizeof(module), "0x%2.2x%4.4x/0x%4.4x",
+			  id2->manufacturerIdHigh & 0xff,
+			  id2->manufacturerIdLow, id2->modelId);
+	    strcat(report, module);
+	}
     }
 
     if (carriers.info[carrier].driver->report != NULL) {

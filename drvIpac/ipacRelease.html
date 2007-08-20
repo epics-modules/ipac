@@ -4,7 +4,7 @@
 <META NAME="Author" CONTENT="Andrew Johnson">
 <META NAME="Description" CONTENT="Release Notes for the vxWorks/EPICS IPAC driver software">
 <META NAME="KeyWords" CONTENT="vxWorks, IPAC, EPICS">
-<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.17 2007-08-20 17:49:07 anj Exp $">
+<META NAME="Version" CONTENT="$Id: ipacRelease.html,v 1.18 2007-08-20 21:16:21 anj Exp $">
 </HEAD>
 <BODY>
 
@@ -28,6 +28,11 @@ version appears at the bottom, with more recent releases above it.</P>
 actually a complete rewrite of Andy Foster's driver since his didn't support
 configuring the slot memory through the board registers, and I had to convert it
 to use devLib and provide command registration any way.</LI>
+
+<LI>Support for VITA's Format-2 ID Proms, as used by Hytec. Note that the CRC
+calculation for these 16-bit Proms has not been checked against any known
+correct IP modules (Hytec set their CRC values to zero, which this version
+assumes to mean don't check the CRC).</LI>
 
 </UL>
 

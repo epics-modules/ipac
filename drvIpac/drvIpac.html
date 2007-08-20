@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.19 2007-08-20 19:51:22 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.20 2007-08-20 21:16:21 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -665,7 +665,7 @@ Description</h4>
 <p>
 Does a quick check to make sure the carrier and slot numbers are legal,
 probes the IDprom space to ensure an IPAC is installed, and checks that
-the IDprom starts with an "IPAC" or "IPAH" identifier.</p>
+the IDprom starts with an "IPAC", "IPAH" or "VITA4" identifier.</p>
 
 <h4>
 Returns</h4>
@@ -709,7 +709,7 @@ Returns</h4>
 <tr>
 <td>S_IPAC_noIpacId</td>
 
-<td>"IPAC" identifier not found</td>
+<td>IP Module identifier not found</td>
 </tr>
 </table></dd>
 </dl>
@@ -725,7 +725,7 @@ Validates a particular IPAC module type at the given carrier &amp; slot
 number.</p>
 
 <pre>int ipmValidate(int carrier, int slot,
-                uchar_t manufacturerId, uchar_t modelId);</pre>
+                int manufacturerId, int modelId);</pre>
 
 <h4>
 Parameters</h4>
@@ -738,14 +738,14 @@ Parameters</h4>
 Module identification - see <a href="#carrierSlot">above</a></dd>
 
 <dt>
-<tt>uchar_t manufacturerId</tt></dt>
+<tt>int manufacturerId</tt></dt>
 
 <dd>
 IPAC Manufacturer Identification Number, as allocated by SBS. This number
 should be given in the Programmer's Documentation for the IPAC module.</dd>
 
 <dt>
-<tt>uchar_t modelId</tt></dt>
+<tt>int modelId</tt></dt>
 
 <dd>
 IPAC Model Identification Number, as allocated by the module manufacturer.
@@ -769,6 +769,17 @@ which the driver has been told to control. If a driver supports more than one
 type of module, it should check each module type individually by calling
 <tt>ipmValidate</tt> with each manufacturer/model pair it can control until it
 finds a match.</p>
+
+<p>
+Releases of drvIpac before 2-9 did not recognize Format-2 ID PROMS as defined in
+the VITA spec. From release 2-9 on this software should be compatible with
+modules having either Format-1 or Format-2 ID PROMS. In the newer format the
+PROM is specified to be 16 bits wide rather than 8, and various fields including
+the Manufacturer and Model numbers have been made wider. The calculated CRC is
+also wider, but some IP Module manufacturers are setting the CRC field to all
+zeros rather than calculating the correct CRC value for it. As a result, the
+<tt>ipmValidate</tt> routine will not check the CRC of a Format-2 ID Prom if its
+CRC field is zero.</p>
 
 <h4>
 Returns</h4>
@@ -824,7 +835,7 @@ Returns</h4>
 <tr>
 <td>S_IPAC_noIpacId</td>
 
-<td>"IPAC" or "IPAH" identifiers not found</td>
+<td>IP Module identifier not found</td>
 </tr>
 </table></dd>
 </dl>
@@ -1189,15 +1200,17 @@ Pointer to a static, printable string.</dd>
 Sample Output</h4>
 
 <blockquote>
-<pre>"C0 S1 : 0xB1/0x01 - M0 L4,5"</pre>
+<pre>C0 S0 : 0x23ae80/0x8d49 - M0 L3,3
+C0 S1 : 0xB1/0x01 - M0 L4,5</pre>
 </blockquote>
 
 <p>
-This string is made up of three parts. The first two elements before the
-colon give the carrier and slot number of the slot. If a module is installed,
-the manufacturer and model IDs follow as two hex numbers. Finally if the
-Carrier Driver contains a report function it is called and the string it
-returns is appended after the hyphen.</p>
+This string is made up of three parts. The first two elements before the colon
+give the carrier and slot number of the slot. If a module is installed, the
+manufacturer and model IDs follow as two hex numbers (2 digits each for Format-1
+ID PROMS, 6+4 digits for Format-2 ID PROMS). Finally if the Carrier Driver
+contains a report function it is called and the string it returns is appended
+after a hyphen.</p>
 
 <hr>
 

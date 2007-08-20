@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.10 2007-05-15 20:59:49 anj Exp $
+    $Id: drvIpac.h,v 1.11 2007-08-20 21:16:21 anj Exp $
 
 Copyright (c) 1995-2007 Andrew Johnson
 
@@ -82,7 +82,7 @@ extern "C" {
 #define S_IPAC_badAddress   (M_ipac| 3) /*Bad IPAC carrier or slot number*/
 #define S_IPAC_badDriver    (M_ipac| 4) /*Bad value from IPAC carrier driver*/
 #define S_IPAC_noModule     (M_ipac| 5) /*No IP module installed*/
-#define S_IPAC_noIpacId     (M_ipac| 6) /*IPAC identifier not found*/
+#define S_IPAC_noIpacId     (M_ipac| 6) /*IPAC/VITA4 identifier not found*/
 #define S_IPAC_badCRC       (M_ipac| 7) /*IPAC CRC Check failed*/
 #define S_IPAC_badModule    (M_ipac| 8) /*IPAC Manufacturer or model ID wrong*/
 #define S_IPAC_notImplemented (M_ipac| 9) /*IPAC Driver command not available*/
@@ -97,7 +97,8 @@ extern "C" {
 #define IPAC_REPORT_LEN	256
 
 
-/* Structure of the IPAC ID Prom, located in the pack ID space. */
+/* Structure of the IPAC ID Prom, located in the pack ID space.
+ */
 
 typedef volatile struct {
     epicsUInt16 asciiI;
@@ -114,6 +115,23 @@ typedef volatile struct {
     epicsUInt16 CRC;
     epicsUInt16 packSpecific[52];
 } ipac_idProm_t;
+
+typedef volatile struct {
+    epicsUInt16 asciiVI;
+    epicsUInt16 asciiTA;
+    epicsUInt16 ascii4_;
+    epicsUInt16 manufacturerIdHigh;
+    epicsUInt16 manufacturerIdLow;
+    epicsUInt16 modelId;
+    epicsUInt16 revision;
+    epicsUInt16 reserved;
+    epicsUInt16 driverIdLow;
+    epicsUInt16 driverIdHigh;
+    epicsUInt16 flags;
+    epicsUInt16 bytesUsed;
+    epicsUInt16 CRC;
+    epicsUInt16 packSpecific[51];
+} ipac_idProm2_t;
 
 
 /* These are the types of address space implemented in the IP
