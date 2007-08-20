@@ -5,7 +5,7 @@
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
    <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
-   <meta name="Version" content="$Id: drvIpac.html,v 1.18 2007-08-20 17:19:40 anj Exp $">
+   <meta name="Version" content="$Id: drvIpac.html,v 1.19 2007-08-20 19:51:22 anj Exp $">
    <title>drvIpac - Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
@@ -221,10 +221,7 @@ and carrier drivers.</p>
 
 <p>
 This header file declares the necessary structures, enumerated types and
-functions provided by the driver. These are individually documented below. This
-header <b><tt>#include</tt></b>s the vxWorks ANSI header file <i>types.h</i>
-thus a <b><tt>-I</tt></b> option to the C pre-processor must be used to
-indicate the location of the vxWorks header files.</p>
+functions provided by the driver. These are individually documented below.</p>
 
 <p>This software can no longer be built for use without EPICS.</p>
 
@@ -277,7 +274,7 @@ initialised. See the specific documentation for each carrier driver
 Description</h4>
 
 <p>
-This routine will usually be called from the vxWorks (EPICS) start-up script.
+This routine will usually be called from the EPICS start-up script.
 Some types of carrier may need additional initialisation before or after
 registering, but this method using the card parameter string should be
 sufficient for most carriers. Note that only the carrier <tt>initialise()</tt>
