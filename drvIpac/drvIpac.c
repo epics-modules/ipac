@@ -15,7 +15,7 @@ Author:
 Created:
     3 July 1995
 Version:
-    $Id: drvIpac.c,v 1.14 2007-08-20 21:16:21 anj Exp $
+    $Id: drvIpac.c,v 1.15 2007-08-21 19:27:37 anj Exp $
 
 Copyright (c) 1995-2007 Andrew Johnson
 
@@ -421,7 +421,7 @@ int ipmValidate (
     }
 
     id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-    if (id->asciiP == 'P') {
+    if ((id->asciiP & 0xff) == 'P') {
 	/* Format-1 ID Prom */
 	int crc = checkCRC_8((epicsUInt16 *) id, id->bytesUsed & 0xff);
 	if (crc != (id->CRC & 0xff)) {
@@ -497,7 +497,7 @@ char *ipmReport (
 	ipac_idProm_t *id;
 
 	id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
-	if (id->asciiP == 'P') {
+	if ((id->asciiP & 0xff) == 'P') {
 	    /* Format-1 ID Prom */
 	    char module[10];
 	    epicsSnprintf(module, sizeof(module), "0x%2.2x/0x%2.2x",
