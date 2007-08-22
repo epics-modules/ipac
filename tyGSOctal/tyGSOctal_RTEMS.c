@@ -24,6 +24,8 @@
 #include <rtems/error.h>
 #include <rtems/termiostypes.h>
 
+#define TY_DEV  int
+
 #include "ip_modules.h"     /* GreenSpring IP modules */
 #include "scc2698.h"        /* SCC 2698 UART register map */
 #include "tyGSOctal.h"      /* Device driver includes */

@@ -25,7 +25,7 @@ enum { MAX_SPIN_TIME=2 };
 typedef enum { RS485,RS232 } RSmode;
 
 typedef struct ty_gsoctal_dev {
-    epicsUInt16	    tyDev;
+    TY_DEV	    tyDev;
     SCC2698*        regs;
     SCC2698_CHAN*   chan;
 
