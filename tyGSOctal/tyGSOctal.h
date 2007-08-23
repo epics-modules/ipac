@@ -36,7 +36,6 @@ typedef struct ty_gsoctal_dev {
     int             baud;
     int             opts;
     epicsUInt8      imr;
-    void           *ttyp;
 } TY_GSOCTAL_DEV;
 
 typedef struct quadTable {

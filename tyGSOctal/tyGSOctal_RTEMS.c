@@ -24,7 +24,7 @@
 #include <rtems/error.h>
 #include <rtems/termiostypes.h>
 
-#define TY_DEV  int
+typedef void *TY_DEV;
 
 #include "ip_modules.h"     /* GreenSpring IP modules */
 #include "scc2698.h"        /* SCC 2698 UART register map */
@@ -81,8 +81,8 @@ tyGSOctalInt(int idx)
             if (isr & 0x02) {
                 char inChar = chan->u.r.rhr;
 printk("Read %x\n", inChar & 0xFF);
-                if (pTyGSOctalDv->ttyp)
-                    rtems_termios_enqueue_raw_characters(pTyGSOctalDv->ttyp, &inChar, 1);
+                if (pTyGSOctalDv->tyDev)
+                    rtems_termios_enqueue_raw_characters(pTyGSOctalDv->tyDev, &inChar, 1);
             }
 
             /*
@@ -91,8 +91,8 @@ printk("Read %x\n", inChar & 0xFF);
             if (isr & 0x1) {
                 pQt->imr[block] &= ~pTyGSOctalDv->imr;
                 regs->u.w.imr = pQt->imr[block];
-                if (pTyGSOctalDv->ttyp)
-                    rtems_termios_dequeue_characters(pTyGSOctalDv->ttyp, 1);
+                if (pTyGSOctalDv->tyDev)
+                    rtems_termios_dequeue_characters(pTyGSOctalDv->tyDev, 1);
             }
 
             /*
@@ -212,7 +212,7 @@ static rtems_device_driver tyGsOctalOpen(rtems_device_major_number major,
         TERMIOS_IRQ_DRIVEN
     };
     sc = rtems_termios_open(major, minor, arg, &callbacks);
-    (tyGSOctalModules+(minor/8))->port[minor%8].ttyp = args->iop->data1;
+    (tyGSOctalModules+(minor/8))->port[minor%8].tyDev = args->iop->data1;
     return sc;
 }
 
@@ -300,9 +300,9 @@ void tyGSOctalReport()
                 SCC2698_CHAN *chan = chan = pTyGSOctalDv->chan;
                 SCC2698 *regs = pTyGSOctalDv->regs;
                 printf("  UART %d --", i);
-                printf(" SR:%2.2x", chan->u.r.sr);
-                printf(" ISR:%2.2x", regs->u.r.isr);
-                printf(" IMR:%2.2x", qt->imr[i%2]);
+                printf(" SR:%2.2X", chan->u.r.sr);
+                printf(" ISR:%2.2X", regs->u.r.isr);
+                printf(" IMR:%2.2X", qt->imr[i%2]);
                 printf("\n");
             }
         }
