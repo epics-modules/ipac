@@ -1,38 +1,33 @@
 <html>
 <head>
-<title>GreenSpring OctalUart IP Module Support</title>
-
+  <meta http-equiv="Content-Type" content="">
+  <title>GreenSpring OctalUart IP Module Support</title>
 </head>
-<body text="#000000" bgcolor="#ffffff" link="#000080" vlink="#707070" alink="0000080">
 
+<body text="#000000" bgcolor="#ffffff" link="#000080" vlink="#707070"
+alink="0000080">
 <h1>SBS OctalUart IP Module Support</h1>
 
 <h2>Introduction</h2>
 
-<p>
-This software drives the SBS (formerly GreenSpring) OctalUart family of
+<p>This software drives the SBS (formerly GreenSpring) OctalUart family of
 Industry Pack modules to communicate with a number of RS-232, RS-422, and
 RS-485 devices.  Note that this driver is <b>not</b> compatible with newer
 IP-OctalPlus modules as they use a different chipset.</p>
 
-<p>
-The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the
-carrier board plus access routines for the SCC2698 octalUart used in the IP
-modules. The driver implements a standard vxWorks terminal driver making use of
-the vxWorks tyLib system library.</p>
+<p>The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of
+the carrier board plus access routines for the SCC2698 octalUart used in the
+IP modules. The driver implements a standard vxWorks terminal driver making
+use of the vxWorks tyLib system library.</p>
 
-<h2>
-Configuration Example</h2>
+<h2>Configuration Example</h2>
 
-<P>
-The following is an example of a startup script (st.cmd) segment that creates
-and configures IP carriers, OctalUart IP modules, and tty devices. This example
-is compatible with both vxWorks and iocsh startup scripts.
-</P>
+<p>The following is an example of a startup script (st.cmd) segment that
+creates and configures IP carriers, OctalUart IP modules, and tty devices.
+This example is compatible with both vxWorks and iocsh startup scripts.</p>
 
 <blockquote>
-<pre>
-# Initialize the drvIpac carriers.
+  <pre># Initialize the drvIpac carriers.
 # -------------------------------
 # carrier#0
 ipacAddMVME162    "A:m=0xe0000000,64 l=3,2"
@@ -52,8 +47,8 @@ tyGSOctalDrv 6
 #   moduleID   - assign the IP module a name for future reference. 
 #   ModuleType - "232", "422", or "485".
 #   irq_num    - interrupt request number.
-#   carrier#   - carrier# assigned from the ipacAdd<I>CarrierType</I>() call.
-#   slot#      - slot number on carrier; slot[A,B,C,D] -> slot#[0,1,2,3].
+#   carrier#   - carrier# assigned from the ipacAdd<i>CarrierType</i>() call.
+#   slot#      - slot number on carrier; slot[A,B,C,D] -&gt; slot#[0,1,2,3].
 
 # Init two IP-Octal modules from the MVME162 carrier; the 1st module is in
 # slot A, the second module is in slot B.
@@ -80,8 +75,8 @@ tyGSOctalModuleInit "Mod5", "485", 0x85, 2, 3
 #   rdBufSize  - read buffer size, in bytes.
 #   wrtBufSize - write buffer size, in bytes.
 
-# Create two tty ports on Mod0 with <I>portname</I> based on the convention;
-# "/tyGS/<I>carrier#,slot#</I>/<I>moduleID</I>/port#</I>".
+# Create two tty ports on Mod0 with <i>portname</i> based on the convention;
+# "/tyGS/<i>carrier#,slot#</i>/<i>moduleID</i>/port#".
 tyGSOctalDevCreate    "/tyGS/0,0/0",  "Mod0", 0, 512, 512
 tyGSOctalDevCreate    "/tyGS/0,0/1",  "Mod0", 1, 512, 512
 
@@ -106,8 +101,32 @@ tyGSOctalDevCreateAll "/tyGS/1,0/",   "Mod2", 512, 512
 #   flow     - flow control; hardware - 'H' or none - 'N'.
 tyGSOctalConfig "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
 
-# Ports default to 9600, 'N', 1, 8, 'N'</pre>
+# Ports default to 9600, 'N', 1, 8, 'N'
+
+  </pre>
 </blockquote>
 
+<h2>RTEMS</h2>
+
+<p>The RTEMS version of this driver provides a similar set of commands.
+Significant differences are:</p>
+<ol>
+  <li>The devName argument to the tyGSOctalDevCreate command is used to
+    create an entry in the in-memory filesystem. Thus, the '/' character
+    takes on the special meaning.</li>
+  <li>There is no tyGSOctalDevCreateAlltyGSOctalDevCreateAll command. The
+    tyGSOctalDevCreate command performs this function when given a port
+    number argument less than zero.</li>
+  <li>There is no tyGSOctalConfig command. The asynSetOption command should
+    be used instead. The RTEMS driver provides standard termios device
+    support so any code compatible with such devices will also work with this
+    driver.</li>
+  <li>The final two arguments (rdBufSize and wrBufSize) to the
+    tyGSOctalDevCreate command are ignored.</li>
+</ol>
+
+<p></p>
+
+<p></p>
 </body>
 </html>
