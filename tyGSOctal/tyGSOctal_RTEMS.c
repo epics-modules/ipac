@@ -80,7 +80,6 @@ tyGSOctalInt(int idx)
              */
             if (isr & 0x02) {
                 char inChar = chan->u.r.rhr;
-printk("Read %x\n", inChar & 0xFF);
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_enqueue_raw_characters(pTyGSOctalDv->tyDev, &inChar, 1);
             }
@@ -140,7 +139,6 @@ tyGsOctalCallbackWrite(int minor, const char *buf, int len)
     int block = pTyGSOctalDv->block;
 	int key;
 
-printk("write %x %d\n", *buf, len);
 	key = epicsInterruptLock();
     chan->u.w.thr = *buf;
     qt->imr[block] |= pTyGSOctalDv->imr; /* activate Tx interrupt */
