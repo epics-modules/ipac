@@ -31,16 +31,13 @@ typedef void *TY_DEV;
 #include "tyGSOctal.h"      /* Device driver includes */
 #include "drvIpac.h"        /* IP management (from drvIpac) */
 
-
+/*
+ * 'Global' variables
+ */
 static QUAD_TABLE *tyGSOctalModules;
 static int tyGSOctalMaxModules;
 static int tyGSOctalLastModule;
 rtems_device_major_number tyGsOctalMajor;
-
-/*
- * forward declarations
- */
-static void   tyGSOctalRebootHook(void *);
 
 /*
  * Interrupt handler
@@ -62,7 +59,7 @@ tyGSOctalInt(int idx)
             if (!pTyGSOctalDv->created)
                 continue;
 
-            block = i/2;
+            block = pTyGSOctalDv->block;
             chan = pTyGSOctalDv->chan;
             regs = pTyGSOctalDv->regs;
 
@@ -242,6 +239,35 @@ static rtems_device_driver tyGsOctalControl(rtems_device_major_number major,
     return rtems_termios_ioctl(arg);
 }
 
+/*
+ * Shut things down on exit
+ */
+static void
+tyGSOctalRebootHook(void *arg)
+{
+    QUAD_TABLE *qt;
+    int i, n;
+    TY_GSOCTAL_DEV *pty;
+    int key;
+        
+    key = epicsInterruptLock();
+    for (n = 0; n < tyGSOctalLastModule; n++) {
+        qt = &tyGSOctalModules[n];
+        for (i=0; i < 8; i++) {
+            pty = &qt->port[i];
+            if (pty->created) {
+                pty->imr = 0;
+                pty->regs->u.w.imr = 0;
+            }
+        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
+        ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
+        
+        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_statUnused);
+        }
+    }
+    epicsInterruptUnlock(key);
+}
+
 /******************************************************************************
  *
  * tyGSOctalDrv - initialize the driver
@@ -305,31 +331,6 @@ void tyGSOctalReport()
             }
         }
     }
-}
-
-static void tyGSOctalRebootHook(void *arg)
-{
-    QUAD_TABLE *qt;
-    int i, n;
-    TY_GSOCTAL_DEV *pty;
-    int key;
-        
-    key = epicsInterruptLock();
-    for (n = 0; n < tyGSOctalLastModule; n++) {
-        qt = &tyGSOctalModules[n];
-        for (i=0; i < 8; i++) {
-            pty = &qt->port[i];
-            if (pty->created) {
-                pty->imr = 0;
-                pty->regs->u.w.imr = 0;
-            }
-        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
-        ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
-        
-        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_statUnused);
-        }
-    }
-    epicsInterruptUnlock(key);
 }
 
 /******************************************************************************
@@ -530,7 +531,7 @@ tyGSOctalDevCreate (
 {
     TY_GSOCTAL_DEV *pTyGSOctalDv;
     QUAD_TABLE *qt = tyGSOctalFindQT(moduleID);
-    int block = port/4;
+    int block;
     int minor;
     rtems_status_code sc;
     int key;
@@ -549,6 +550,7 @@ tyGSOctalDevCreate (
     if (!name || !qt || port < 0 || port > 7)
         return NULL;
     minor = ((qt - tyGSOctalModules) * 8) + port;
+    block = port / 2;
     pTyGSOctalDv = &qt->port[port];
 
     /* if there is a device already on this channel, don't do it */
