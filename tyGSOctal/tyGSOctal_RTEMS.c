@@ -316,8 +316,9 @@ tyGSOctalDrv(int maxModules)
 
 void tyGSOctalReport()
 {
-    int i, n;
+    int i, n, header;
 
+    header = 1;
     for (n = 0; n < tyGSOctalLastModule; n++) {
         QUAD_TABLE *qt = &tyGSOctalModules[n];
         printf("qt=%p carrier=%d module=%d interrupts:%lu\n",
@@ -325,9 +326,12 @@ void tyGSOctalReport()
         for (i = 0; i < 8; i++) {
             TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[i];
             if (pTyGSOctalDv->created) {
-                printf("  UART %d -- read:%-9lu write:%-9lu\n", i,
-                                                pTyGSOctalDv->readCharCount,
-                                                pTyGSOctalDv->writeCharCount);
+                if (header) {
+                    printf("UART      IN       OUT\n");
+                    header = 0;
+                }
+                printf("%3d %9lu %9lu\n", i, pTyGSOctalDv->readCharCount,
+                                               pTyGSOctalDv->writeCharCount);
             }
         }
     }
