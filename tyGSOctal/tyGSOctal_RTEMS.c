@@ -53,6 +53,7 @@ tyGSOctalInt(int idx)
     SCC2698_CHAN *chan;
     SCC2698 *regs = NULL;
 
+    pQt->interruptCount++;
     for (spin=0; spin < MAX_SPIN_TIME; spin++) {
         for (i = 0; i < 8; i++) {
             TY_GSOCTAL_DEV *pTyGSOctalDv = &(pQt->port[i]);
@@ -77,6 +78,7 @@ tyGSOctalInt(int idx)
              */
             if (isr & 0x02) {
                 char inChar = chan->u.r.rhr;
+                pTyGSOctalDv->readCharCount++;
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_enqueue_raw_characters(pTyGSOctalDv->tyDev, &inChar, 1);
             }
@@ -87,6 +89,7 @@ tyGSOctalInt(int idx)
             if (isr & 0x1) {
                 pQt->imr[block] &= ~pTyGSOctalDv->imr;
                 regs->u.w.imr = pQt->imr[block];
+                pTyGSOctalDv->writeCharCount++;
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_dequeue_characters(pTyGSOctalDv->tyDev, 1);
             }
@@ -317,17 +320,14 @@ void tyGSOctalReport()
 
     for (n = 0; n < tyGSOctalLastModule; n++) {
         QUAD_TABLE *qt = &tyGSOctalModules[n];
-        printf("qt=%p carrier=%d module=%d\n", qt, qt->carrier, qt->module);
+        printf("qt=%p carrier=%d module=%d interrupts:%lu\n",
+                            qt, qt->carrier, qt->module, qt->interruptCount);
         for (i = 0; i < 8; i++) {
             TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[i];
             if (pTyGSOctalDv->created) {
-                SCC2698_CHAN *chan = chan = pTyGSOctalDv->chan;
-                SCC2698 *regs = pTyGSOctalDv->regs;
-                printf("  UART %d --", i);
-                printf(" SR:%2.2X", chan->u.r.sr);
-                printf(" ISR:%2.2X", regs->u.r.isr);
-                printf(" IMR:%2.2X", qt->imr[i%2]);
-                printf("\n");
+                printf("  UART %d -- read:%-9lu write:%-9lu\n", i,
+                                                pTyGSOctalDv->readCharCount,
+                                                pTyGSOctalDv->writeCharCount);
             }
         }
     }

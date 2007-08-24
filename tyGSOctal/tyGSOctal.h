@@ -36,6 +36,8 @@ typedef struct ty_gsoctal_dev {
     int             baud;
     int             opts;
     epicsUInt8      imr;
+    unsigned long   readCharCount;
+    unsigned long   writeCharCount;
 } TY_GSOCTAL_DEV;
 
 typedef struct quadTable {
@@ -45,6 +47,7 @@ typedef struct quadTable {
     epicsUInt16    carrier;
     epicsUInt16    module;
     epicsUInt8     imr[4];			/* one per block */
+    unsigned long  interruptCount;
 } QUAD_TABLE;
 
 int tyGSOctalDrv(int);
