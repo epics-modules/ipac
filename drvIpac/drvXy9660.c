@@ -182,7 +182,7 @@ static int initialise (
 	{ PROM_A, PROM_B, PROM_C, PROM_D },
 	{ REGS_A, REGS_B, REGS_C, REGS_D }
     };
-    char memSlot, memSize;
+    char memSlot[2], memSize[2];
     epicsUInt32 memBase;
     static const int memBits[10] = {
 	-1, 0, 1, -1, 2, -1, -1, -1, 3, -1
@@ -254,30 +254,30 @@ static int initialise (
     /* Now finish parsing the parameter string */
     while (*cardParams) {
 	if (3 != sscanf(cardParams, "%1[ABCDabcd] = %1[1248], %x %n",
-		&memSlot, &memSize, &memBase, &skip)) {
+		memSlot, memSize, &memBase, &skip)) {
 	    printf("Xy9660: Error parsing slot configuration '%s'\n",
 		cardParams);
 	    return S_IPAC_badAddress;
 	}
 	cardParams += skip;
 
-	slot = tolower(memSlot) - 'A';
+	slot = tolower(*memSlot) - 'a';
 	assert(slot < SLOTS);
 
-	memSize -= '0';
-	memCtl = memBits[(int) memSize];
+	*memSize -= '0';
+	memCtl = memBits[(int) *memSize];
 	assert(memCtl >= 0);
 
 	if (memBase & memMask[memCtl]) {
 	    printf("Xy9660: Slot %c bad memory base address %x\n",
-		memSlot, memBase);
+		*memSlot, memBase);
 	    return S_IPAC_badAddress;
 	}
 	memCtl |= (memBase >> 16) & 0xf0;
 
 	/* This also checks for overlapping memory areas */
 	status = devRegisterAddress("Xy9660", atVMEA24, memBase,
-	    memSize << 20, &ptr);
+	    *memSize << 20, &ptr);
 	if (status) {
 	    printf("Xy9660: Can't map VME address A24:%6.6x\n", memBase);
 	    return status;
