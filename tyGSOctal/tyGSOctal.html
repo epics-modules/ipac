@@ -112,7 +112,7 @@ tyGSOctalConfig "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
 Significant differences are:</p>
 <ol>
   <li>The devName argument to the tyGSOctalDevCreate command is used to
-    create an entry in the in-memory filesystem. Thus, the '/' character
+    create an entry in the in-memory filesystem. Thus the '/' character
     takes on special meaning.</li>
   <li>There is no tyGSOctalDevCreateAll command. The
     tyGSOctalDevCreate command performs this function when given a port
@@ -120,7 +120,7 @@ Significant differences are:</p>
   <li>There is no tyGSOctalConfig command. The asynSetOption command should
     be used instead. The RTEMS driver provides standard termios device
     support so any code compatible with such devices will also work with this
-    driver.</li>
+    driver.   The ASYN drvAsynSerial driver fits this description.</li>
   <li>The final two arguments (rdBufSize and wrBufSize) to the
     tyGSOctalDevCreate command are ignored.</li>
 </ol>
