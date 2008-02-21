@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.17 2007-05-25 19:42:13 anj Exp $
+    $Id: devAiCan.c,v 1.18 2008-02-21 16:34:15 anj Exp $
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -345,20 +345,14 @@ static long special_linconv (
     int after
 ) {
     if (after) {
-        if (prec->linr == menuConvertLINEAR) {
-	    epicsUInt32 fsd;
-	    aiCanPrivate_t *pcanAi = prec->dpvt;
-
-	    fsd = abs(pcanAi->inp.parameter);
-	    if (fsd > 0) {
-		if ((fsd & (fsd-1)) == 0) {
-		    fsd--;
-		}
-		prec->roff = pcanAi->sign;
-		prec->eslo = (prec->eguf - prec->egul) / fsd;
+	aiCanPrivate_t *pcanAi = prec->dpvt;
+	epicsUInt32 fsd = abs(pcanAi->inp.parameter);
+	if (fsd > 0) {
+	    if ((fsd & (fsd-1)) == 0) {
+		fsd--;
 	    }
-	} else {
-	    prec->roff = 0;
+	    prec->roff = pcanAi->sign;
+	    prec->eslo = (prec->eguf - prec->egul) / fsd;
 	}
     }
     return 0;
