@@ -16,7 +16,7 @@ Author:
 Created:
     1 July 1995
 Version:
-    $Id: drvIpac.h,v 1.11 2007-08-20 21:16:21 anj Exp $
+    $Id: drvIpac.h,v 1.12 2008-10-23 19:27:59 anj Exp $
 
 Copyright (c) 1995-2007 Andrew Johnson
 
@@ -40,8 +40,10 @@ Copyright (c) 1995-2007 Andrew Johnson
 #ifndef INCdrvIpacH
 #define INCdrvIpacH
 
-#include <epicsTypes.h>
-#include <errMdef.h>
+#include "epicsTypes.h"
+#include "errMdef.h"
+#include "shareLib.h"
+
 
 /* These types are being defined here for compatibility reasons - in vxWorks
  * they are standard types, replacing them with OSI versions would break the
@@ -205,20 +207,20 @@ typedef struct {
 
 /* Functions for startup and interactive use */
 
-extern int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
-extern int ipacReport(int interest);
+epicsShareFunc int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
+epicsShareFunc int ipacReport(int interest);
 
 
 /* Functions for use in IPAC module drivers */
 
-extern int ipmCheck(int carrier, int slot);
-extern int ipmValidate(int carrier, int slot,
+epicsShareFunc int ipmCheck(int carrier, int slot);
+epicsShareFunc int ipmValidate(int carrier, int slot,
 		int manufacturerId, int modelId);
-extern char *ipmReport(int carrier, int slot);
-extern void *ipmBaseAddr(int carrier, int slot, ipac_addr_t space);
-extern int ipmIrqCmd(int carrier, int slot, 
+epicsShareFunc char *ipmReport(int carrier, int slot);
+epicsShareFunc void *ipmBaseAddr(int carrier, int slot, ipac_addr_t space);
+epicsShareFunc int ipmIrqCmd(int carrier, int slot, 
 		int irqNumber, ipac_irqCmd_t cmd);
-extern int ipmIntConnect(int carrier, int slot, int vector, 
+epicsShareFunc int ipmIntConnect(int carrier, int slot, int vector, 
 		void (*routine)(int parameter), int parameter);
 
 
