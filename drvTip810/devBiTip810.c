@@ -13,7 +13,7 @@ Author:
 Created:
     3 April 1997
 Version:
-    $Id: devBiTip810.c,v 1.10 2007-05-25 19:42:14 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

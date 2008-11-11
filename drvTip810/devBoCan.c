@@ -14,7 +14,7 @@ Author:
 Created:
     14 August 1995
 Version:
-    $Id: devBoCan.c,v 1.14 2007-05-25 19:42:14 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

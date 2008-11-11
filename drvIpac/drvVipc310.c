@@ -17,7 +17,7 @@ Author:
 Created:
     5 July 1995
 Version:
-    $Id: drvVipc310.c,v 1.8 2007-05-25 20:33:46 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2003 Andrew Johnson
 

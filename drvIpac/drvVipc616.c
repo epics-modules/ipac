@@ -19,7 +19,7 @@ Author:
 Created:
     17 October 1997
 Version:
-    $Id: drvVipc616.c,v 1.10 2007-05-25 20:33:46 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2003 Andrew Johnson
 

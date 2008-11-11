@@ -15,7 +15,7 @@ Author:
 Created:
     6 July 1995
 Version:
-    $Id: ipic.h,v 1.3 2000-02-21 21:35:34 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

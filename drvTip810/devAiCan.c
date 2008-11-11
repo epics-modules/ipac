@@ -14,7 +14,7 @@ Author:
 Created:
     8 August 1995
 Version:
-    $Id: devAiCan.c,v 1.18 2008-02-21 16:34:15 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

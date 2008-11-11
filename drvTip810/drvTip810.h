@@ -14,7 +14,7 @@ Author:
 Created:
     20 July 1995
 Version:
-    $Id: drvTip810.h,v 1.5 2007-05-25 19:42:14 anj Exp $
+    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 
@@ -38,6 +38,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 #ifndef INCdrvTip810H
 #define INCdrvTip810H
 
+#include "shareLib.h"
+
 
 /* Error Numbers */
 
@@ -52,10 +54,10 @@ Copyright (c) 1995-2000 Andrew Johnson
 #define S_t810_timeout		(M_t810| 5) /*timeout during request*/
 
 
-extern int t810Status(canBusID_t busID);
-extern int t810Report(int page);
-extern int t810Create(char *busName, int card, int slot, int irqNum, int busRate);
-extern void t810Shutdown(void *dummy);
-extern int t810Initialise(void);
+epicsShareFunc int t810Status(canBusID_t busID);
+epicsShareFunc int t810Report(int page);
+epicsShareFunc int t810Create(char *busName, int card, int slot, int irqNum, int busRate);
+epicsShareFunc void t810Shutdown(void *dummy);
+epicsShareFunc int t810Initialise(void);
 
 #endif /* INCdrvTip810H */
