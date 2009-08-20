@@ -46,9 +46,9 @@ Copyright (c) 2007 UChicago Argonne LLC.
 
 #include <devLib.h>
 #include <epicsThread.h>
-#include <epicsExport.h>
 #include <epicsExit.h>
 #include <iocsh.h>
+#include <epicsExport.h>
 
 #include "drvIpac.h"
 
@@ -79,17 +79,17 @@ Copyright (c) 2007 UChicago Argonne LLC.
 /* Carrier Board Registers */
 
 typedef struct {
-    short ctlStatus;
-    short irqLevel;
-    short ipError;
-    short memEnable;
-    short pad_c8[4];
-    short memCtl[SLOTS];
-    short pad_d8[4];
-    short irqEnable;
-    short irqStatus;
-    short irqClear;
-    short pad_e6[13];
+    epicsInt16 ctlStatus;
+    epicsInt16 irqLevel;
+    epicsInt16 ipError;
+    epicsInt16 memEnable;
+    epicsInt16 pad_c8[4];
+    epicsInt16 memCtl[SLOTS];
+    epicsInt16 pad_d8[4];
+    epicsInt16 irqEnable;
+    epicsInt16 irqStatus;
+    epicsInt16 irqClear;
+    epicsInt16 pad_e6[13];
 } ctrl_t;
 
 /* Bits in the ctlStatus register: */
@@ -170,15 +170,16 @@ Returns:
 static int initialise (
     const char *cardParams,
     void **pprivate,
-    ushort_t carrier
+    epicsUInt16 carrier
 ) {
     epicsUInt32 baseAddr;
+    char *basePtr;
     int irqLevel;
     int skip;
     long status;
     volatile void *ptr;
     volatile ctrl_t *regs;
-    ushort_t space, slot;
+    int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
 	{ PROM_A, PROM_B, PROM_C, PROM_D },
@@ -199,7 +200,7 @@ static int initialise (
 	return S_IPAC_badAddress;
     }
 
-    if (2 != sscanf(cardParams, "%x, %1i %n", &baseAddr, &irqLevel, &skip)) {
+    if (2 != sscanf(cardParams, "%x, %i %n", &baseAddr, &irqLevel, &skip)) {
 	printf("Xy9660: Error parsing card configuration '%s'\n", cardParams);
 	return S_IPAC_badAddress;
     }
@@ -210,10 +211,12 @@ static int initialise (
 	printf("Xy9660: Can't map VME address A16:%4.4x\n", baseAddr);
 	return status;
     }
-    baseAddr = (epicsUInt32) ptr;
-    regs = (volatile ctrl_t *) (baseAddr + CTLREG);
+    basePtr = (char *) ptr;
+    regs = (volatile ctrl_t *) (basePtr + CTLREG);
 
-    if (irqLevel <0 || irqLevel > 7) {
+    if (irqLevel < 0 || irqLevel > 7) {
+        printf("Xy9660: Bad IRQ level '%d'\n", irqLevel);
+        return S_IPAC_badAddress;
     }
 
     /* Disable everything on the carrier */
@@ -230,7 +233,7 @@ static int initialise (
     for (space = 0; space < IO_SPACES; space++) {
 	for (slot = 0; slot < SLOTS; slot++) {
 	    private->addr[space][slot] =
-		(void *) (baseAddr + offset[space][slot]);
+		(void *) (basePtr + offset[space][slot]);
 	}
     }
     for (slot = 0; slot < SLOTS; slot++) {
@@ -317,7 +320,7 @@ Returns:
 
 static void *baseAddr (
     void *p,
-    ushort_t slot,
+    epicsUInt16 slot,
     ipac_addr_t space
 ) {
     private_t *private = (private_t *)p;
@@ -349,8 +352,8 @@ Returns:
 
 static int irqCmd (
     void *p,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd
 ) {
     private_t *private = (private_t *)p;

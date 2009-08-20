@@ -44,8 +44,8 @@ Copyright (c) 1995-2003 Andrew Johnson
 #include <string.h>
 
 #include <devLib.h>
-#include <epicsExport.h>
 #include <iocsh.h>
+#include <epicsExport.h>
 
 #include "drvIpac.h"
 
@@ -160,12 +160,13 @@ Returns:
 LOCAL int initialise (
     const char *cardParams,
     void **pprivate,
-    ushort_t carrier
+    epicsUInt16 carrier
 ) {
     int params, status, mSize = 0;
-    ulong_t ioBase, mOrig = 0, mBase, mEnd, addr;
+    epicsUInt32 ioBase, mOrig = 0, mBase, mEnd, addr;
     volatile void *ptr;
-    ushort_t space, slot;
+    char *ioPtr, *mPtr;
+    int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
 	{ PROM_A, PROM_B, PROM_C, PROM_D },
@@ -192,18 +193,19 @@ LOCAL int initialise (
     if (devRegisterAddress("VIPC616", atVMEA16, ioBase, EXTENT, &ptr)) {
 	return S_IPAC_badAddress;
     }
-    ioBase = (ulong_t) ptr;
+    ioPtr = (char *) ptr;              /* ioPtr points to ioBase in A16 space */
 
     if (params == 1) {
 	/* No memory, just the A16 I/O space */
 	mSize = 0;
+        mPtr = NULL;
 	status = OK;
     } else if (params == 2) {
 	/* A32 space, 8Mb allocated per module */
 	mSize = 8 << 20;
 	status = devRegisterAddress("VIPC616", atVMEA32, mBase,
 				       mSize * SLOTS, &ptr);
-	mBase = (ulong_t) ptr;
+	mPtr = (char *) ptr;            /* mPtr points to mBase in A32 space */
 	mOrig = mBase;
       } else {
 	/* A24 space, module size given, some slots may be hidden */
@@ -212,7 +214,7 @@ LOCAL int initialise (
 	if (mSize) {
 	    status = devRegisterAddress("VIPC616", atVMEA24, mBase,
 					mEnd - mBase, &ptr);
-	    mBase = (ulong_t) ptr;
+	    mPtr = (char *) ptr;        /* mPtr points to mBase in A24 space */
 	    mOrig = mBase & ~(mSize * SLOTS - 1);
 	} else {
 	    status = 0;
@@ -228,7 +230,7 @@ LOCAL int initialise (
 
     for (space = 0; space < IO_SPACES; space++) {
 	for (slot = 0; slot < SLOTS; slot++) {
-	    (*private)[space][slot] = (void *) (ioBase + offset[space][slot]);
+	    (*private)[space][slot] = (void *) (ioPtr + offset[space][slot]);
 	}
     }
 
@@ -238,7 +240,7 @@ LOCAL int initialise (
 	if ((mSize == 0) || (addr < mBase)) {
 	    (*private)[ipac_addrMem][slot] = NULL;
 	} else {
-	    (*private)[ipac_addrMem][slot] = (void *) addr;
+	    (*private)[ipac_addrMem][slot] = (void *) (mPtr + (addr - mBase));
 	}
     }
 
@@ -269,7 +271,7 @@ Returns:
 
 LOCAL void *baseAddr (
     void *private,
-    ushort_t slot,
+    epicsUInt16 slot,
     ipac_addr_t space
 ) {
     return (*(private_t *) private)[space][slot];
@@ -300,8 +302,8 @@ Returns:
 
 LOCAL int irqCmd (
     void *private,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd,
     const int irqLevel[SLOTS][IPAC_IRQS]
 ) {
@@ -320,8 +322,8 @@ LOCAL int irqCmd (
 
 LOCAL int irqCmd_616 (
     void *private,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
@@ -335,8 +337,8 @@ LOCAL int irqCmd_616 (
 
 LOCAL int irqCmd_616_01 (
     void *private,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {

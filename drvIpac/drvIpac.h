@@ -45,22 +45,14 @@ Copyright (c) 1995-2007 Andrew Johnson
 #include "shareLib.h"
 
 
-/* These types are being defined here for compatibility reasons - in vxWorks
- * they are standard types, replacing them with OSI versions would break the
- * IPAC carrier drivers that are outside of the drvIpac distribution.  They
- * are #defined to use explicitly-sized types from epicsTypes.h instead (we
+/* This type is defined here for backwards compatibility - the original drvIpac
+ * used this type, and replacing it with an OSI equivalent would break any
+ * IPAC carrier drivers that are outside of the drvIpac distribution.  The type
+ * is #defined to use an explicitly-sized type from epicsTypes.h instead (we
  * can't use a typedef because that could fail on vxWorks).
  */
-#ifndef uchar_t
-#define uchar_t epicsUInt8
-#endif
-
 #ifndef ushort_t
 #define ushort_t epicsUInt16
-#endif
-
-#ifndef ulong_t
-#define ulong_t epicsUInt32
 #endif
 
 
@@ -188,18 +180,18 @@ typedef enum {
 typedef struct {
     char *carrierType;
 			/* String containing carrier board type */
-    ushort_t numberSlots;
+    epicsUInt16 numberSlots;
 			/* Number of IPAC devices this carrier can hold */
-    int (*initialise)(const char *cardParms, void **cPrivate, ushort_t carrier);
+    int (*initialise)(const char *cardParms, void **cPrivate, epicsUInt16 carrier);
 			/* Initialise carrier and return *cPrivate */
-    char *(*report)(void *cPrivate, ushort_t slot);
+    char *(*report)(void *cPrivate, epicsUInt16 slot);
 			/* Return string giving status of this slot */
-    void *(*baseAddr)(void *cPrivate, ushort_t slot, ipac_addr_t space);
+    void *(*baseAddr)(void *cPrivate, epicsUInt16 slot, ipac_addr_t space);
 			/* Return base addresses for this slot */
-    int (*irqCmd)(void *cPrivate, ushort_t slot, 
-		ushort_t irqNumber, ipac_irqCmd_t cmd);
+    int (*irqCmd)(void *cPrivate, epicsUInt16 slot,
+		epicsUInt16 irqNumber, ipac_irqCmd_t cmd);
 			/* Interrupt manipulation */
-    int (*intConnect)(void *cPrivate, ushort_t slot, ushort_t vecNum, 
+    int (*intConnect)(void *cPrivate, epicsUInt16 slot, epicsUInt16 vecNum,
 		void (*routine)(int parameter), int parameter);
 			/* Connect routine to interrupt vector */
 } ipac_carrier_t;

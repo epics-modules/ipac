@@ -19,6 +19,22 @@ version appears at the bottom, with more recent releases above it.</P>
 
 <HR>
 
+<H2>Version 2.11</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Modified most carrier drivers to compile without warnings on 64-bit systems.  Not that
+I'm really expecting anyone to <I>use</I> them on a 64-bit CPU, but who knows?</LI>
+
+<LI>Deleted the macros for <TT>uchar_t</TT> and <TT>ulong_t</TT> which are no longer used
+internally and which shouldn't really be used.  Neither should <TT>ushort_t</TT> but I've
+left that defined in drvIpac.h since it has always been used for several arguments to the
+carrier drivers and taking it out would guarantee to break any out-of-tree carriers.</LI>
+
+</UL>
+<HR>
+
 <H2>Version 2.10</H2>
 
 <P>Changed:</P>

@@ -49,8 +49,8 @@ Modifications:
 
 #include <devLib.h>
 #include <epicsThread.h>
-#include <epicsExport.h>
 #include <iocsh.h>
+#include <epicsExport.h>
 
 #include "drvIpac.h"
 
@@ -105,8 +105,8 @@ static const int tvmeIrqs[SETTINGS][SLOTS] = {
 /* IRQ and Control Registers */
 
 typedef struct {
-    short irqLevel;  /* IRQ0 = bits 0-2, IRQ1 = bits 4-6 */
-    short control;   /* 0 = IRQ0, 1 = IRQ1, 2 = Error, 7 = Reset */
+    epicsInt16 irqLevel;  /* IRQ0 = bits 0-2, IRQ1 = bits 4-6 */
+    epicsInt16 control;   /* 0 = IRQ0, 1 = IRQ1, 2 = Error, 7 = Reset */
 } ctrl_t;
 
 
@@ -163,11 +163,12 @@ Returns:
 LOCAL int initialise (
     const char *cardParams,
     void **pprivate,
-    ushort_t carrier
+    epicsUInt16 carrier
 ) {
     int s3, s4, mAM;
-    ulong_t switches, ioBase, mSize, mBase;
+    epicsUInt32 switches, ioBase, mSize, mBase;
     volatile void *ptr;
+    char *ioPtr, *mPtr;
     int space, slot;
     private_t *settings;
 
@@ -186,10 +187,10 @@ LOCAL int initialise (
 
     if (devRegisterAddress("TVME200", atVMEA16, ioBase, EXTENT, &ptr))
 	return S_IPAC_badAddress;
-    ioBase = (ulong_t) ptr;
+    ioPtr = (char *) ptr;
 
     for (slot = 0; slot < SLOTS; slot++) {
-	ctrl_t *ctrl = (ctrl_t *) (ioBase + tvmeCtrls[slot]);
+	ctrl_t *ctrl = (ctrl_t *) (ioPtr + tvmeCtrls[slot]);
 	int reg = ctrl->irqLevel & 0x77;
 	int set = tvmeIrqs[s3][slot];
 	/* Correct and warn if levels are wrong */
@@ -228,7 +229,7 @@ LOCAL int initialise (
 	devRegisterAddress("TVME200", mAM, mBase, mSize * SLOTS,  &ptr))) {
 	return S_IPAC_badAddress;
     }
-    mBase = (ulong_t) ptr;
+    mPtr = (char *) ptr;
 
     settings = (private_t *)malloc(sizeof (private_t));
     if (!settings)
@@ -237,13 +238,13 @@ LOCAL int initialise (
     for (space = 0; space < IO_SPACES; space++) {
 	for (slot = 0; slot < SLOTS; slot++) {
 	    settings->addr[space][slot] = (void *)
-		(ioBase + tvmeAddrs[space][slot]);
+		(ioPtr + tvmeAddrs[space][slot]);
 	}
     }
 
     for (slot = 0; slot < SLOTS; slot++) {
-	settings->addr[ipac_addrMem][slot] = (void *) (mBase + mSize * slot);
-	settings->ctrl[slot] = (ctrl_t *) (ioBase + tvmeCtrls[slot]);
+	settings->addr[ipac_addrMem][slot] = (void *) (mPtr + mSize * slot);
+	settings->ctrl[slot] = (ctrl_t *) (ioPtr + tvmeCtrls[slot]);
 	settings->addr[ipac_addrIO32][slot] = NULL;
     }
 
@@ -269,7 +270,7 @@ Returns:
 
 LOCAL char *report (
     void *private,
-    ushort_t slot
+    epicsUInt16 slot
 ) {
     private_t *settings = (private_t *)private;
     volatile ctrl_t *ctrl = settings->ctrl[slot];
@@ -304,7 +305,7 @@ Returns:
 
 LOCAL void *baseAddr (
     void *private,
-    ushort_t slot,
+    epicsUInt16 slot,
     ipac_addr_t space
 ) {
     private_t *settings = (private_t *)private;
@@ -341,8 +342,8 @@ Returns:
 
 LOCAL int irqCmd (
     void *private,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd
 ) {
     private_t *settings = (private_t *)private;

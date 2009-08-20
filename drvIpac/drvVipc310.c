@@ -42,8 +42,8 @@ Copyright (c) 1995-2003 Andrew Johnson
 #include <string.h>
 
 #include <devLib.h>
-#include <epicsExport.h>
 #include <iocsh.h>
+#include <epicsExport.h>
 
 #include "drvIpac.h"
 
@@ -132,12 +132,13 @@ Returns:
 LOCAL int initialise (
     const char *cardParams,
     void **pprivate,
-    ushort_t carrier
+    epicsUInt16 carrier
 ) {
     int params, mSize = 0;
-    ulong_t ioBase, mOrig, mBase, mEnd, addr;
+    epicsUInt32 ioBase, mOrig, mBase, mEnd, addr;
     volatile void *ptr;
-    ushort_t space, slot;
+    char *ioPtr, *mPtr;
+    int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
 	{ PROM_A, PROM_B },
@@ -162,7 +163,7 @@ LOCAL int initialise (
     if (devRegisterAddress("VIPC310", atVMEA16, ioBase, EXTENT, &ptr)) {
 	return S_IPAC_badAddress;
     }
-    ioBase = (ulong_t) ptr;
+    ioPtr = (char *) ptr;	/* ioPtr points to ioBase in A16 space */
 
     mSize = mSize << 10;	/* Convert size from K to Bytes */
     mEnd = (mBase & ~(mSize * SLOTS - 1)) + mSize * SLOTS;
@@ -171,7 +172,7 @@ LOCAL int initialise (
 	devRegisterAddress("VIPC310", atVMEA24, mBase, mEnd - mBase, &ptr)) {
 	return S_IPAC_badAddress;
     }
-    mBase = (ulong_t) ptr;
+    mPtr = (char *) ptr;	/* mPtr points to mBase in A24 space */
     mOrig = mBase & ~(mSize * SLOTS - 1);
 
     private = malloc(sizeof (private_t));
@@ -180,7 +181,7 @@ LOCAL int initialise (
 
     for (space = 0; space < IO_SPACES; space++) {
 	for (slot = 0; slot < SLOTS; slot++) {
-	    (*private)[space][slot] = (void *) (ioBase + offset[space][slot]);
+	    (*private)[space][slot] = (void *) (ioPtr + offset[space][slot]);
 	}
     }
 
@@ -190,7 +191,7 @@ LOCAL int initialise (
 	if ((mSize == 0) || (addr < mBase)) {
 	    (*private)[ipac_addrMem][slot] = NULL;
 	} else {
-	    (*private)[ipac_addrMem][slot] = (void *) addr;
+	    (*private)[ipac_addrMem][slot] = (void *) (mPtr + (addr - mBase));
 	}
     }
 
@@ -220,7 +221,7 @@ Returns:
 
 LOCAL void *baseAddr (
     void *private,
-    ushort_t slot,
+    epicsUInt16 slot,
     ipac_addr_t space
 ) {
     return (*(private_t *) private)[space][slot];
@@ -251,8 +252,8 @@ Returns:
 
 LOCAL int irqCmd (
     void *private,
-    ushort_t slot,
-    ushort_t irqNumber,
+    epicsUInt16 slot,
+    epicsUInt16 irqNumber,
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
