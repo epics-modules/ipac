@@ -165,7 +165,7 @@ LOCAL int initialise (
     int params, status, mSize = 0;
     epicsUInt32 ioBase, mOrig = 0, mBase, mEnd, addr;
     volatile void *ptr;
-    char *ioPtr, *mPtr;
+    char *ioPtr, *mPtr = NULL;
     int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
@@ -198,7 +198,6 @@ LOCAL int initialise (
     if (params == 1) {
 	/* No memory, just the A16 I/O space */
 	mSize = 0;
-        mPtr = NULL;
 	status = OK;
     } else if (params == 2) {
 	/* A32 space, 8Mb allocated per module */
