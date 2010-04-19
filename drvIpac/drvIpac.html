@@ -2083,16 +2083,16 @@ routine. This is defined as follows:</p>
 <blockquote>
 <pre>typedef struct {
     char *carrierType;                 <i>/* String describing carrier board type */</i>
-    int numberSlots;                   <i>/* Number of IPAC devices this carrier can hold */</i>
-    int (*initialise)(char *cardParams, void **cPrivate, ushort_t carrier);
+    epicsUInt16 numberSlots;           <i>/* Number of IPAC devices this carrier can hold */</i>
+    int (*initialise)(char *cardParams, void **cPrivate, epicsUInt16 carrier);
                                        <i>/* Initialise carrier and return *cPrivate */</i>
-    char *(*report)(void *cPrivate, ushort_t slot);
+    char *(*report)(void *cPrivate, epicsUInt16 slot);
                                        <i>/* Return string giving status of this slot */</i>
-    void *(*baseAddr)(void *cPrivate, ushort_t slot, ipac_addr_t space);
+    void *(*baseAddr)(void *cPrivate, epicsUInt16 slot, ipac_addr_t space);
                                        <i>/* Return base addresses for this slot */</i>
-    int (*irqCmd)(void *cPrivate, ushort_t slot, ushort_t irqNumber,
+    int (*irqCmd)(void *cPrivate, epicsUInt16 slot, epicsUInt16 irqNumber,
                   ipac_irqCmd_t cmd);  <i>/* Interrupt control */</i>
-    int (*intConnect)(void *cPrivate, ushort_t slot, ushort_t vecNum,
+    int (*intConnect)(void *cPrivate, epicsUInt16 slot, epicsUInt16 vecNum,
                       void (*routine)(int parameter), int parameter);
                                        <i>/* Connect routine to interrupt vector */</i>
 } ipac_carrier_t;</pre>
