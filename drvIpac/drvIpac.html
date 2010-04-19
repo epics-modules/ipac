@@ -91,7 +91,7 @@ Andrew Johnson</address></center>
 <a href="#MVME162">Motorola MVME162/172</a></li>
 
 <li>
-<a href="#XVME9660">Xycom XVME-9660/9670</a></li>
+<a href="#AVME9660">Acromag AVME-9660/9668/9670</a></li>
 </ul></li>
 
 <li>
@@ -1973,30 +1973,34 @@ the commands are:</p>
 
 
 <h3>
-<a NAME="XVME9660"></a>Xycom XVME-9660/9670</h3>
+<a NAME="AVME9660"></a>Acromag AVME-9660/9668/9670</h3>
 
 <p>
-
-These boards are four-slot, 6U VME carriers which are also sold by Acromag asthe AVME-9660/9670. On the 9660 board the IP module signal wiring is brought out
-through front panel connectors, whereas the 9670 boards make signal wiring
-available through the VME64x P2 and P0 connectors. A single bank of jumpers
-provide the only hardware configuration, setting the base address of the board
-in VME A16 space; module memory locations in VME A24 space are configured in
-software using the board registers.</p>
+These boards are four-slot, 6U VME carriers, two of which were once sold by
+Xycom as the XVME-9660/9670. On the 9660 board the IP module signal wiring is
+brought out through front panel connectors, whereas the 9670 boards make signal
+wiring available through the VME64x P2 and P0 connectors. The AVME-9668 is like
+the 9660 but can operate IP modules at 8MHz or 32MHz, whereas the other boards
+only support 8MHz operation. A single bank of jumpers provides the only hardware
+configuration, setting the base address of the board in VME A16 space; module
+memory locations in VME A24 space and the module clock speeds for the 9668 are
+configured in software using the board registers.</p>
 
 <p>
 The IPAC Carrier driver is found in the file <i>drvXy9660.c</i> and implements
-the command <tt>ipacAddXy9660</tt> that registers an XVME-9660 board with
-drvIpac. It also exports a registrar routine <tt>xy9660Registrar</tt> that adds
-the above command to the iocsh and will link the driver into a final IOC
-executable, for which it must be listed in the IOC's .dbd file thus:</p>
+the commands <tt>ipacAddAvme96XX</tt> and <tt>ipacAddXy9660</tt> that register a
+single carrier board (of any of the supported models) with drvIpac. The driver
+also exports a registrar routine <tt>xy9660Registrar</tt> that adds the above
+command to the iocsh and will link the driver into a final IOC executable, for
+which it must be listed in the IOC's .dbd file thus:</p>
 
 <blockquote><pre>registrar(xy9660Registrar)</pre></blockquote>
 
 <h4>
 Configuration Commands and Parameter</h4>
 
-<pre>int ipacAddXy9660(const char *cardParams);</pre>
+<pre>int ipacAddXy9660(const char *cardParams);
+int ipacAddAvme96XX(const char *cardParams);</pre>
 
 <p>
 The parameter string starts with a hex number (a leading 0x is optional) which
@@ -2044,7 +2048,7 @@ it generates interrupts on VME IRQ4. None of the slots are configured for
 memory, and modules are reset at initialization.</p>
 
 <blockquote>
-<pre>ipacAddXy9660("C000,3 A=2,800000 C=1,A00000")</pre>
+<pre>ipacAddAvme96XX("C000,3 A=2,800000 C=1,A00000")</pre>
 </blockquote>
 
 <p>

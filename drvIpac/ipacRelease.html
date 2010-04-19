@@ -24,13 +24,27 @@ version appears at the bottom, with more recent releases above it.</P>
 <P>Changed:</P>
 <UL>
 
-<LI>Modified most carrier drivers to compile without warnings on 64-bit systems.  Not that
-I'm really expecting anyone to <I>use</I> them on a 64-bit CPU, but who knows?</LI>
+<LI>Added support for the AVME-9668 board to the drvXy9660 driver. This board
+adds the ability to operate IP modules at 32MHz, using a register to select the
+speed. The driver will automatically detect a 9668 board and those modules
+which can operate at this clock frequency and will configure the board
+appropriately.</LI>
 
-<LI>Deleted the macros for <TT>uchar_t</TT> and <TT>ulong_t</TT> which are no longer used
-internally and which shouldn't really be used.  Neither should <TT>ushort_t</TT> but I've
-left that defined in drvIpac.h since it has always been used for several arguments to the
-carrier drivers and taking it out would guarantee to break any out-of-tree carriers.</LI>
+<LI>Since Xycom VME seem to have dropped their IP carrier product line while
+Acromag are continuing to develop theirs, I have changed the error messages in
+the drvXy9660 driver to use the Acromag names, and added a command synonym
+<TT>ipacAddAvme96XX</TT>, although existing installations will continue to work
+with the old names.</LI>
+
+<LI>Modified most carrier drivers to compile without warnings on 64-bit
+systems.  Not that I'm really expecting anyone to <I>use</I> them on a 64-bit
+CPU, but who knows?</LI>
+
+<LI>Deleted the macros for <TT>uchar_t</TT> and <TT>ulong_t</TT> which are no
+longer used internally and which shouldn't really be used.  Neither should
+<TT>ushort_t</TT> but I've left that defined in drvIpac.h since it has always
+been used for several arguments to the carrier drivers and taking it out would
+guarantee to break any out-of-tree carriers.</LI>
 
 </UL>
 <HR>
