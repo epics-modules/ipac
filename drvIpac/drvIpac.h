@@ -201,7 +201,7 @@ typedef struct {
 
 epicsShareFunc int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
 epicsShareFunc int ipacReport(int interest);
-
+epicsShareFunc int ipacLatestCarrier(void);
 
 /* Functions for use in IPAC module drivers */
 
