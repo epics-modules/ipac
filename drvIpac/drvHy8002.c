@@ -16,17 +16,19 @@ Description:
     practical. As a result, this version takes this part out of the loop.
 
 Author:
-    Oringinal developer:   Walter Scott (aka Scotty), HyTec Electronics Ltd,
-    Reading, Berks., UK
-    http://www.hytec-electronics.co.uk
-    Current developer: Jim Chen, HyTec Electronics Ltd     
-    The code is based on Andrew Johnson's <anjohnson@iee.org>
-    drvTvme200.c.
+    Oringinal code framework:   Andrew Johnson <anjohnson@iee.org>,
+    First version developer:	Walter Scott (aka Scotty), HyTec Electronics Ltd,
+    Second version developer:	Jim Chen, HyTec Electronics Ltd     
+
 Created:
-    20/11/2002 first version.
-    24/05/2010 This new version.
+	5 July 1995 code base drvIpMv162.c
+    20 November 2002 first version.
+    24 May 2010 This new version.
 Version:
-    $Id: drvHy8002.c 200 2010-05-24 13:00$
+    $Id: drvHy8002.c 2.0 2010-05-24 13:00$
+
+Original copyright (c) 1995-2003 Andrew Johnson, APS - Argonne National Laboratories, USA;
+Subsequent modifications by Hytec Electronics Ltd, UK.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -43,14 +45,21 @@ Version:
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Modifications:
-    20-Nov-2002  Walter Scott   First version with hotswap
-    24-May-2010  Jim Chen       Second version without hotswap
-    07-July-2010 Jim Chen       1.Removed VxWorks dependence
+	5 July 1995	Andrew Johnson	Code base drvIpMv162.c
+    20 November 2002 Walter Scott   First release version with hotswap
+    24 May 2010  Jim Chen       Second version without hotswap
+    07 July 2010 Jim Chen       1.Removed VxWorks dependence
                                 2.Fixed a couple of bugs in arguments parsing routine. 
                                 3.Added comments. 
                                 4.Changed Hy8002CarrierInfo to ipacHy8002CarrierInfo for consistency
                                 5.ipacAddHy8002 now returns latest carrier number if successful
                                 6.Tidy up the return value for success and errors
+    20 August 2010 Jim Chen     Modified checkprom routine to check both configuration ROM space and GreenSpring spaces.
+								Before this driver only checks the ID and model in GreenSpring space
+								and other version of 8002 drivers check only in configuration ROM.
+    24 August 2010 Jim Chen     Added interrupt connection routine. This used to be missing so that 
+								all IP module drivers have to use devLib devConnectInterruptVME directly which 
+								makes the drivers hardware dependent. 
 *******************************************************************************/
 
 /*ANSI standard*/
@@ -69,6 +78,9 @@ Modifications:
 #define HYTECID    0x8003
 #define PROM_MODEL 0x8002
 #define PROM_MODEL_8003 0x8003
+#define MANUFACTURER_HYTEC	0x80
+#define HYTEC_PROM_MODEL	0x82
+#define HYTEC_PROM_MODEL_8003	0x83
 
 /* define individual bits in the carrier board's CSR register*/
 #define CSR_RESET   0x0001
@@ -418,6 +430,34 @@ static int irqCmd(void *cPrivate, ushort_t slot,
     return retval;
 }
 
+/*******************************************************************************
+
+Routine:
+    intConnect
+
+Purpose:
+    Connect routine to interrupt vector
+
+Description:
+    This function connects the user's interrupt service routine to the vector by calling 
+	the VME devLib interrupt connectoin routine. This devConnectInterruptVME is osi independent
+	but is not hardware architecture independent. For other but rather than VME has to use 
+	different devLib.
+    
+Returns:
+    return 0 = OK,
+    otherwise Error.
+
+*/
+static int
+intConnect(void *cPrivate, epicsUInt16 slot, epicsUInt16 vecNum, void (*routine)(int parameter), int parameter)
+{
+  /*
+    begin
+  */
+  return devConnectInterruptVME(vecNum, (void (*)()) routine, (void *) parameter);
+}
+
 
 /*THIS IS THE CARRIER JUMPTABLE */
 ipac_carrier_t Hy8002={
@@ -427,7 +467,7 @@ ipac_carrier_t Hy8002={
     report,
     baseAddr,
     irqCmd,
-    NULL
+    intConnect
 };
 
 
@@ -563,7 +603,7 @@ static int checkVMEprom(unsigned int base)
     char* hytecstr=" (HyTec Electronics Ltd., Reading, UK)";
     int manid,ismodel,modelnum,ishytec;
 
-    /*begin*/
+	/* This checks the ID in Configuration ROM */
     manid=(*((char*)(base+VME_CARR_MAN1))<<8)+
         (*((char*)(base+VME_CARR_MAN2)));
 
@@ -571,24 +611,39 @@ static int checkVMEprom(unsigned int base)
 *  manid gets sign extended on a 167
 */
     manid &= 0xffff;
-
     ishytec=(manid==HYTECID);
 
+	/* If ID in Configuration ROM fails, also check GreenSpring space */
+	if (!ishytec)
+	{
+		manid = (int) (*((char *) (base + CARR_MANID)));
+		manid &= 0xff;
+		ishytec = (manid == MANUFACTURER_HYTEC);
+	}
+
+	/* This checks the model in Configuration ROM  */
     modelnum=((int)(*((char*)base+VME_CARR_MOD1))<<8)+
         (int)(*((char*)base+VME_CARR_MOD2));
 
 /* bug fix PHO 29-1-02 as for manid
 */
     modelnum &= 0xffff;
-
     ismodel=((modelnum==PROM_MODEL) || (modelnum==PROM_MODEL_8003));
 
+	/* If model in Configuration ROM fails, also check GreenSpring space */
+	if(!ismodel)	
+	{
+		modelnum = (int) (*((char *) base + CARR_MODID));
+		modelnum &= 0xff;
+		ismodel=((modelnum==HYTEC_PROM_MODEL) || (modelnum==HYTEC_PROM_MODEL_8003));
+	}
+
     if (!ishytec)
-        printf("PROM UNSUPPORTED MANUFACTURER ID;\nPROM EXPECTED 0x%08X, %s\n",
-	       HYTECID,hytecstr);
+		printf("PROM UNSUPPORTED MANUFACTURER ID:%x;\nPROM EXPECTED 0x%08X, %s\n",
+	       manid,HYTECID,hytecstr);
     if(!ismodel)
-        printf("PROM UNSUPPORTED BOARD MODEL NUMBER: EXPECTED 0x%04hx or 0x%04hx\n",
-	       PROM_MODEL, PROM_MODEL_8003);
+        printf("PROM UNSUPPORTED BOARD MODEL NUMBER:%x EXPECTED 0x%04hx or 0x%04hx\n",
+	       modelnum, PROM_MODEL, PROM_MODEL_8003);
     return (ishytec && ismodel) ? OK : S_IPAC_badModule;
 }
 
