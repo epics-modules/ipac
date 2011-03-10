@@ -98,8 +98,14 @@ static void ipacReportCallFunc(const iocshArgBuf *args) {
     ipacReport(args[0].ival);
 }
 
+static const iocshFuncDef ipacAddNullFuncDef = {"ipacAddNullCarrier",0};
+static void ipacAddNullCallFunc(const iocshArgBuf *args) {
+    ipacAddNullCarrier();
+}
+
 void ipacRegistrar(void) {
-    iocshRegister(&ipacReportFuncDef,ipacReportCallFunc);
+    iocshRegister(&ipacReportFuncDef, ipacReportCallFunc);
+    iocshRegister(&ipacAddNullFuncDef, ipacAddNullCallFunc);
 }
 epicsExportRegistrar(ipacRegistrar);
 
@@ -186,6 +192,31 @@ int ipacAddCarrier (
     carriers.info[carriers.latest].driver = pcarrierTable;
 
     return OK;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    ipacAddNullCarrier
+
+Purpose:
+    Used to reserve a carrier number.
+
+Description:
+    Registers a null carrier.
+
+Returns:
+    0 = OK,
+    S_IPAC_tooMany = Carrier Info Table full.
+
+Example:
+    ipacAddNullCarrier();
+
+*/
+
+int ipacAddNullCarrier (void) {
+    return ipacAddCarrier(NULL, NULL);
 }
 
 

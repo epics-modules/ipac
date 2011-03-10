@@ -299,11 +299,17 @@ a slot on this carrier will be given error status returns by the module
 interface routines.</p>
 
 <p>
-As long as the carrier table is not full, ipacAddCarrier() will always increment
-its internal carrier number on every call, thus a carrier driver failure will
-not cause all subsequent carriers to silently move down by one.  In the event of
-an error, the null carrier table is used for the current carrier number instead
-of the requested table.
+As long as the carrier table is not full, <tt>ipacAddCarrier()</tt> will always
+increment its internal carrier number on every call, thus a carrier driver
+failure will not cause all subsequent carriers to silently change their carrier
+numbers. In the event of an error, the null carrier table is used for the
+current carrier number instead of the requested table, which will cause module
+driver initialization to fail for that carrier.</p>
+
+<p>
+This routine is not provided as an IOC Shell command; individual carrier
+drivers must register their own <tt>ipacAdd...()</tt> commands to use
+instead.</p>
 
 <h4>
 Returns</h4>
@@ -351,8 +357,62 @@ Examples</h4>
 
 <blockquote>
 <pre>ipacAddCarrier(&amp;vipc610_01, "0x6000,256");
-ipacAddCarrier(NULL, "");
+ipacAddCarrier(0, "");
 ipacAddCarrier(&amp;vipc310, "0x6800");</pre>
+</blockquote>
+
+
+<hr>
+<h3>
+<a NAME="ipacAddNullCarrier"></a>ipacAddNullCarrier</h3>
+
+<p>
+Reserves a carrier number for a board that is not currently being
+used.</p>
+
+<pre>int ipacAddNullCarrier();</pre>
+
+<h4>
+Description</h4>
+
+<p>
+This routine provides a way to reserve a carrier number for a carrier
+board that is not currently in use.</p>
+
+<h4>
+Returns</h4>
+
+<dl>
+<dt>
+<tt>int</tt></dt>
+
+<dd>
+<table BORDER=2>
+<tr>
+<th>Symbol/Value</th>
+
+<th>Meaning</th>
+</tr>
+
+<tr>
+<td>0</td>
+
+<td>OK</td>
+</tr>
+
+<tr>
+<td>S_IPAC_tooMany</td>
+
+<td>Carrier Info Table full</td>
+</tr>
+</table></dd>
+</dl>
+
+<h4>
+Example</h4>
+
+<blockquote>
+<pre>ipacAddNullCarrier();
 </blockquote>
 
 
@@ -375,6 +435,10 @@ fulfilled because the carrier table was already full. The value returned can
 always be used as the carrier argument to any drvIpac routine without checking
 it first; if the carrier board was not properly initialized for any reason then
 these routines will return a failure status of some kind.</p>
+
+<p>
+This routine is not provided as an IOC Shell command, it would not be
+useful.</p>
 
 <h4>
 Returns</h4>
@@ -2055,6 +2119,9 @@ memory, and modules are reset at initialization.</p>
 The carrier is at A16:C000 and generates level 3 interrupts. Slot A is
 configured for 2MB of memory space at A24:800000 and Slot C for 1MB of memory
 space at A24:A00000.</p>
+
+
+<hr>
 
 <h2>
 <a NAME="section5"></a>5. Interface to IPAC Carrier Drivers</h2>
