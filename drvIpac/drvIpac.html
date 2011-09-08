@@ -1311,13 +1311,13 @@ Configuration Command and Parameter</h4>
 <pre>int ipacAddVIPC310(const char *cardParams);</pre>
 
 <p>
-The parameter string should comprise a hexadecimal number (an 0x or 0X at the
-start is optional) optionally followed by a comma and a decimal integer. The
-first number is the I/O Base Address of the card in the VME A16 address space.
-The factory default setting for the card gives an I/O Base Address of 0x6000,
-and this value will be used if the string is empty or NULL. If supplied the
-second number in the parameter string gives the size in Kbytes of the memory
-space allocated to each IP module.</p>
+The parameter string should comprise an integer (0x or 0X is now required for
+hex) optionally followed by a comma and a second integer. The first number is
+the I/O Base Address of the card in the VME A16 address space. The factory
+default setting for the card gives an I/O Base Address of 0x6000, and this value
+will be used if the string is empty or NULL. If supplied the second number in
+the parameter string gives the size in Kbytes of the memory space allocated to
+each IP module.</p>
 
 <p>
 The Memory Base Address of the VIPC310 card is set using the same jumpers as
@@ -1344,11 +1344,12 @@ This indicates that the carrier has its I/O base set to 0x6000, and neither
 slot uses any memory space.</dd>
 
 <dt>
-<tt>ipacAddVIPC310("1000,512")</tt></dt>
+<tt>ipacAddVIPC310("4096,512")</tt></dt>
 
 <dd>
-Here the I/O base is set to 0x1000, and there is 512 Kbytes of memory on
-each module, with the IP module A memory at 0x100000 and module B at 0x180000.</dd>
+Here the I/O base is set to 4096 = 0x1000, and there is 512 Kbytes of memory on
+each module, with the IP module A memory at 0x100000 and module B at
+0x180000.</dd>
 
 <dt>
 <tt>ipacAddVIPC310("0xfe00, 128")</tt></dt>
@@ -1438,13 +1439,13 @@ Configuration Commands and Parameter</h4>
 int ipacAddVIPC610_01(const char *cardParams);</pre>
 
 <p>
-The parameter string should comprise a hexadecimal number (an 0x or 0X at the
-start is optional) optionally followed by a comma and a decimal integer. The
-first number is the I/O Base Address of the card in the VME A16 address space.
-The factory default setting for the card gives an I/O Base Address of 0x6000,
-and this value will be used if the string is empty or NULL. If supplied the
-second number in the parameter string gives the size of the memory space in
-Kbytes allocated to each IP module.</p>
+The parameter string should comprise an integer (0x or 0X is now required for
+hex) optionally followed by a comma and a second integer. The first number is
+the I/O Base Address of the card in the VME A16 address space. The factory
+default setting for the card gives an I/O Base Address of 0x6000, and this value
+will be used if the string is empty or NULL. If supplied the second number in
+the parameter string gives the size of the memory space in Kbytes allocated to
+each IP module.</p>
 
 <p>
 The Memory Base Address of the VIPC610 card is set using the same jumpers as
@@ -1472,15 +1473,15 @@ This indicates that the VIPC610 carrier board has its I/O base set to 0x6000,
 and none of the slots provide memory space.</dd>
 
 <dt>
-<tt>ipacAddVIPC610_01("1000,128")</tt></dt>
+<tt>ipacAddVIPC610_01("4096,128")</tt></dt>
 
 <dd>
-Here the I/O base is set to 0x1000, and there is 128Kbytes of memory on
+Here the I/O base is set to 4096 = 0x1000, and there is 128Kbytes of memory on
 each module, with the IP module A memory at 0x100000, module B at 0x120000,
 module C at 0x140000 and D at 0x160000. The board is actually a VIPC610-01.</dd>
 
 <dt>
-<tt>ipacAddVIPC610("7000,1024")</tt></dt>
+<tt>ipacAddVIPC610("0X7000,1024")</tt></dt>
 
 <dd>
 The I/O base is at 0x7000, and hence the carrier memory base is 0x700000.
@@ -1576,12 +1577,13 @@ Configuration Commands and Parameter</h4>
 int ipacAddVIPC616_01(const char *cardParams);</pre>
 
 <p>
-The parameter string should comprise a hexadecimal number (an 0x or 0X at the
-start is not required) optionally followed by a comma and another hexadecimal
-number, and then possibly another comma and a decimal integer. The first number
-is the I/O Base Address of the card in the VME A16 address space. The factory
-default setting for the card gives an I/O Base Address of 0x6000, and this
-value will be used if the string is empty or NULL.</p>
+The parameter string should comprise an integer (0x or 0X is now required for
+hex) optionally followed by a comma and a second integer (with 0x/0X if hex),
+and then possibly another comma and a third integer. The first number is the I/O
+Base Address of the card in the VME A16 address space. The factory default
+setting for the card gives an I/O Base Address of 0x6000, and this value will be
+used if the string is empty or NULL. If only the I/O Base Address given, the IP
+modules are not allocated any memory.</p>
 
 <p>
 The meaning of the second number depends upon whether the third (decimal)
@@ -1618,16 +1620,16 @@ This indicates that the board has its I/O base set to 0x9000, and none
 of the slots provide memory space.
 
 <dt>
-<tt>ipacAddVIPC616_01("1000,8000000")</tt></dt>
+<tt>ipacAddVIPC616_01("4096,0x8000000")</tt></dt>
 
 <dd>
-Here the I/O base is set to 0x1000, and each module is allocated 8Mb of
-VME A32 memory space starting at 0x80000000. This puts IP module A memory
-at 0x80000000, module B at 0x80800000, module C at 0x81000000 and D at
+Here the I/O base is set to 4096 = 0x1000, and each module is allocated 8Mb of
+VME A32 memory space starting at 0x80000000. This puts IP module A memory at
+0x80000000, module B at 0x80800000, module C at 0x81000000 and D at
 0x81800000.</dd>
 
 <dt>
-<tt>ipacAddVIPC616("7000,700000,1024")</tt></dt>
+<tt>ipacAddVIPC616("0x7000,0x700000,1024")</tt></dt>
 
 <dd>
 The I/O base is at 0x7000 and the carrier memory base is at 0x700000 in
