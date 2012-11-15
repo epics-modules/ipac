@@ -836,21 +836,15 @@ void tyGSOctalInt
     volatile unsigned char sr, isr;
     unsigned int spin;
     int i;
-    int level;
-    int vector;
+    int oldlevel;
     int block;
-    char outChar;
-    char inChar;
     QUAD_TABLE *pQt;
     TY_GSOCTAL_DEV *pTyGSOctalDv;
     SCC2698_CHAN *chan;
     SCC2698 *regs = NULL;
 
-    pQt = &(tyGSOctalModules[idx]);
-    
-    level = ipmIrqCmd(pQt->carrier, pQt->module, 0, ipac_irqGetLevel);
-    vector = sysBusIntAck(level);
-  
+    pQt = &tyGSOctalModules[idx];
+
     for (spin=0; spin < MAX_SPIN_TIME; spin++)
     {
     /*
@@ -865,6 +859,7 @@ void tyGSOctalInt
             chan = pTyGSOctalDv->chan;
             regs = pTyGSOctalDv->regs;
 
+            oldlevel = intLock();
             sr = chan->u.r.sr;
 
             /* Only examine the active interrupts */
@@ -875,49 +870,31 @@ void tyGSOctalInt
             
             if (isr & 0x02) /* a byte needs to be read */
             {
-                inChar = chan->u.r.rhr;
-                if (tyGSOctalDebug)
-                    logMsg("%d/%dR%02x %02x\n", idx, i, inChar, isr, 5,6);
+                char inChar = chan->u.r.rhr;
 
-                if (tyIRd(&(pTyGSOctalDv->tyDev), inChar) != OK)
-                    if (tyGSOctalDebug)
-                        logMsg("tyIRd failed!\n",
-                               1,2,3,4,5,6);
+                tyIRd(&pTyGSOctalDv->tyDev, inChar);
             }
 
             if (isr & 0x01) /* a byte needs to be sent */
             {
-                if (tyITx(&(pTyGSOctalDv->tyDev), &(outChar)) == OK) {
-                    if (tyGSOctalDebug)
-                        logMsg("%d/%dT%02x %02x %lx = %d\n",
-                               idx, i, outChar, isr,
-                               (int)&(pTyGSOctalDv->tyDev.wrtState.busy),
-                               pTyGSOctalDv->tyDev.wrtState.busy);
-                    
+                char outChar;
+
+                if (tyITx(&pTyGSOctalDv->tyDev, &outChar) == OK) {
                     chan->u.w.thr = outChar;
                 }
                 else {
                     /* deactivate Tx INT and disable Tx INT */
-                    pQt->imr[pTyGSOctalDv->block] &=
-                        ~pTyGSOctalDv->imr;
+                    pQt->imr[pTyGSOctalDv->block] &= ~pTyGSOctalDv->imr;
                     regs->u.w.imr = pQt->imr[pTyGSOctalDv->block];
-                    
-                    if (tyGSOctalDebug)
-                        logMsg("TxInt disabled: %d/%d isr=%02x\n",
-                               idx, i, isr, 4,5,6);
-                    
                 }
             }
-            
+
             if (sr & 0xf0) /* error condition present */
             {
-                if (tyGSOctalDebug)
-                    logMsg("%d/%dE% 02x\n",
-                       idx, i, sr, 4,5,6);
-                       
                 /* reset error status */
                 chan->u.w.cr = 0x40;
             }
+            intUnlock(oldlevel);
         }
     }
     if (regs)
@@ -941,17 +918,24 @@ LOCAL int tyGSOctalStartup
     SCC2698 *regs = pTyGSOctalDv->regs;
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     int block = pTyGSOctalDv->block;
+    int oldlevel;
 
+    oldlevel = intLock();
     if (tyITx (&pTyGSOctalDv->tyDev, &outChar) == OK) {
         if (chan->u.r.sr & 0x04)
             chan->u.w.thr = outChar;
-        
+
         qt->imr[block] |= pTyGSOctalDv->imr; /* activate Tx interrupt */
         regs->u.w.imr = qt->imr[block]; /* enable Tx interrupt */
+        intUnlock(oldlevel);
     }
-    else
-        logMsg("%s: tyITX ERROR, sr=%02x",
+    else {
+        qt->imr[block] &= ~pTyGSOctalDv->imr;
+        regs->u.w.imr = qt->imr[block];
+        intUnlock(oldlevel);
+        logMsg("%s: tyITX ERROR, sr=%02x\n",
                (int)fn_nm, chan->u.r.sr, 3,4,5,6);
+    }
 
     return (0);
 }
