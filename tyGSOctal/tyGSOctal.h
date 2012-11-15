@@ -25,7 +25,7 @@ enum { MAX_SPIN_TIME=2 };
 typedef enum { RS485,RS232 } RSmode;
 
 typedef struct ty_gsoctal_dev {
-    TY_DEV	    tyDev;
+    TY_DEV          tyDev;
     SCC2698*        regs;
     SCC2698_CHAN*   chan;
 
@@ -36,8 +36,6 @@ typedef struct ty_gsoctal_dev {
     int             baud;
     int             opts;
     epicsUInt8      imr;
-    unsigned long   readCharCount;
-    unsigned long   writeCharCount;
 } TY_GSOCTAL_DEV;
 
 typedef struct quadTable {
@@ -46,8 +44,7 @@ typedef struct quadTable {
     int            modelID;
     epicsUInt16    carrier;
     epicsUInt16    module;
-    epicsUInt8     imr[4];			/* one per block */
-    unsigned long  interruptCount;
+    epicsUInt8     imr[4];              /* one per block */
 } QUAD_TABLE;
 
 int tyGSOctalDrv(int);
