@@ -53,10 +53,11 @@ Copyright (c) 2007 UChicago Argonne LLC.
 #include <iocsh.h>
 #include <epicsExport.h>
 
-#include "drvIpac.h"
-
 #define epicsAssertAuthor "Andrew Johnson <anj@aps.anl.gov>"
 #include <epicsAssert.h>
+
+#include "drvIpac.h"
+
 
 /* Characteristics of the card */
 
@@ -186,6 +187,7 @@ static int initialise (
     long status;
     volatile void *ptr;
     volatile ctrl_t *regs;
+    epicsUInt16 value;
     int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
@@ -226,10 +228,16 @@ static int initialise (
         return S_IPAC_badAddress;
     }
 
-    /* Disable everything on the carrier */
-    regs->ctlStatus = 0;
-    regs->memEnable = 0;
-    regs->irqEnable = 0;
+    /* Safely disable everything on the carrier */
+    value = 0;
+    if ((status = devWriteProbe(2, &regs->ctlStatus, &value)) ||
+        (status = devWriteProbe(2, &regs->memEnable, &value)) ||
+        (status = devWriteProbe(2, &regs->irqEnable, &value))) {
+        printf("AVME-IP: Card probe at VME A16:%4.4x failed, is it there?\n",
+            baseAddr);
+        return status;
+    }
+
     regs->irqClear  = 0xff;
     if ((regs->carrierId & 0xff) == ID_32MHz)
 	regs->clkControl = 0;
