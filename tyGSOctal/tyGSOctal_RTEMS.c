@@ -46,17 +46,21 @@ static void
 tyGSOctalInt(int idx)
 {
     epicsUInt8 sr, isr;
-    unsigned int spin;
-    int i;
-    int block;
+    int spin;
     QUAD_TABLE *pQt = &tyGSOctalModules[idx];
-    SCC2698_CHAN *chan;
     SCC2698 *regs = NULL;
 
     pQt->interruptCount++;
+
     for (spin=0; spin < MAX_SPIN_TIME; spin++) {
+        int i;
+
         for (i = 0; i < 8; i++) {
-            TY_GSOCTAL_DEV *pTyGSOctalDv = &(pQt->port[i]);
+            TY_GSOCTAL_DEV *pTyGSOctalDv = &pQt->port[i];
+            SCC2698_CHAN *chan;
+            int block;
+            int key;
+
             if (!pTyGSOctalDv->created)
                 continue;
 
@@ -64,6 +68,7 @@ tyGSOctalInt(int idx)
             chan = pTyGSOctalDv->chan;
             regs = pTyGSOctalDv->regs;
 
+            key = epicsInterruptLock();
             sr = chan->u.r.sr;
 
             /* Only examine the active interrupts */
@@ -78,7 +83,8 @@ tyGSOctalInt(int idx)
              */
             if (isr & 0x02) {
                 char inChar = chan->u.r.rhr;
-                pTyGSOctalDv->readCharCount++;
+
+                pTyGSOctalDv->readCount++;
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_enqueue_raw_characters(pTyGSOctalDv->tyDev, &inChar, 1);
             }
@@ -89,7 +95,7 @@ tyGSOctalInt(int idx)
             if (isr & 0x1) {
                 pQt->imr[block] &= ~pTyGSOctalDv->imr;
                 regs->u.w.imr = pQt->imr[block];
-                pTyGSOctalDv->writeCharCount++;
+                pTyGSOctalDv->writeCount++;
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_dequeue_characters(pTyGSOctalDv->tyDev, 1);
             }
@@ -99,10 +105,12 @@ tyGSOctalInt(int idx)
              */
             if (sr & 0xf0)
                 chan->u.w.cr = 0x40;
+
+            epicsInterruptUnlock(key);
         }
     }
     if (regs)
-        isr = regs->u.r.isr;    /* Flush last write cycle (for PowerPC) */
+        isr = regs->u.r.isr;    /* Flush last write cycle */
 }
 
 /*
@@ -129,22 +137,22 @@ csrForTermiosSpeedCode(int speedCode)
 /*
  * TERMIOS callback routines
  */
-static int
-tyGsOctalCallbackWrite(int minor, const char *buf, int len)
+static ssize_t
+tyGsOctalCallbackWrite(int minor, const char *buf, size_t len)
 {
     QUAD_TABLE *qt = &tyGSOctalModules[minor/8];
     TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[minor%8];
     SCC2698_CHAN *chan = pTyGSOctalDv->chan;
     SCC2698 *regs = pTyGSOctalDv->regs;
     int block = pTyGSOctalDv->block;
-	int key;
+    int key;
 
-	key = epicsInterruptLock();
+    key = epicsInterruptLock();
     chan->u.w.thr = *buf;
     qt->imr[block] |= pTyGSOctalDv->imr; /* activate Tx interrupt */
     regs->u.w.imr = qt->imr[block];      /* enable Tx interrupt */
-	epicsInterruptUnlock(key);
-	return 0;
+    epicsInterruptUnlock(key);
+    return 0;
 }
 
 static int
@@ -193,9 +201,10 @@ tyGsOctalCallbackSetAttributes(int minor, const struct termios *termios)
 /*
  * RTEMS driver points
  */
-static rtems_device_driver tyGsOctalOpen(rtems_device_major_number major,
-                                         rtems_device_minor_number minor,
-                                         void *arg) 
+static rtems_device_driver
+tyGsOctalOpen(rtems_device_major_number major,
+              rtems_device_minor_number minor,
+              void *arg) 
 {
     rtems_libio_open_close_args_t *args = (rtems_libio_open_close_args_t *)arg;
     rtems_status_code sc;
@@ -214,30 +223,34 @@ static rtems_device_driver tyGsOctalOpen(rtems_device_major_number major,
     return sc;
 }
 
-static rtems_device_driver tyGsOctalClose(rtems_device_major_number major,
-                                          rtems_device_minor_number minor,
-                                          void *arg) 
+static rtems_device_driver
+tyGsOctalClose(rtems_device_major_number major,
+               rtems_device_minor_number minor,
+               void *arg) 
 {
     return rtems_termios_close(arg);
 }
 
-static rtems_device_driver tyGsOctalRead(rtems_device_major_number major,
-                                         rtems_device_minor_number minor,
-                                         void *arg) 
+static rtems_device_driver
+tyGsOctalRead(rtems_device_major_number major,
+              rtems_device_minor_number minor,
+              void *arg) 
 {
     return rtems_termios_read(arg);
 }
 
-static rtems_device_driver tyGsOctalWrite(rtems_device_major_number major,
-                                          rtems_device_minor_number minor,
-                                          void *arg) 
+static rtems_device_driver
+tyGsOctalWrite(rtems_device_major_number major,
+               rtems_device_minor_number minor,
+               void *arg) 
 {
     return rtems_termios_write(arg);
 }
 
-static rtems_device_driver tyGsOctalControl(rtems_device_major_number major,
-                                            rtems_device_minor_number minor,
-                                            void *arg) 
+static rtems_device_driver
+tyGsOctalControl(rtems_device_major_number major,
+                 rtems_device_minor_number minor,
+                 void *arg) 
 {
     return rtems_termios_ioctl(arg);
 }
@@ -248,23 +261,24 @@ static rtems_device_driver tyGsOctalControl(rtems_device_major_number major,
 static void
 tyGSOctalRebootHook(void *arg)
 {
-    QUAD_TABLE *qt;
-    int i, n;
-    TY_GSOCTAL_DEV *pty;
     int key;
-        
+    int idx;
+
     key = epicsInterruptLock();
-    for (n = 0; n < tyGSOctalLastModule; n++) {
-        qt = &tyGSOctalModules[n];
+    for (idx = 0; idx < tyGSOctalLastModule; idx++) {
+        QUAD_TABLE *qt = &tyGSOctalModules[idx];
+        int i;
+
         for (i=0; i < 8; i++) {
-            pty = &qt->port[i];
+            TY_GSOCTAL_DEV *pty = &qt->port[i];
+
             if (pty->created) {
                 pty->imr = 0;
                 pty->regs->u.w.imr = 0;
             }
         ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
         ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
-        
+
         ipmIrqCmd(qt->carrier, qt->module, 0, ipac_statUnused);
         }
     }
@@ -295,15 +309,19 @@ tyGSOctalDrv(int maxModules)
         tyGsOctalWrite,
         tyGsOctalControl
     };
+
     if (tyGsOctalMajor > 0)
         return 0;
+
     tyGSOctalMaxModules = maxModules;
     tyGSOctalLastModule = 0;
+
     tyGSOctalModules = (QUAD_TABLE *)calloc(maxModules, sizeof(QUAD_TABLE));
     if (!tyGSOctalModules) {
         printf("Memory allocation failed!");
         return -1;
     }
+
     epicsAtExit(tyGSOctalRebootHook, NULL);    
 
     sc = rtems_io_register_driver(0, &tyGsOctalDriverTable, &tyGsOctalMajor);
@@ -316,23 +334,21 @@ tyGSOctalDrv(int maxModules)
 
 void tyGSOctalReport()
 {
-    int i, n, header;
+    int idx;
 
-    header = 1;
-    for (n = 0; n < tyGSOctalLastModule; n++) {
-        QUAD_TABLE *qt = &tyGSOctalModules[n];
-        printf("qt=%p carrier=%d module=%d interrupts:%lu\n",
-                            qt, qt->carrier, qt->module, qt->interruptCount);
+    for (idx = 0; idx < tyGSOctalLastModule; idx++) {
+        QUAD_TABLE *qt = &tyGSOctalModules[idx];
+        int i;
+
+        printf("Module %d: carrier=%d module=%d\n  %lu interrupts\n",
+            idx, qt->carrier, qt->module, qt->interruptCount);
+
         for (i = 0; i < 8; i++) {
-            TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[i];
-            if (pTyGSOctalDv->created) {
-                if (header) {
-                    printf("UART      IN       OUT\n");
-                    header = 0;
-                }
-                printf("%3d %9lu %9lu\n", i, pTyGSOctalDv->readCharCount,
-                                               pTyGSOctalDv->writeCharCount);
-            }
+            TY_GSOCTAL_DEV *pty = &qt->port[i];
+
+            if (pty->created)
+                printf("  Port %d: %lu chars in, %lu chars out, %lu errors\n",
+                    i, pty->readCount, pty->writeCount, pty->errorCount);
         }
     }
 }
@@ -372,10 +388,10 @@ int tyGSOctalModuleInit
     int status;
     int i;
     QUAD_TABLE *qt;
-    
+
     /*
      * Check for the driver being installed.
-     */    
+     */
     if (tyGsOctalMajor == 0) {
         errno = ENODEV;
         return -1;
@@ -404,10 +420,11 @@ int tyGSOctalModuleInit
     /*
      * Validate the IP module location and type.
      */
-    if ((status = ipmValidate(carrier, module, GREEN_SPRING_ID, modelID)) != 0) {
+    status = ipmValidate(carrier, module, GREEN_SPRING_ID, modelID);
+    if (status) {
         printf("%s: Unable to validate IP module\n", fn_nm);
         printf("%s: carrier:%d module:%d modelID:%d\n", fn_nm, carrier, module, modelID);
-        
+
         switch(status) {
             case S_IPAC_badAddress:
                 printf("%s: Bad carrier or module number\n", fn_nm);
@@ -435,9 +452,11 @@ int tyGSOctalModuleInit
     /* See if the associated IP module has already been set up */
     for (i = 0; i < tyGSOctalLastModule; i++) {
         qt = &tyGSOctalModules[i];
-        if (qt->carrier == carrier && qt->module == module) break;
+        if (qt->carrier == carrier &&
+            qt->module == module)
+            break;
     }
-    
+
     /* Create a new quad table entry if not there */
     if (i >= tyGSOctalLastModule) {
         void *addrIO;
@@ -447,19 +466,20 @@ int tyGSOctalModuleInit
         SCC2698 *r;
         SCC2698_CHAN *c;
         int block;
-        
+
         if (tyGSOctalLastModule >= tyGSOctalMaxModules) {
             printf("%s: Maximum module count exceeded!", fn_nm);
             errno = ENOSPC;
             return -1;
         }
+
         qt = &tyGSOctalModules[tyGSOctalLastModule];
         qt->modelID = modelID;
         qt->carrier = carrier;
         qt->module = module;
         strcpy(ID, moduleID);
         qt->moduleID = ID;
-        
+
         addrIO = ipmBaseAddr(carrier, module, ipac_addrIO);
         r = (SCC2698 *) addrIO;
         c = (SCC2698_CHAN *) addrIO;
@@ -472,31 +492,34 @@ int tyGSOctalModuleInit
             qt->port[i].chan = &c[i];
         }
 
-        for (i = 0; i < 4; i++) qt->imr[i] = 0;
-        
+        for (i = 0; i < 4; i++)
+            qt->imr[i] = 0;
+
         /* set up the single interrupt vector */
         addrMem = (char *) ipmBaseAddr(carrier, module, ipac_addrMem);
         if (addrMem == NULL) {
-            printf("%s: No IPAC memory allocated for carrier %d slot %d", fn_nm, carrier, module);
+            printf("%s: No IPAC memory allocated for carrier %d slot %d",
+                fn_nm, carrier, module);
             return -1;
         }
         if (devWriteProbe(2, addrMem, &intNum) != 0) {
-            printf("%s: Bus Error writing interrupt vector to address %#x",
-                               fn_nm, (int) addrMem);
+            printf("%s: Bus Error writing interrupt vector to address 0x%p",
+                fn_nm, addrMem);
             return -1;
         }
-        if (ipmIntConnect(carrier, module, int_num, 
-                                      tyGSOctalInt, tyGSOctalLastModule)) {
+
+        if (ipmIntConnect(carrier, module, int_num, tyGSOctalInt,
+            tyGSOctalLastModule)) {
             printf("%s: Unable to connect ISR", fn_nm);
             return -1;
         }
         ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
         ipmIrqCmd(carrier, module, 1, ipac_irqEnable);
-        
+
         ipmIrqCmd(carrier, module, 0, ipac_statActive);
     }
-  
-    return (tyGSOctalLastModule++);
+
+    return tyGSOctalLastModule++;
 }
 
 /*
@@ -509,6 +532,7 @@ tyGSOctalFindQT(const char *moduleID)
 
     if (!moduleID)
         return NULL;
+
     for (i = 0; i < tyGSOctalLastModule; i++)
         if (strcmp(moduleID, tyGSOctalModules[i].moduleID) == 0)
             return &tyGSOctalModules[i];
@@ -560,7 +584,7 @@ tyGSOctalDevCreate (
     /* if there is a device already on this channel, don't do it */
     if (pTyGSOctalDv->created)
         return NULL;
-    
+
     /* initialize the channel hardware (9600-8N1) */
     termios.c_iflag = 0;
     termios.c_oflag = 0;
