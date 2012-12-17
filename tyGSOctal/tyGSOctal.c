@@ -131,8 +131,7 @@ STATUS tyGSOctalDrv
     tyGSOctalModules = (QUAD_TABLE *)calloc(maxModules, sizeof(QUAD_TABLE));
 
     if (!tyGSOctalModules) {
-        logMsg("%s: Memory allocation failed!",
-               (int)fn_nm, 2,3,4,5,6);
+        printf("%s: Memory allocation failed!", fn_nm);
         return ERROR;
     }
     rebootHookAdd(tyGSOctalRebootHook);

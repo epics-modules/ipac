@@ -21,6 +21,37 @@ refer to the release of the ipac support software as a whole. The earliest
 version appears at the bottom, with more recent releases above it.</P><HR>
 
 <HR>
+<H2>Version 2.10</H2>
+
+<P>Bugs Fixed:</P>
+
+<UL>
+
+<LI>A high interrupt rate when many channels are in use could result in missing
+characters. Some additional interrupt locking has been added to prevent this
+problem.</LI>
+
+</UL>
+
+<P>Added:</P>
+
+<UL>
+
+<LI>Counters for read, write and interrupt events. The counter values are
+reported by the tyGSOctalReport() routine.</LI>
+
+</UL>
+
+<P>Changed:</P>
+
+<UL>
+
+<LI>Warning and error messages from configuration command routines are now
+displayed using printf() instead of logMsg()</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.9</H2>
 
 <P>Added:</P>
