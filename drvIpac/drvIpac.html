@@ -4,17 +4,17 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Andrew Johnson">
    <meta name="Description" content="How to use the drvIpac Industry Pack Carrier driver software">
-   <meta name="KeyWords" content="IndustryPack, vxWorks, EPICS, SBS">
+   <meta name="KeyWords" content="IndustryPack, VxWorks, EPICS, SBS">
    <meta name="Version" content="$Id$">
-   <title>drvIpac - Industry Pack Driver</title>
+   <title>drvIpac &ndash; Industry Pack Driver</title>
 </head>
 <body bgcolor="#FFFFFF">
 
 <center>
 <h1>
-drvIpac - Industry Pack Driver</h1>
+drvIpac &ndash; Industry Pack Driver</h1>
 
-Version 2.9
+Version 2.12
 
 <address>
 Andrew Johnson</address></center>
@@ -46,7 +46,7 @@ Andrew Johnson</address></center>
 </ul></li>
 
 <li>
-<a href="#section3">Calls for use by IPAC Module Drivers</a>
+<a href="#section3">Routines for use by IPAC Drivers</a>
 
 <ul>
 <li>
@@ -66,6 +66,10 @@ Andrew Johnson</address></center>
 
 <li>
 <a href="#ipmReport">ipmReport</a></li>
+
+<li>
+<a href="#ipcCheckId">ipcCheckId</a></li>
+
 </ul></li>
 
 <li>
@@ -92,6 +96,9 @@ Andrew Johnson</address></center>
 
 <li>
 <a href="#AVME9660">Acromag AVME-9660/9668/9670</a></li>
+
+<li>
+<a href="#Hy8002">Hytec 8002/8004</a></li>
 </ul></li>
 
 <li>
@@ -140,7 +147,8 @@ Carrier drivers are available for most of the common IP carrier boards.</p>
 <p>
 At present the IPAC driver is limited (by the size of an internal array) to
 controlling a maximum of 21 carrier boards, but this limitation should be easy
-to dispense with completely without altering any of its interfaces.</p>
+to dispense with without altering the drvIpac API should any user ever need more
+than 21 carriers in a single IOC.</p>
 
 <h3>
 <a NAME="Installation"></a>Installation</h3>
@@ -148,13 +156,11 @@ to dispense with completely without altering any of its interfaces.</p>
 <p>
 The drvIpac subsystem is an EPICS &lt;supporttop&gt; application which
 can also be used to build IPAC module drivers. To install and use the the ipac
-support, obtain a copy of the tar file or (if you have remote CVS permissions
-at APS) export the software from the CVS repository where it resides as
-<tt>epics/modules/bus/ipac</tt> - CVS tags of the form `<b><tt>V2-1</tt></b>'
-mark the particular file versions required for each release. These instructions
-assume you already have EPICS R3.14.x installed and built (this software should
-work with EPICS R3.14.4 and later). Two steps are then required to install and
-build the software:</p>
+support, download the tar file from the
+<a href="http://www.aps.anl.gov/epics/download/modules/">APS Support Module
+Downloads</a> page. These instructions assume you already have EPICS R3.14.x
+installed and built (this software should work with most EPICS R3.14.x
+releases). Four steps are then required to install and build the software:</p>
 
 <ol>
 
@@ -168,7 +174,7 @@ edit the top level Makefile and comment out the lines mentioning driver
 directories you don't need.</li>
 
 <li>
-Edit the drvIpac/drvIpac.dbd file to include the set of IPAC Carrier drivers
+Edit the drvIpac/drvIpac.dbd file and uncomment the set of IPAC Carrier drivers
 that you will be using at your site. This step can also be performed later by
 copying the drvIpac.dbd file to an IOC application and modifying it there
 instead.</li>
@@ -183,7 +189,7 @@ Run <tt>gnumake</tt> in the top level directory.</li>
 
 <p>
 From version 2-1 this software supports little-endian as well as big-endian
-busses, and provides a means of isolating module drivers from some of the
+CPUs, and provides a means of isolating module drivers from some of the
 differences between interrrupt handling on different busses.</p>
 
 <p>
@@ -205,7 +211,7 @@ caused the interrupt. A module driver should not need to know about the
 particular bus type its carrier is on, thus Ipac now provides the routine <a
 href="#ipmIntConnect">ipmIntConnect()</a> to allow it to pass such issues off to
 the carrier driver to handle. The interface to this is very similar to the
-standard vxWorks intConnect() routine.</p>
+standard VxWorks intConnect() routine.</p>
 
 <hr>
 
@@ -237,7 +243,7 @@ for it with the IPAC Driver.  Up to release 2.5 this call was used directly
 inside IOC startup scripts, but from release 2.6 onwards the carrier drivers
 provided with drvIpac all contain their own routines for use in startup
 scripts, which allows initialization from the EPICS ioc shell as well as from
-the vxWorks shell.  See the documentation for the specific carrier board in
+the VxWorks shell.  See the documentation for the specific carrier board in
 <a href="#section4">section 4</a> below for the name of the new initialization
 routine.</p>
 
@@ -579,16 +585,19 @@ Returns</h4>
 
 
 <h2>
-<a NAME="section3"></a>3. Calls for use by IPAC Module Drivers</h2>
+<a NAME="section3"></a>3. Routines for use by IPAC Drivers</h2>
 
 <p>
-The routines documented below are provided for use by the module drivers
-which use the services of the generic IPAC driver. In general it is expected
-that these routines will only be used at initialisation time. The module
-driver should be informed by other means which carrier and slot the particular
-IPAC module it is to control is installed in, although it should be possible
-to search each carrier and slot number in turn for the module using the
-Manufacturer and Model ID codes.</p>
+The routines documented below are provided for use by the module and carrier
+drivers which use the services of the generic IPAC driver (routine names
+beginning with <q>ipm</q> are intended for module drivers, routine names
+beginning with <q>ipc</q> are intended for carrier drivers). In most cases these
+routines will only need to be called at initialisation time, the exception being
+some run-time use of the <tt>ipmIrqCmd()</tt> routine. A module driver should be
+informed by other means which carrier and slot the particular IPAC module it is
+to control has been installed in, although it is possible to search each carrier
+slot in turn for a particular module using the Manufacturer and Model ID
+codes.</p>
 
 <h3>
 <a NAME="ipmBaseAddr"></a>ipmBaseAddr</h3>
@@ -608,7 +617,7 @@ Parameters</h4>
 <dd>
 Carrier number; identifies a particular carrier board in the system. The
 carriers are given numbers sequentially starting from zero according to
-the order in which they were registered by calling <tt>ipacAddCarrier</tt>.</dd>
+the order in which they were registered with <tt>ipacAddCarrier</tt>.</dd>
 
 <dt>
 <tt>int slot</tt></dt>
@@ -616,8 +625,8 @@ the order in which they were registered by calling <tt>ipacAddCarrier</tt>.</dd>
 <dd>
 Slot number; identifies the particular IP slot on the carrier board, starting
 from zero. The number of slots available varies with the type of the carrier
-board - the VIPC310 and MVME172 provide 2, the VIPC610, VIPC616, ATC40 and
-MVME162 each have four slots.</dd>
+board &ndash; for example the VIPC310 and MVME172 provide two, the TVME200 and
+Xy9660 each have four slots.</dd>
 </dl>
 
 <p>
@@ -720,7 +729,7 @@ Parameters</h4>
 <tt>int carrier, int slot</tt></dt>
 
 <dd>
-Module identification - see <a href="#carrierSlot">above</a></dd>
+Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 </dl>
 
 <h4>
@@ -799,7 +808,7 @@ Parameters</h4>
 <tt>int carrier, int slot</tt></dt>
 
 <dd>
-Module identification - see <a href="#carrierSlot">above</a></dd>
+Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 
 <dt>
 <tt>int manufacturerId</tt></dt>
@@ -924,7 +933,7 @@ Parameters</h4>
 <tt>int carrier, int slot</tt></dt>
 
 <dd>
-Module identification - see <a href="#carrierSlot">above</a></dd>
+Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 
 <dt>
 <tt>int irqNumber</tt></dt>
@@ -932,7 +941,7 @@ Module identification - see <a href="#carrierSlot">above</a></dd>
 <dd>
 The IPAC specification provides two interrupt lines for each module. This
 parameter identifies the interrupt to the Carrier Driver. It should have
-the value 0 or 1 only.</dd>
+the value <tt>0</tt> or <tt>1</tt> only.</dd>
 
 <dt>
 <tt>ipac_irqCmd_t cmd</tt></dt>
@@ -1006,7 +1015,7 @@ follows:</p>
 </tr>
 
 <tr>
-<td>Selects Interrupt Priority 7 (non-maskable)</td>
+<td>Selects Interrupt Priority 7</td>
 
 <td><tt>ipac_irqLevel7</tt></td>
 </tr>
@@ -1059,24 +1068,24 @@ follows:</p>
 <p>
 The Interrupt Priority (often also known as interrupt level) commands are
 defined to be numerically the same as the level number they select. Level 0
-effectively disables the interrupt. Level 7 is not recommended within vxWorks
-as it is non-maskable, and may only be used for an ISR that does not call any
-vxWorks routines. The <tt>ipac_irqGetLevel</tt> command returns the level
-currently set. Carrier boards which have fixed interrupt levels will not
-support setting the interrupt level but the driver may still able to return the
-level number.</p>
+effectively disables the interrupt. The use of level 7 is not recommended for
+VxWorks systems as it may be non-maskable on some CPU boards; non-maskable
+interrupts must not call any VxWorks OS routines. The <tt>ipac_irqGetLevel</tt>
+command returns the level currently set. Carrier boards which have fixed
+interrupt levels will not support setting the interrupt level but the driver may
+still able to return the level number.</p>
 
 <p>
 The <tt>ipac_irqEnable</tt> command must be supported by all Carrier Drivers,
-and must be called by any Module Driver that uses interrupts. The Carrier
-Driver routine is responsible for calling the vxWorks sysIntEnable() routine if
-this is required to allow IPAC interrupts to be seen by the CPU. The
-corresponding <tt>ipac_irqDisable</tt> command is not necessarily supported by
-all carriers however - the module driver must disable interrupts using the
-control registers on the IP module itself if this is necessary. A Carrier
-Driver cannot implement the <tt>ipac_irqDisable</tt> command with a call to the
-vxWorks sysIntDisable() routine because this would stop any other devices which
-still need this interrupt level from working.</p>
+and must be called by any Module Driver that uses interrupts. The Carrier Driver
+routine is responsible for calling the VxWorks sysIntEnable() routine if this is
+required to allow IPAC interrupts to be seen by the CPU. The corresponding
+<tt>ipac_irqDisable</tt> command is not necessarily supported by all carriers
+however &ndash; the module driver must disable interrupts using the control
+registers on the IP module itself if this is necessary. A Carrier Driver cannot
+implement the <tt>ipac_irqDisable</tt> command with a call to the VxWorks
+sysIntDisable() routine because this would stop any other devices which still
+need this interrupt level from working.</p>
 
 <p>
 The <tt>ipac_slotReset</tt> command should only be implemented on carrier boards
@@ -1144,7 +1153,7 @@ Parameters</h4>
 <tt>int carrier, int slot</tt></dt>
 
 <dd>
-Module identification - see <a href="#carrierSlot">above</a></dd>
+Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 
 <dt>
 <tt>int vecNum</tt></dt>
@@ -1170,17 +1179,17 @@ Description</h4>
 
 <p>
 Checks input parameters, then passes the request to the carrier driver routine.
-If no carrier routine is provided it uses the standard vxWorks intConnect()
-routine instead. This is not quite a direct replacement for the vxWorks
+If no carrier routine is provided it uses the standard VxWorks intConnect()
+routine instead. This is not quite a direct replacement for the VxWorks
 intConnect() call; as well as providing the carrier and slot numbers the module
 driver does not use the INUM_TO_IVEC(vecNum) macro but just passes the vector
 number to this routine.</p>
 
 <p>
 VxWorks' interrupt vectoring mechanism varies between bus types, and
-ipmIntConnect() allows a module driver to connect its routine to an interrupt
-vector from a particular IPAC module without knowing the requirements of the
-particular bus type. Some carrier drivers will need to maintain a private
+<tt>ipmIntConnect()</tt> allows a module driver to connect its routine to an
+interrupt vector from a particular IPAC module without knowing the requirements
+of the particular bus type. Some carrier drivers will need to maintain a private
 interrupt dispatch table if the bus type (i.e. ISA) does not support interrupt
 vectoring.</p>
 
@@ -1234,7 +1243,7 @@ Parameters</h4>
 <tt>int carrier, int slot</tt></dt>
 
 <dd>
-Module identification - see <a href="#carrierSlot">above</a></dd>
+Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 </dl>
 
 <h4>
@@ -1275,6 +1284,77 @@ manufacturer and model IDs follow as two hex numbers (2 digits each for Format-1
 ID PROMS, 6+4 digits for Format-2 ID PROMS). Finally if the Carrier Driver
 contains a report function it is called and the string it returns is appended
 after a hyphen.</p>
+
+<hr>
+
+
+<h3>
+<a NAME="ipcCheckId"></a>ipcCheckId</h3>
+
+<p>
+Check on the presence of an IPAC module at the given carrier and slot
+number.</p>
+
+<pre>int ipcCheckId(ipac_idProm_t *id);</pre>
+
+<h4>
+Parameters</h4>
+
+<dl>
+<dt>
+<tt>ipac_idProm_t *id</tt></dt>
+
+<dd>
+Pointer to the module ID prom to be checked</dd>
+</dl>
+
+<h4>
+Description</h4>
+
+<p>
+Probes the IDprom space to ensure an IPAC module is installed, and checks that
+the IDprom starts with an "IPAC", "IPAH" or "VITA4 " identifier.</p>
+
+<h4>
+Returns</h4>
+
+<dl>
+<dt>
+<tt>int</tt></dt>
+
+<dd>
+<table BORDER=2>
+<tr>
+<th>Symbol/Value</th>
+
+<th>Meaning</th>
+</tr>
+
+<tr>
+<td>0</td>
+
+<td>OK</td>
+</tr>
+
+<tr>
+<td>S_IPAC_badDriver</td>
+
+<td>NULL pointer passed for id address</td>
+</tr>
+
+<tr>
+<td>S_IPAC_noModule</td>
+
+<td>No IP module installed</td>
+</tr>
+
+<tr>
+<td>S_IPAC_noIpacId</td>
+
+<td>IP Module identifier not found</td>
+</tr>
+</table></dd>
+</dl>
 
 <hr>
 
@@ -1426,9 +1506,9 @@ executable, for which it must be listed in the IOC's .dbd file thus:</p>
 <p>
 <b>Warning:</b> As delivered by SBS the VIPC610 has IRQ0 of slot D connected to
 the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not cause a VMEbus
-interrupt at all.  Under vxWorks on the MC680x0 family a level&nbsp;7 interrupt
+interrupt at all.  Under VxWorks on the MC680x0 family a level&nbsp;7 interrupt
 level may only be connected to a service routine that does not make any calls
-to vxWorks routines.  Thus with a VIPC610 board slot D should not be used for
+to VxWorks routines.  Thus with a VIPC610 board slot D should not be used for
 modules that generate interrupts.  The VIPC610-01 board option is free of this
 problem.</p>
 
@@ -1564,9 +1644,9 @@ for which it must be listed in the IOC's .dbd file thus:</p>
 <p>
 <b>Warning:</b> As delivered by SBS the VIPC616 has IRQ0 of slot D connected to
 the VMEbus level&nbsp;7 interrupt, and IRQ1 of slot D does not cause a VMEbus
-interrupt at all.  Under vxWorks on the MC680x0 family a level&nbsp;7 interrupt
+interrupt at all.  Under VxWorks on the MC680x0 family a level&nbsp;7 interrupt
 level may only be connected to a service routine that does not make any calls
-to vxWorks routines.  Thus with a VIPC616 board slot D should not be used for
+to VxWorks routines.  Thus with a VIPC616 board slot D should not be used for
 modules that generate interrupts.  The VIPC616-01 board option is free of this
 problem.</p>
 
@@ -1914,7 +1994,7 @@ the following meanings:</p>
 <dd>
 If used this must be the first character of the string, and will cause a
 hardware reset pulse to be sent to all the IP modules.  This is useful if any
-module is found to need a hardware reset on a vxWorks soft reboot.</dd>
+module is found to need a hardware reset on a VxWorks soft reboot.</dd>
 
 <dt>
 <tt>A</tt>, <tt>B</tt>, <tt>C</tt> and <tt>D</tt></dt>
@@ -1979,7 +2059,7 @@ Configuration Example</h4>
 </blockquote>
 
 <p>
-The above example initialises slots 0 and 1 only - slots 2 and 3 are not
+The above example initialises slots 0 and 1 only &ndash; slots 2 and 3 are not
 used or their modules require register and ID Prom access only in this
 particular application.</p>
 
@@ -2122,8 +2202,126 @@ The carrier is at A16:C000 and generates level 3 interrupts. Slot A is
 configured for 2MB of memory space at A24:800000 and Slot C for 1MB of memory
 space at A24:A00000.</p>
 
+<hr>
+
+
+<h3>
+<a NAME="Hy8002"></a>Hytec 8002/8004</h3>
+
+<p>
+These boards are 6U VME64x carrier cards that provide four single-width IP
+slots. Their User Manuals imply that double-wide slots are supported by the
+hardware, but this driver does not implement that configuration. Geographical
+addressing can be used to set the board address when installed in a VME64x
+crate, or jumpers can be used to set the board address when installed in an
+older chassis. The 8004 model can control the IP clock speeds of the slots
+independently, while the 8002 supports clocking all slots at either 8MHz or
+32MHz. The IP memory base address can be selected using geographic addressing,
+or can be directly programmed by the driver. The board supports a single VME
+interrupt reqest level which is shared by all module interrupts.</p>
+
+<p>
+The IPAC carrier driver is found in the file <i>drvHy8002.c</i> and implements
+two commands <tt>ipacAddHy8002</tt> and <tt>ipacHy8002CarrierInfo</tt> which
+register a single carrier board (of either model) and print out various board
+model and serial numbers respectively. The driver also exports a registrar
+routine <tt>Hy8002Registrar</tt> that adds the commands to the iocsh and will
+link the driver into a final IOC executable, for which it must be listed in the
+IOC's .dbd file thus:</p>
+
+<blockquote>
+<pre>registrar(Hy8002Registrar)</pre>
+</blockquote>
+
+<h4>
+Configuration Commands and Parameter</h4>
+
+<pre>int ipacAddHy8002(const char *cardParams);</pre>
+
+<p>
+The parameter string starts with two decimal integers separated by a comma,
+which give the board's VME slot number (0 through 21) and the VME interrupt
+level to be used (0 through 7, 0 means interrupts are disabled). If a VME64x
+backplane is not being used to provide geographical addressing information, the
+slot number parameter must match the value set in jumpers J6 through J10, with
+J6 being the LSB and an installed jumper giving a 1 bit.</p>
+
+<p>
+After the above mandatory parameters, any of the following optional parameters
+may appear in any order. Space characters cannot be used on either side of the
+equals sign:</p>
+
+<dl>
+<dt>
+<tt>IPMEM=<i>size</i></tt></dt>
+
+<dd>
+Sets the extent of the memory space allocated for each IP slot. The <i>size</i>
+parameter is a single digit <tt>1</tt>, <tt>2</tt>, <tt>4</tt> or <tt>8</tt>
+which gives the memory size to be used, expressed in MegaBytes. If this
+parameter is not provided the default value of 1 will be used.</dd>
+
+<dt>
+<tt>MEMBASE=<i>address</i></tt></dt>
+
+<dd>
+Specifies the top 16 bits of the base address of the A32 memory area to be used
+for IP slot memory space, overriding the jumper-selected or VME64x geographical
+address that will be used if this parameter is not provided. The <i>address</i>
+string should be a decimal integer or a number hex with a leading <tt>0x</tt>.
+The resulting base address must be a multiple of 4 times the slot memory size;
+an error message will be printed if this restriction is not met.</dd>
+
+<dt>
+<tt>IPCLK=<i>frequency</i></tt></dt>
+
+<dd>
+Specifies the frequency in MHz of the IP clock passed to all slots. The
+<i>frequency</i> parameter must be either <tt>8</tt> or <tt>32</tt>. If not
+specified for a 8002 carrier the IP clock will default to 8MHz, while for a 8004
+carrier the driver will then configure each slot individually based on
+information from the ID prom of the module installed; specifying this parameter
+for an 8004 board overrides the module's configuration for all slots.</dd>
+
+<dt>
+<tt>ROAK=<i>release</i></tt></dt>
+
+<dd>
+This parameter controls when an 8004 carrier board will releases the interrupt
+request to the VMEbus. Giving <i>release</i> as <tt>1</tt> will cause the
+request to be released by the VME Interrupt Acknowledge cycle (ROAK protocol).
+If <i>release</i> is given as <tt>0</tt> or the parameter is not specified at
+all, the interrupt request will be released by the module's interrupt service
+routine clearing the module's reason for the interrupt request (RORA protocol)
+or disabling the interrupt using <tt>ipmIrqCmd(<i>carrier</i>, <i>slot</i>,
+<i>irqn</i>, ipac_irqDisable)</tt>.</dd>
+
+</dl>
+
+<h4>
+Configuration Examples</h4>
+
+<blockquote>
+<pre>ipacAddHy8002("3,2")</pre>
+</blockquote>
+
+<p>
+In this configuration the board is in slot 3 of a VME64x crate, or jumpers are
+installed in positions J6 and J7. Module interrupts will use VMEbus level 2. IP
+slots will get 1MB of memory space in a block starting at A32:0x00c00000, and
+the default IP clock frequency as described above.</p>
+
+<blockquote>
+<pre>ipacAddHy8002("3,2 IPMEM=2, MEMBASE=0x9000,IPCLCK=32 ROAK=1")</pre>
+</blockquote>
+
+<p>
+This modifies the above configuration to give each slot 2MB of memory space in
+the block starting at A32:0x90000000, drives all IP clocks at 32MHz, and uses
+the ROAK protocol for releasing interrupt requests.</p>
 
 <hr>
+
 
 <h2>
 <a NAME="section5"></a>5. Interface to IPAC Carrier Drivers</h2>
@@ -2145,7 +2343,7 @@ protected from simultaneous updates by different tasks.</p>
 <p>
 The sole interface between the Carrier Driver and the IPAC driver is through
 the <tt>ipac_carrier_t</tt> typedef structure given in the header file. Note
-that this has changed slightly since version 2.0 with the addition of the
+that the structure changed slightly since version 2.0 with the addition of the
 carrier parameter to the initialise() routine, and the new intConnect()
 routine. This is defined as follows:</p>
 
@@ -2184,9 +2382,9 @@ and passes the same pointer back to the other routines when referring to that
 particular carrier board at a later stage.</p>
 
 <p>
-The intConnect() function pointer may be set to NULL if the standard vxWorks
+The intConnect() function pointer may be set to NULL if the standard VxWorks
 intConnect() provides all the funtionality needed to install an interrupt
-vector - this will probably only be needed for ISA bus carriers.</p>
+vector &ndash; this will probably only be needed for ISA bus carriers.</p>
 
 <p>
 The other parameters to the routines are identical to those described in detail
@@ -2196,12 +2394,11 @@ before calling the Carrier Driver routine, so these values can be used with
 confidence.</p>
 
 <p>
-The simplest way to write a carrier driver is to copy the VIPC310 or MVME162
-driver and modify one of these for the new board type. The MVME162 driver
-interfaces to the IPIC chip and can be used as a basis for carrier drivers
-which provide extensive control over the IPAC slots. The VIPC310 and VIPC610
-boards are totally dumb, and thus provide the simplest possible example of a
-carrier driver.</p>
+The simplest way to write a carrier driver is to copy the VIPC610 or TVME200
+driver and modify it for the new board type. The TVME200 driver can configure
+some aspects of each IPAC slot separately, while the VIPC610 board has no
+programmable registers at all and thus provides the simplest possible example of
+a carrier driver.</p>
 
 <hr>
 
