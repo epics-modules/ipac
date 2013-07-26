@@ -204,6 +204,12 @@ epicsShareFunc int ipacReport(int interest);
 epicsShareFunc int ipacAddNullCarrier (void);
 epicsShareFunc int ipacLatestCarrier(void);
 
+
+/* Functions for use in IPAC carrier drivers */
+
+epicsShareFunc int ipcCheckId(ipac_idProm_t *id);
+
+
 /* Functions for use in IPAC module drivers */
 
 epicsShareFunc int ipmCheck(int carrier, int slot);

@@ -252,43 +252,31 @@ int ipacLatestCarrier(void)
 /*******************************************************************************
 
 Routine:
-    ipmCheck
+    ipcCheckId
 
 Function:
-    Check on presence of an IPAC module at the given carrier & slot number.
+    Check on presence of an IPAC ID Prom at the given location.
 
 Description:
-    Does a quick check to make sure the carrier and slot numbers are legal, 
-    probes the IDprom space to ensure an IPAC is installed, and checks that 
-    the IDprom starts with the "IPAC" identifier.
+    Probes the IDprom space to ensure an IPAC is installed, and checks that 
+    the IDprom starts with the "IPAC", "IPAH" or "VITA4 " identifier.
 
 Returns:
     0 = OK,
-    S_IPAC_badAddress = Bad carrier or slot number,
+    S_IPAC_badDriver = NULL pointer passed for id
     S_IPAC_noModule = No module installed,
-    S_IPAC_noIpacId = "IPAC"/"VITA4 " identifier not found
+    S_IPAC_noIpacId = "IPAC"/"IPAH"/"VITA4 " identifier not found
 
 */
 
-int ipmCheck (
-    int carrier,
-    int slot
+int ipcCheckId (
+    ipac_idProm_t *id
 ) {
-    ipac_idProm_t *id;
     epicsUInt16 word;
 
-    if (carrier < 0 ||
-	carrier >= carriers.number ||
-	slot < 0 ||
-	slot >= carriers.info[carrier].driver->numberSlots) {
-	return S_IPAC_badAddress;
-    }
-
-    id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
     if (id == NULL) {
 	return S_IPAC_badDriver;
     }
-
     if (devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)) {
 	return S_IPAC_noModule;
     }
@@ -298,9 +286,9 @@ int ipmCheck (
 
     /*
      * The Format-1 check is deliberately de-optimized to fix a problem with
-     * one particular IP module which can't handle the back-to-back accesses
-     * that the cc68k compiler generates if the "IPAC" ID is tested in a
-     * single if() statement.  Format-2 modules should be Ok though.
+     * IP modules which can't handle back-to-back accesses that compilers
+     * may generate if the "IPAC" ID is tested in a single if () statement.
+     * Format-2 modules should be Ok though.
      */
 
     if ((id->asciiP & 0xff) != 'P') {
@@ -322,6 +310,46 @@ int ipmCheck (
     }
 
     return OK;
+}
+
+
+/*******************************************************************************
+
+Routine:
+    ipmCheck
+
+Function:
+    Check on presence of an IPAC module at the given carrier & slot number.
+
+Description:
+    Does a quick check to make sure the carrier and slot numbers are legal, 
+    then delegates the remaining checks to the ipcCheckId() routine.
+
+Returns:
+    0 = OK,
+    S_IPAC_badAddress = Bad carrier or slot number,
+    S_IPAC_badDriver = Carrier driver returned NULL ID address
+    S_IPAC_noModule = No module installed,
+    S_IPAC_noIpacId = "IPAC"/"IPAH"/"VITA4 " identifier not found
+
+*/
+
+int ipmCheck (
+    int carrier,
+    int slot
+) {
+    ipac_idProm_t *id;
+
+    if (carrier < 0 ||
+	carrier >= carriers.number ||
+	slot < 0 ||
+	slot >= carriers.info[carrier].driver->numberSlots) {
+	return S_IPAC_badAddress;
+    }
+
+    id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
+
+    return ipcCheckId(id);
 }
 
 
