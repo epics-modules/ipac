@@ -10,12 +10,15 @@ Description:
 
     IPAC Carrier Driver for the Acromag AVME-9660, 9668 and 9670 Quad IP carrier
     VME boards, which were once sold by Xycom as the XVME-9660 and XVME-9670.
-    This file provides the interface between IPAC driver and the hardware. These
-    carriers are 6U high and supports A16+A24 addresses only. The difference
-    between the 9660 and 9670 is in the physical wiring used to connect external
-    I/O signals to the IP modules; the 9670 requires a VME-64X backplane with a
-    P0 connector, and has no front panel wiring. The AVME-9668 is similar to
-    the 9660 board but can also operate individual IP modules at 32MHz.
+    This file provides the interface between the IPAC driver and the hardware.
+
+    These carriers are 6U high and support VME A16+A24 addressing modes only.
+    The difference between the 9660 and 9670 is in the physical wiring used to
+    connect external I/O signals to the IP modules; the 9670 requires a VME64x
+    backplane with a P0 connector, and has no front panel wiring.
+
+    The AVME-9668 is similar to the 9660 board, but can also operate individual
+    IP modules at 32MHz.
 
 Author:
     Andrew Johnson <anjohnson@iee.org>
@@ -42,29 +45,31 @@ Copyright (c) 2007 UChicago Argonne LLC.
 
 *******************************************************************************/
 
+/* ANSI headers */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
+/* EPICS headers */
+#define epicsAssertAuthor "Andrew Johnson <anj@aps.anl.gov>"
+#include <epicsAssert.h>
+#include <dbDefs.h>
 #include <devLib.h>
 #include <epicsThread.h>
 #include <epicsExit.h>
 #include <iocsh.h>
 #include <epicsExport.h>
 
-#define epicsAssertAuthor "Andrew Johnson <anj@aps.anl.gov>"
-#include <epicsAssert.h>
-
+/* Module headers */
 #include "drvIpac.h"
 
 
 /* Characteristics of the card */
 
-#define SLOTS 4
-#define IO_SPACES 2	/* Address spaces in A16 */
-#define IPAC_IRQS 2	/* Interrupts per module */
-#define EXTENT 0x400	/* Register size in A16 */
+#define SLOTS 4         /* Number of IP slots */
+#define IO_SPACES 2     /* Address spaces in A16 */
+#define EXTENT 0x400    /* Register size in A16 */
 
 
 /* Offsets from base address in VME A16 */
@@ -98,7 +103,7 @@ typedef struct {
     epicsInt16 pad_e6[13];
 } ctrl_t;
 
-/* Bits in the ctlStatus register: */
+/* Bits in the ctlStatus register */
 
 #define CSR_GIP     0x04    /* Global Interrupt Pending (r) */
 #define CSR_GIE     0x08    /* Global Interrupt Enable (rw) */
@@ -110,6 +115,7 @@ typedef struct {
 /* The 9668 has a carrierId register with this identifier */
 #define ID_32MHz    0x0b    /* 32MHz clocks supported */
 
+
 /* Carrier Private structure, one instance per board */
 
 typedef struct {
@@ -120,7 +126,8 @@ typedef struct {
 
 static void avme96XXreboot(void *r) {
     volatile ctrl_t *regs = (ctrl_t *)r;
-    regs->ctlStatus = 0;
+
+    regs->ctlStatus &= ~CSR_GIE;
 }
 
 /*******************************************************************************
@@ -150,7 +157,7 @@ Parameters:
     Finally if any module drivers need to access the memory space on their
     module, the relevent slots must have their memory size and base address
     configured, which is done like this:
-	<slot letter A-D> = <mem size 1/2/4/8>, <A24 base address>
+        <slot letter A-D> = <mem size 1/2/4/8>, <A24 base address>
 
     The memory size is a single digit, expressed in MegaBytes.  The A24 base
     address is a 6-digit hexadecimal number (a leading 0x is optional) which
@@ -159,16 +166,16 @@ Parameters:
 
 Examples:
     "0x6000,4 R"
-	This indicates that the carrier board has its I/O base set to A16:6000
-	and that it generates interrupts on VME IRQ4.  None of the slots are
-	configured for memory, and modules are reset at initialization.
+        This indicates that the carrier board has its I/O base set to A16:6000
+        and that it generates interrupts on VME IRQ4.  None of the slots are
+        configured for memory, and modules are reset at initialization.
     "C000,3 A=2,800000 C=1,A00000"
-	The carrier is at A16:C000 and generates level 3 interrupts. Slot A is
-	configured for 2MB of memory space at A24:800000 and Slot C for 1MB of
-	memory space at A24:A00000.
+        The carrier is at A16:C000 and generates level 3 interrupts. Slot A is
+        configured for 2MB of memory space at A24:800000 and Slot C for 1MB of
+        memory space at A24:A00000.
 
 Returns:
-    0 = OK, 
+    0 = OK,
     S_IPAC_badAddress = Parameter string error
     S_IPAC_noMemory = malloc() failed
     S_dev_ errors returned by devLib
@@ -191,34 +198,34 @@ static int initialise (
     int space, slot;
     private_t *private;
     static const int offset[IO_SPACES][SLOTS] = {
-	{ PROM_A, PROM_B, PROM_C, PROM_D },
-	{ REGS_A, REGS_B, REGS_C, REGS_D }
+        { PROM_A, PROM_B, PROM_C, PROM_D },
+        { REGS_A, REGS_B, REGS_C, REGS_D }
     };
     char memSlot[2], memSize[2];
     epicsUInt32 memBase;
     static const int memBits[10] = {
-	-1, 0, 1, -1, 2, -1, -1, -1, 3, -1
+        -1, 0, 1, -1, 2, -1, -1, -1, 3, -1
     };
     int memCtl;
     static const epicsUInt32 memMask[4] = {
-	0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff
+        0x0fffff, 0x1fffff, 0x3fffff, 0x7fffff
     };
 
     if (cardParams == NULL ||
-	strlen(cardParams) == 0) {
-	return S_IPAC_badAddress;
+        strlen(cardParams) == 0) {
+        return S_IPAC_badAddress;
     }
 
     if (2 != sscanf(cardParams, "%x, %i %n", &baseAddr, &irqLevel, &skip)) {
-	printf("AVME-IP: Error parsing card configuration '%s'\n", cardParams);
-	return S_IPAC_badAddress;
+        printf("AVME-IP: Error parsing card configuration '%s'\n", cardParams);
+        return S_IPAC_badAddress;
     }
     cardParams += skip;
 
     status = devRegisterAddress("AVME-IP", atVMEA16, baseAddr, EXTENT, &ptr);
     if (status) {
-	printf("AVME-IP: Can't map VME address A16:%4.4x\n", baseAddr);
-	return status;
+        printf("AVME-IP: Can't map VME address A16:%4.4x\n", baseAddr);
+        return status;
     }
     basePtr = (char *) ptr;
     regs = (volatile ctrl_t *) (basePtr + CTLREG);
@@ -240,105 +247,106 @@ static int initialise (
 
     regs->irqClear  = 0xff;
     if ((regs->carrierId & 0xff) == ID_32MHz)
-	regs->clkControl = 0;
+        regs->clkControl = 0;
 
     private = malloc(sizeof (private_t));
     if (!private)
-	return S_IPAC_noMemory;
+        return S_IPAC_noMemory;
 
     private->regs = regs;
     for (space = 0; space < IO_SPACES; space++) {
-	for (slot = 0; slot < SLOTS; slot++) {
-	    private->addr[space][slot] =
-		(void *) (basePtr + offset[space][slot]);
-	}
+        for (slot = 0; slot < SLOTS; slot++) {
+            private->addr[space][slot] =
+                (void *) (basePtr + offset[space][slot]);
+        }
     }
     for (slot = 0; slot < SLOTS; slot++) {
-	private->addr[ipac_addrIO32][slot] = NULL;
-	private->addr[ipac_addrMem ][slot] = NULL;
+        private->addr[ipac_addrIO32][slot] = NULL;
+        private->addr[ipac_addrMem ][slot] = NULL;
     }
 
     /* Check for a Reset in the parameter string */
     while (isspace((int) *cardParams)) ++cardParams;
-    if (tolower(*cardParams) == 'R') {
-	regs->ctlStatus = CSR_RESET;
-	while (regs->ctlStatus & CSR_RESET) epicsThreadSleep(0.01);
+    if (tolower((int) *cardParams) == 'R') {
+        regs->ctlStatus = CSR_RESET;
+        while (regs->ctlStatus & CSR_RESET) epicsThreadSleep(0.01);
     }
 
     /* Now configure the card */
     epicsAtExit(avme96XXreboot, (void *) regs);
     regs->irqLevel = irqLevel;
     regs->ctlStatus = CSR_ACE | /* Auto-clear interrupts */
-		      CSR_AAD | /* Disable auto-DTACK */
-		      CSR_GIE;  /* Enable interrupts */
+                      CSR_AAD | /* Disable auto-DTACK */
+                      CSR_GIE;  /* Enable interrupts */
     devEnableInterruptLevel(intVME, irqLevel);
 
     /* On the 9668, use 32MHz clocks where modules support them */
     if ((regs->carrierId & 0xff) == ID_32MHz) {
-	epicsUInt16 clkControl = 0;
+        epicsUInt16 clkControl = 0;
 
-	for (slot = 0; slot < SLOTS; slot++)
-	    if (ipmCheck(carrier, slot) == OK) {
-		ipac_idProm_t *id = (ipac_idProm_t *)
-		    ipmBaseAddr(carrier, slot, ipac_addrID);
+        for (slot = 0; slot < SLOTS; slot++) {
+            ipac_idProm_t *id = (ipac_idProm_t *)
+                private->addr[ipac_addrID][slot];
 
-		if ((id->asciiP & 0xff) == 'P') {
-		    /* ID Prom is Format 1 */
-		    clkControl |= ((id->asciiC & 0xff) == 'H') << slot;
-		} else {
-		    /* ID Prom is Format 2 */
-		    ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
-		    epicsUInt16 flags = id2->flags;
+            if (ipcCheckId(id) == OK) {
+                if ((id->asciiP & 0xff) == 'P') {
+                    /* ID Prom is Format 1 */
+                    clkControl |= ((id->asciiC & 0xff) == 'H') << slot;
+                } else {
+                    /* ID Prom is Format 2 */
+                    ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
+                    epicsUInt16 flags = id2->flags;
 
-		    if (flags & 1) {
-			printf("AVME-IP: IP module at (%d,%d) has flags = %x\n",
-			    carrier, slot, flags);
-			continue;
-		    }
-		    if (flags & 4)
-			clkControl |= 1 << slot;
-		}
-	    }
+                    if (flags & 1) {
+                        printf("AVME-IP: IP module at (%d,%d) has flags = %x\n",
+                            carrier, slot, flags);
+                        continue;
+                    }
+                    if (flags & 4)
+                        clkControl |= 1 << slot;
+                }
+            }
+        }
 
-	if (clkControl)
-	    regs->clkControl = clkControl;
+        if (clkControl)
+            regs->clkControl = clkControl;
     }
 
     /* Now finish parsing the parameter string */
     while (*cardParams) {
-	if (3 != sscanf(cardParams, "%1[ABCDabcd] = %1[1248], %x %n",
-		memSlot, memSize, &memBase, &skip)) {
-	    printf("AVME-IP: Error parsing slot configuration '%s'\n",
-		cardParams);
-	    return S_IPAC_badAddress;
-	}
-	cardParams += skip;
+        if (3 != sscanf(cardParams, "%1[ABCDabcd] = %1[1248], %x %n",
+                memSlot, memSize, &memBase, &skip)) {
+            printf("AVME-IP: Error parsing slot configuration '%s'\n",
+                cardParams);
+            return S_IPAC_badAddress;
+        }
+        cardParams += skip;
 
-	slot = tolower(*memSlot) - 'a';
-	assert(slot < SLOTS);
+        slot = tolower((int) *memSlot) - 'a';
+        assert(slot < SLOTS);
 
-	*memSize -= '0';
-	memCtl = memBits[(int) *memSize];
-	assert(memCtl >= 0);
+        *memSize -= '0';
+        memCtl = memBits[(int) *memSize];
+        assert(memCtl >= 0);
 
-	if (memBase & memMask[memCtl]) {
-	    printf("AVME-IP: Slot %c bad memory base address %x\n",
-		*memSlot, memBase);
-	    return S_IPAC_badAddress;
-	}
-	memCtl |= (memBase >> 16) & 0xf0;
+        if (memBase & memMask[memCtl]) {
+            printf("AVME-IP: Slot %c bad memory base address %x\n",
+                *memSlot, memBase);
+            return S_IPAC_badAddress;
+        }
+        memCtl |= (memBase >> 16) & 0xf0;
 
-	/* This also checks for overlapping memory areas */
-	status = devRegisterAddress("AVME-IP", atVMEA24, memBase,
-	    *memSize << 20, &ptr);
-	if (status) {
-	    printf("AVME-IP: Can't map VME address A24:%6.6x\n", memBase);
-	    return status;
-	}
-	private->addr[ipac_addrMem ][slot] = (void *) ptr;
+        /* This also checks for overlapping memory areas */
+        status = devRegisterAddress("AVME-IP", atVMEA24, memBase,
+            *memSize << 20, &ptr);
+        if (status) {
+            printf("AVME-IP: Can't map VME address A24:%6.6x\n", memBase);
+            return status;
+        }
+        private->addr[ipac_addrMem ][slot] = (void *) ptr;
 
-	regs->memCtl[slot] = memCtl;
-	regs->memEnable |= 1 << slot;
+        regs->memCtl[slot] = memCtl;
+        regs->memEnable |= 1 << slot;
     }
 
     *pprivate = private;
@@ -407,31 +415,34 @@ static int irqCmd (
     private_t *private = (private_t *)p;
     volatile ctrl_t *regs = private->regs;
     int irqBit = 1 << (irqNumber + 2*slot);
+
     switch (cmd) {
-	case ipac_irqGetLevel:
-	    return regs->irqLevel & 7;
+        case ipac_irqGetLevel:
+            return regs->irqLevel & 7;
 
-	case ipac_irqEnable:
-	    regs->irqClear = irqBit;
-	    regs->irqEnable |= irqBit;
-	    return OK;
+        case ipac_irqEnable:
+            regs->irqClear = irqBit;
+            regs->irqEnable |= irqBit;
+            return OK;
 
-	case ipac_irqDisable:
-	    regs->irqEnable &= ~(irqBit);
-	    return OK;
+        case ipac_irqDisable:
+            regs->irqEnable &= ~ irqBit;
+            return OK;
 
-	case ipac_irqPoll:
-	    return regs->irqStatus & irqBit;
+        case ipac_irqPoll:
+            return regs->irqStatus & irqBit;
 
-	case ipac_irqClear:
-	    regs->irqClear = irqBit;
-	    return OK;
+        case ipac_irqClear:
+            regs->irqClear = irqBit;
+            return OK;
 
-	default:
-	    return S_IPAC_notImplemented;
+        default:
+            return S_IPAC_notImplemented;
     }
 }
 
+
+/******************************************************************************/
 
 /* IPAC Carrier Table */
 
@@ -445,6 +456,7 @@ static ipac_carrier_t avme96XX = {
     NULL
 };
 
+
 int ipacAddXy9660(const char *cardParams) {
     return ipacAddCarrier(&avme96XX, cardParams);
 }
@@ -453,17 +465,18 @@ int ipacAddAvme96XX(const char *cardParams) {
     return ipacAddCarrier(&avme96XX, cardParams);
 }
 
-/* iocsh command table and registrar */
+
+/* iocsh Command Table and Registrar */
 
 static const iocshArg arg0 =
     {"cardParams", iocshArgString};
-static const iocshArg * const avmeArgs[1] =
+static const iocshArg * const avmeArgs[] =
     {&arg0};
 
 static const iocshFuncDef xyFuncDef =
-    {"ipacAddXy9660", 1, avmeArgs};
+    {"ipacAddXy9660", NELEMENTS(avmeArgs), avmeArgs};
 static const iocshFuncDef avmeFuncDef =
-    {"ipacAddAvme96XX", 1, avmeArgs};
+    {"ipacAddAvme96XX", NELEMENTS(avmeArgs), avmeArgs};
 
 static void avmeCallFunc(const iocshArgBuf *args) {
     ipacAddAvme96XX(args[0].sval);
