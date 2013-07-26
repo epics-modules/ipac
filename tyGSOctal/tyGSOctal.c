@@ -72,6 +72,14 @@
 #include "iocsh.h"
 #include "epicsExport.h"
 
+/* VxWorks 6.9 changed tyDevinit()'s txStartup argument type.
+ * This avoids compiler warnings for that call.
+ */
+#if !defined(_WRS_VXWORKS_MAJOR) || \
+    (_WRS_VXWORKS_MAJOR == 6) && (_WRS_VXWORKS_MINOR < 9)
+#define TY_DEVSTART_PTR FUNCPTR
+#endif
+
 QUAD_TABLE *tyGSOctalModules;
 int tyGSOctalMaxModules;
 int tyGSOctalLastModule;
@@ -88,7 +96,7 @@ LOCAL QUAD_TABLE * tyGSOctalFindQT(const char *);
 LOCAL int    tyGSOctalOpen(TY_GSOCTAL_DEV *, const char *, int);
 LOCAL int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
 LOCAL STATUS tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
-LOCAL int    tyGSOctalStartup(TY_GSOCTAL_DEV *);
+LOCAL void   tyGSOctalStartup(TY_GSOCTAL_DEV *);
 LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *, int);
 LOCAL void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts);
 LOCAL void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
@@ -408,7 +416,7 @@ const char * tyGSOctalDevCreate
     
     /* initialize the ty descriptor */
     if (tyDevInit (&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
-                   (FUNCPTR) tyGSOctalStartup) != OK)
+                   (TY_DEVSTART_PTR) tyGSOctalStartup) != OK)
         return NULL;
     
     /* initialize the channel hardware */
@@ -473,7 +481,7 @@ STATUS tyGSOctalDevCreateAll
 
         /* initialize the ty descriptor */
         if (tyDevInit(&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
-                (FUNCPTR) tyGSOctalStartup) != OK)
+                (TY_DEVSTART_PTR) tyGSOctalStartup) != OK)
             return ERROR;
 
         /* initialize the channel hardware */
@@ -933,7 +941,7 @@ void tyGSOctalInt
  *
  * Call interrupt level character output routine.
 */
-LOCAL int tyGSOctalStartup
+LOCAL void tyGSOctalStartup
     (
     TY_GSOCTAL_DEV *pTyGSOctalDv    /* ty device to start up */
     )
@@ -959,8 +967,6 @@ LOCAL int tyGSOctalStartup
         regs->u.w.imr = qt->imr[block];
         intUnlock(key);
     }
-
-    return 0;
 }
 
 
