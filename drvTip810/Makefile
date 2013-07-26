@@ -24,7 +24,8 @@ LIBSRCS += devSiWiener.c
 LIBSRCS += devBiTip810.c
 LIBSRCS += drvTip810.c
 
-LIBRARY_IOC = Tip810
+LIBRARY_IOC_vxWorks = Tip810
+LIBRARY_IOC_RTEMS = Tip810
 
 Tip810_LIBS = Ipac $(EPICS_BASE_IOC_LIBS)
 
