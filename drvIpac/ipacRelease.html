@@ -23,8 +23,12 @@ version appears at the bottom, with more recent releases above it.</P>
 <p>Added:</P>
 <UL>
 
-<LI>New iocsh command ipacAddNull Carrier, to reserve a carrier number for a
-board that is not currently installed or in use.</LI>
+<LI>New iocsh command <TT>ipacAddNullCarrier</TT>, so iocsh users can reserve a
+carrier number for a board that is not currently installed or in use.</LI>
+
+<LI>New routine <TT>int ipcCheckId(ipac_idProm_t *id);</TT> added for carrier
+drivers that need to check for the existence of module ID proms at
+initialization time.</LI>
 
 <LI>Added carrier driver for the Hytec VICB8002 and 8004 VME64x 4-slot carrier
 boards. The 8004 module can configure the IP module clock frequency separately
