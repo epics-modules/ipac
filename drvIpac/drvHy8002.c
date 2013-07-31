@@ -8,11 +8,11 @@ File:
 
 Description:
     IPAC Carrier Driver for the Hytec VICB8002 and 8004 VME64x Quad IP Carrier
-    board. This file provides the interface between IPAC driver and the hardware.
-    This carrier is 6U high and can support VME Extended mode addresses.
-    The carrier supports 4 IP card slots and can be configured to use any
-    of the 7 interrupt levels (1 ~ 7).  The hotswap capability is not
-    supported in this version of the driver.
+    boards. This file provides the board-specific interface between IPAC driver
+    and the hardware. These carrier boards are 6U high and can support VME64x
+    geographic addresses. The carrier has 4 IP card slots and can be configured
+    to use any of the 7 interrupt levels (1 ~ 7).  The hotswap capability of the
+    8002 board is not supported in this driver.
 
 Authors:
     Andrew Johnson, Argonne National Laboratory
@@ -70,7 +70,9 @@ Portions Copyright (c) 2002-2010 Hytec Electronics Ltd, UK.
 /* Default configuration parameters */
 
 #define DEFAULT_IPMEM   1
+#define DEFAULT_IPCLOCK -1
 #define DEFAULT_ROAK    0
+#define DEFAULT_MEMBASE -1
 
 
 /* Offsets from base address in VME A16 space */
@@ -96,9 +98,13 @@ static const epicsUInt16 ipOffsets[IO_SPACES][SLOTS] = {
 
 typedef struct {
     epicsUInt16 ipstat;
+    epicsUInt16 pad_02;
     epicsUInt16 memoff;
+    epicsUInt16 pad_06;
     epicsUInt16 csr;
+    epicsUInt16 pad_0a;
     epicsUInt16 intsel;
+    epicsUInt16 pad_0e;
 } ctrl_t;
 
 
@@ -286,12 +292,6 @@ static int scanparm (
 
     params += skip;
 
-    /* Set defaults for optional parameters */
-    *ipmem      = DEFAULT_IPMEM;
-    *roak       = DEFAULT_ROAK;
-    *ipclock    = -1;
-    *membase    = -1;
-
     /* Parse IP memory size */
     if ((pstart = strstr(params, "IPMEM=")) != NULL) {
         int ipm;
@@ -449,7 +449,11 @@ static int initialise (
     epicsUInt16 carrier
 ) {
     int status;
-    int vmeslot, intlevel, ipmem, ipclock, roak, membase;
+    int vmeslot, intlevel;
+    int ipmem   = DEFAULT_IPMEM;
+    int ipclock = DEFAULT_IPCLOCK;
+    int roak    = DEFAULT_ROAK;
+    int membase = DEFAULT_MEMBASE;
     epicsUInt32 baseaddr, memaddr;
     char *baseptr, *memptr;
     volatile void *ptr;
@@ -520,12 +524,12 @@ static int initialise (
         }
     }
     else {
-        int mask = ~((ipmem << 6) - 1);
+        int mask = (ipmem << 6) - 1;
 
         if (membase & mask) {
             printf("%s: MEMBASE=0x%4.4x is incompatible with IPMEM=%d\n",
                 drvname, membase, ipmem);
-            membase &= mask;
+            membase &= ~mask;
             printf("\tNearest allowed settings are 0x%4.4x or 0x%4.4x\n",
                 membase, membase + (ipmem << 6));
             return S_IPAC_badAddress;
