@@ -31,6 +31,10 @@ version appears at the bottom, with more recent releases above it.</P><HR>
 characters. Some additional interrupt locking has been added to prevent this
 problem.</LI>
 
+<LI>CPUs with longer or more complex write pipelines might not have flushed the
+last write cycle from the interrupt service routine. A better flush location is
+now used.</LI>
+
 </UL>
 
 <P>Added:</P>

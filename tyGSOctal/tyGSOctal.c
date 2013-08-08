@@ -864,7 +864,8 @@ void tyGSOctalInt
     epicsUInt8 sr, isr;
     int spin;
     QUAD_TABLE *pQt = &tyGSOctalModules[idx];
-    SCC2698 *regs = NULL;
+    SCC2698 *regs;
+    volatile epicsUInt8 *flush = NULL;
 
     pQt->interruptCount++;
 
@@ -912,12 +913,14 @@ void tyGSOctalInt
 
                 if (tyITx(&pTyGSOctalDv->tyDev, &outChar) == OK) {
                     chan->u.w.thr = outChar;
+                    /* Not flushable */
                     pTyGSOctalDv->writeCount++;
                 }
                 else {
                     /* deactivate Tx INT and disable Tx INT */
                     pQt->imr[block] &= ~pTyGSOctalDv->imr;
                     regs->u.w.imr = pQt->imr[block];
+                    flush = &regs->u.w.imr;
                 }
             }
 
@@ -926,13 +929,14 @@ void tyGSOctalInt
             {
                 pTyGSOctalDv->errorCount++;
                 chan->u.w.cr = 0x40;
+                flush = &chan->u.w.cr;
             }
 
             intUnlock(key);
         }
     }
-    if (regs)
-        isr = regs->u.r.isr;    /* Flush last write cycle */
+    if (flush)
+        isr = *flush;    /* Flush last write cycle */
 }
 
 /******************************************************************************

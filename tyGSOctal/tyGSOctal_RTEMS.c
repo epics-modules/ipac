@@ -48,7 +48,8 @@ tyGSOctalInt(int idx)
     epicsUInt8 sr, isr;
     int spin;
     QUAD_TABLE *pQt = &tyGSOctalModules[idx];
-    SCC2698 *regs = NULL;
+    SCC2698 *regs;
+    volatile epicsUInt8 *flush = NULL;
 
     pQt->interruptCount++;
 
@@ -95,6 +96,7 @@ tyGSOctalInt(int idx)
             if (isr & 0x1) {
                 pQt->imr[block] &= ~pTyGSOctalDv->imr;
                 regs->u.w.imr = pQt->imr[block];
+                flush = &regs->u.w.imr;
                 pTyGSOctalDv->writeCount++;
                 if (pTyGSOctalDv->tyDev)
                     rtems_termios_dequeue_characters(pTyGSOctalDv->tyDev, 1);
@@ -103,14 +105,17 @@ tyGSOctalInt(int idx)
             /*
              * Reset errors
              */
-            if (sr & 0xf0)
+            if (sr & 0xf0) {
+                pTyGSOctalDv->errorCount++;
                 chan->u.w.cr = 0x40;
+                flush = &chan->u.w.cr;
+            }
 
             epicsInterruptUnlock(key);
         }
     }
-    if (regs)
-        isr = regs->u.r.isr;    /* Flush last write cycle */
+    if (flush)
+        isr = *flush;    /* Flush last write cycle */
 }
 
 /*
