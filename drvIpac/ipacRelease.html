@@ -18,9 +18,21 @@ IndustryPack driver as it has evolved since first release.  The earliest
 version appears at the bottom, with more recent releases above it.</P>
 
 <HR>
+<H2>Version 2.13</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>In the Xy9660 driver the parameter string parser would not accept the 'R'
+card reset request described in the documentation. This bug has existed in all
+previous versions of the driver, but should now be fixed.</LI>
+
+</UL>
+
+<HR>
 <H2>Version 2.12</H2>
 
-<p>Added:</P>
+<P>Added:</P>
 <UL>
 
 <LI>New iocsh command <TT>ipacAddNullCarrier</TT>, so iocsh users can reserve a
@@ -37,7 +49,7 @@ information provide in the module's ID prom.</LI>
 
 </UL>
 
-<p>Changed:</P>
+<P>Changed:</P>
 <UL>
 
 <LI>Fixed a problem with the drvXy9660 carrier driver controlling an AVME-9668

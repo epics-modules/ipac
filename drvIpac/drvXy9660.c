@@ -266,10 +266,13 @@ static int initialise (
     }
 
     /* Check for a Reset in the parameter string */
-    while (isspace((int) *cardParams)) ++cardParams;
-    if (tolower((int) *cardParams) == 'R') {
+    while (isspace((int) *cardParams))
+        ++cardParams;
+    if (toupper((int) *cardParams) == 'R') {
+        ++cardParams;
         regs->ctlStatus = CSR_RESET;
-        while (regs->ctlStatus & CSR_RESET) epicsThreadSleep(0.01);
+        while (regs->ctlStatus & CSR_RESET)
+            epicsThreadSleep(0.01);
     }
 
     /* Now configure the card */
