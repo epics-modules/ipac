@@ -21,7 +21,6 @@
 
 #include "scc2698.h"
 
-enum { MAX_SPIN_TIME=2 };
 typedef enum { RS485,RS232 } RSmode;
 
 typedef struct ty_gsoctal_dev {
@@ -35,7 +34,7 @@ typedef struct ty_gsoctal_dev {
     RSmode          mode;
     int             baud;
     int             opts;
-    epicsUInt8      imr;
+    epicsUInt8      irqEnable;
     unsigned long   readCount;
     unsigned long   writeCount;
     unsigned long   errorCount;
@@ -43,11 +42,13 @@ typedef struct ty_gsoctal_dev {
 
 typedef struct quadTable {
     const char    *moduleID;
-    TY_GSOCTAL_DEV port[8];             /* one per port */
-    int            modelID;
+    TY_GSOCTAL_DEV dev[8];              /* one per port */
+    epicsUInt16    modelID;
     epicsUInt16    carrier;
-    epicsUInt16    module;
+    epicsUInt16    slot;
+    epicsUInt16    scan;
     epicsUInt8     imr[4];              /* one per block */
+    int 
     unsigned long  interruptCount;
 } QUAD_TABLE;
 

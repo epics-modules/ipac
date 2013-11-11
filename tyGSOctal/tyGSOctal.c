@@ -64,6 +64,7 @@
 #include <sioLib.h>
 #include <vxLib.h>
 #include <epicsTypes.h>
+#include <epicsString.h>
 
 #include "ip_modules.h"     /* GreenSpring IP modules */
 #include "scc2698.h"        /* SCC 2698 UART register map */
@@ -80,8 +81,8 @@
 #define TY_DEVSTART_PTR FUNCPTR
 #endif
 
-QUAD_TABLE *tyGSOctalModules;
-int tyGSOctalMaxModules;
+LOCAL QUAD_TABLE *tyGSOctalModules;
+LOCAL int tyGSOctalMaxModules;
 int tyGSOctalLastModule;
 
 LOCAL int tyGSOctalDrvNum;  /* driver number assigned to this driver */
@@ -98,7 +99,7 @@ LOCAL int    tyGSOctalWrite(TY_GSOCTAL_DEV *, char *, long);
 LOCAL STATUS tyGSOctalIoctl(TY_GSOCTAL_DEV *, int, int);
 LOCAL void   tyGSOctalStartup(TY_GSOCTAL_DEV *);
 LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *, int);
-LOCAL void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts);
+LOCAL void   tyGSOctalOptsSet(TY_GSOCTAL_DEV *, int);
 LOCAL void   tyGSOctalSetmr(TY_GSOCTAL_DEV *, int, int);
 
 /******************************************************************************
@@ -152,47 +153,45 @@ STATUS tyGSOctalDrv
 
 void tyGSOctalReport(void)
 {
-    int idx;
+    int mod;
 
-    for (idx = 0; idx < tyGSOctalLastModule; idx++) {
-        QUAD_TABLE *qt = &tyGSOctalModules[idx];
-        int i;
+    for (mod = 0; mod < tyGSOctalLastModule; mod++) {
+        QUAD_TABLE *qt = &tyGSOctalModules[mod];
+        int port;
 
-        printf("Module %d: carrier=%d module=%d\n  %lu interrupts\n",
-            idx, qt->carrier, qt->module, qt->interruptCount);
+        printf("Module %d: carrier=%d slot=%d\n  %lu interrupts\n",
+            mod, qt->carrier, qt->slot, qt->interruptCount);
 
-        for (i=0; i < 8; i++) {
-            TY_GSOCTAL_DEV *pty = &qt->port[i];
+        for (port=0; port < 8; port++) {
+            TY_GSOCTAL_DEV *dev = &qt->dev[port];
 
-            if (pty->created)
+            if (dev->created)
                 printf("  Port %d: %lu chars in, %lu chars out, %lu errors\n",
-                    i, pty->readCount, pty->writeCount, pty->errorCount);
+                    port, dev->readCount, dev->writeCount, dev->errorCount);
         }
     }
 }
 
 LOCAL int tyGSOctalRebootHook(int type)
 {
-    int key;
-    int idx;
+    int mod;
+    int key = intLock();    /* disable interrupts */
 
-    key = intLock();    /* disable interrupts */
+    for (mod = 0; mod < tyGSOctalLastModule; mod++) {
+        QUAD_TABLE *qt = &tyGSOctalModules[mod];
+        int port;
 
-    for (idx = 0; idx < tyGSOctalLastModule; idx++) {
-        QUAD_TABLE *qt = &tyGSOctalModules[idx];
-        int i;
+        for (port=0; port < 8; port++) {
+            TY_GSOCTAL_DEV *dev = &qt->dev[port];
 
-        for (i=0; i < 8; i++) {
-            TY_GSOCTAL_DEV *pty = &qt->port[i];
-
-            if (pty->created) {
-                pty->imr = 0;
-                pty->regs->u.w.imr = 0;
+            if (dev->created) {
+                dev->irqEnable = 0; /* prevent re-enabling */
+                dev->regs->u.w.imr = 0;
             }
-        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_irqDisable);
-        ipmIrqCmd(qt->carrier, qt->module, 1, ipac_irqDisable);
+            ipmIrqCmd(qt->carrier, qt->slot, 0, ipac_irqDisable);
+            ipmIrqCmd(qt->carrier, qt->slot, 1, ipac_irqDisable);
 
-        ipmIrqCmd(qt->carrier, qt->module, 0, ipac_statUnused);
+            ipmIrqCmd(qt->carrier, qt->slot, 0, ipac_statUnused);
         }
     }
     intUnlock(key);
@@ -204,8 +203,8 @@ LOCAL int tyGSOctalRebootHook(int type)
  *
  * The routine initializes the specified IP module. Each module is
  * characterized by its model name, interrupt vector, carrier board
- * number, and module number on the board. No new setup is done if a
- * QUAD_TABLE entry already exists with the same carrier and module
+ * number, and slot number on the board. No new setup is done if a
+ * QUAD_TABLE entry already exists with the same carrier and slot
  * numbers.
  *
  * For example:
@@ -222,17 +221,17 @@ LOCAL int tyGSOctalRebootHook(int type)
 */
 int tyGSOctalModuleInit
     (
-    const char * moduleID,       /* IP module name           */
-    const char * type,           /* IP module type           */
-    int          int_num,        /* Interrupt number         */
-    int          carrier,        /* carrier board [0-n]      */
-    int          module          /* module on carrier [0-m]  */
+    const char * moduleID,       /* IP module name */
+    const char * type,           /* IP module type 232/422/485 */
+    int          int_num,        /* Interrupt vector */
+    int          carrier,        /* carrier number */
+    int          slot            /* slot number */
     )
 {
     static char *fn_nm = "tyGSOctalModuleInit";
     int modelID;
     int status;
-    int i;
+    int mod;
     QUAD_TABLE *qt;
 
     /*
@@ -266,15 +265,15 @@ int tyGSOctalModuleInit
     /*
      * Validate the IP module location and type.
      */
-    status = ipmValidate(carrier, module, GREEN_SPRING_ID, modelID);
+    status = ipmValidate(carrier, slot, GREEN_SPRING_ID, modelID);
     if (status) {
         printf("%s: IPAC Module validation failed\n"
-            "    Carrier:%d module:%d modelID:0x%x\n",
-            fn_nm, carrier, module, modelID);
+            "    Carrier:%d slot:%d modelID:0x%x\n",
+            fn_nm, carrier, slot, modelID);
 
         switch(status) {
         case S_IPAC_badAddress:
-            printf("    Bad carrier or module number\n");
+            printf("    Bad carrier or slot number\n");
             break;
         case S_IPAC_noModule:
             printf("    No module installed\n");
@@ -297,22 +296,22 @@ int tyGSOctalModuleInit
     }
 
     /* See if the associated IP module has already been set up */
-    for (i = 0; i < tyGSOctalLastModule; i++) {
-        qt = &tyGSOctalModules[i];
+    for (mod = 0; mod < tyGSOctalLastModule; mod++) {
+        qt = &tyGSOctalModules[mod];
         if (qt->carrier == carrier &&
-            qt->module == module)
+            qt->slot == slot)
             break;
     }
 
     /* Create a new quad table entry if not there */
-    if (i >= tyGSOctalLastModule) {
+    if (mod >= tyGSOctalLastModule) {
         void *addrIO;
         char *addrMem;
-        char *ID = malloc(strlen(moduleID) + 1);
+        char *ID = epicsStrDup(moduleID);
         uint16_t intNum = int_num;
         SCC2698 *r;
         SCC2698_CHAN *c;
-        int block;
+        int block, port;
 
         if (tyGSOctalLastModule >= tyGSOctalMaxModules) {
             printf("%s: Maximum module count exceeded!", fn_nm);
@@ -323,30 +322,29 @@ int tyGSOctalModuleInit
         qt = &tyGSOctalModules[tyGSOctalLastModule];
         qt->modelID = modelID;
         qt->carrier = carrier;
-        qt->module = module;
-        strcpy(ID, moduleID);
+        qt->slot = slot;
         qt->moduleID = ID;
 
-        addrIO = ipmBaseAddr(carrier, module, ipac_addrIO);
+        addrIO = ipmBaseAddr(carrier, slot, ipac_addrIO);
         r = (SCC2698 *) addrIO;
         c = (SCC2698_CHAN *) addrIO;
 
-        for (i = 0; i < 8; i++) {
-            block = i/2;
-            qt->port[i].created = 0;
-            qt->port[i].qt = qt;
-            qt->port[i].regs = &r[block];
-            qt->port[i].chan = &c[i];
+        for (port = 0; port < 8; port++) {
+            block = port/2;
+            qt->dev[port].created = 0;
+            qt->dev[port].qt = qt;
+            qt->dev[port].regs = &r[block];
+            qt->dev[port].chan = &c[port];
         }
 
-        for (i = 0; i < 4; i++)
-            qt->imr[i] = 0;
+        for (block = 0; block < 4; block++)
+            qt->imr[block] = 0;
 
         /* set up the single interrupt vector */
-        addrMem = (char *) ipmBaseAddr(carrier, module, ipac_addrMem);
+        addrMem = (char *) ipmBaseAddr(carrier, slot, ipac_addrMem);
         if (addrMem == NULL) {
             printf("%s: No IPAC memory allocated for carrier %d slot %d",
-                fn_nm, carrier, module);
+                fn_nm, carrier, slot);
             return ERROR;
         }
         if (vxMemProbe(addrMem, VX_WRITE, 2, (char *) &intNum) == ERROR) {
@@ -355,15 +353,15 @@ int tyGSOctalModuleInit
             return ERROR;
         }
 
-        if (ipmIntConnect(carrier, module, int_num, 
+        if (ipmIntConnect(carrier, slot, int_num, 
                           tyGSOctalInt, tyGSOctalLastModule)) {
             printf("%s: Unable to connect ISR", fn_nm);
             return ERROR;
         }
-        ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
-        ipmIrqCmd(carrier, module, 1, ipac_irqEnable);
+        ipmIrqCmd(carrier, slot, 0, ipac_irqEnable);
+        ipmIrqCmd(carrier, slot, 1, ipac_irqEnable);
 
-        ipmIrqCmd(carrier, module, 0, ipac_statActive);
+        ipmIrqCmd(carrier, slot, 0, ipac_statActive);
     }
 
     return tyGSOctalLastModule++;
@@ -398,7 +396,7 @@ const char * tyGSOctalDevCreate
     int          wrtBufSize      /* write buffer size, in bytes          */
     )
 {
-    TY_GSOCTAL_DEV *pTyGSOctalDv;
+    TY_GSOCTAL_DEV *dev;
     QUAD_TABLE *qt = tyGSOctalFindQT(moduleID);
 
     if (!name || !qt)
@@ -408,14 +406,14 @@ const char * tyGSOctalDevCreate
     if (port < 0 || port > 7)
         return NULL;
 
-    pTyGSOctalDv = &qt->port[port];
+    dev = &qt->dev[port];
 
     /* if there is a device already on this channel, don't do it */
-    if (pTyGSOctalDv->created)
+    if (dev->created)
         return NULL;
     
     /* initialize the ty descriptor */
-    if (tyDevInit (&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
+    if (tyDevInit (&dev->tyDev, rdBufSize, wrtBufSize,
                    (TY_DEVSTART_PTR) tyGSOctalStartup) != OK)
         return NULL;
     
@@ -423,9 +421,9 @@ const char * tyGSOctalDevCreate
     tyGSOctalInitChannel(qt, port);
 
     /* mark the device as created, and add the device to the I/O system */
-    pTyGSOctalDv->created = TRUE;
+    dev->created = TRUE;
 
-    if (iosDevAdd(&pTyGSOctalDv->tyDev.devHdr, name,
+    if (iosDevAdd(&dev->tyDev.devHdr, name,
                   tyGSOctalDrvNum) != OK)
         return NULL;
 
@@ -472,15 +470,15 @@ STATUS tyGSOctalDevCreateAll
     }
 
     for (port=0; port < 8; port++) {
-        TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[port];
+        TY_GSOCTAL_DEV *dev = &qt->dev[port];
         char name[256];
 
         /* if there is a device already on this channel, ignore it */
-        if (pTyGSOctalDv->created)
+        if (dev->created)
             continue;
 
         /* initialize the ty descriptor */
-        if (tyDevInit(&pTyGSOctalDv->tyDev, rdBufSize, wrtBufSize,
+        if (tyDevInit(&dev->tyDev, rdBufSize, wrtBufSize,
                 (TY_DEVSTART_PTR) tyGSOctalStartup) != OK)
             return ERROR;
 
@@ -488,11 +486,11 @@ STATUS tyGSOctalDevCreateAll
         tyGSOctalInitChannel(qt, port);
 
         /* mark the device as created, and give it to the I/O system */
-        pTyGSOctalDv->created = TRUE;
+        dev->created = TRUE;
 
         sprintf(name, "%s%d", base, port);
 
-        if (iosDevAdd(&pTyGSOctalDv->tyDev.devHdr, name, tyGSOctalDrvNum) != OK)
+        if (iosDevAdd(&dev->tyDev.devHdr, name, tyGSOctalDrvNum) != OK)
             return ERROR;
     }
     return OK;
@@ -510,14 +508,14 @@ LOCAL QUAD_TABLE * tyGSOctalFindQT
     const char *moduleID
     )
 {
-    int i;
+    int mod;
 
     if (!moduleID)
         return NULL;
 
-    for (i = 0; i < tyGSOctalLastModule; i++)
-        if (strcmp(moduleID, tyGSOctalModules[i].moduleID) == 0)
-            return &tyGSOctalModules[i];
+    for (mod = 0; mod < tyGSOctalLastModule; mod++)
+        if (strcmp(moduleID, tyGSOctalModules[mod].moduleID) == 0)
+            return &tyGSOctalModules[mod];
 
     return NULL;
 }
@@ -534,38 +532,38 @@ LOCAL void tyGSOctalInitChannel
         int port
     )
 {
-    TY_GSOCTAL_DEV *pTyGSOctalDv = &qt->port[port];
+    TY_GSOCTAL_DEV *dev = &qt->dev[port];
     int block = port/2;     /* 4 blocks per octal UART */
     int key;                /* current interrupt level mask */
 
     key = intLock ();       /* disable interrupts during init */
 
-    pTyGSOctalDv->block = block;
+    dev->block = block;
 
-    pTyGSOctalDv->imr = ((port%2 == 0) ? SCC_ISR_TXRDY_A : SCC_ISR_TXRDY_B);
+    dev->irqEnable = ((port%2 == 0) ? SCC_ISR_TXRDY_A : SCC_ISR_TXRDY_B);
 
     /* choose set 2 BRG */
-    pTyGSOctalDv->regs->u.w.acr = 0x80;
+    dev->regs->u.w.acr = 0x80;
 
-    pTyGSOctalDv->chan->u.w.cr = 0x1a; /* disable trans/recv, reset pointer */
-    pTyGSOctalDv->chan->u.w.cr = 0x20; /* reset recv */
-    pTyGSOctalDv->chan->u.w.cr = 0x30; /* reset trans */
-    pTyGSOctalDv->chan->u.w.cr = 0x40 ; /* reset error status */
+    dev->chan->u.w.cr = 0x1a; /* disable trans/recv, reset pointer */
+    dev->chan->u.w.cr = 0x20; /* reset recv */
+    dev->chan->u.w.cr = 0x30; /* reset trans */
+    dev->chan->u.w.cr = 0x40; /* reset error status */
 
 /*
  * Set up the default port configuration:
  * 9600 baud, no parity, 1 stop bit, 8 bits per char, no flow control
  */
-    tyGSOctalBaudSet(pTyGSOctalDv, 9600);
-    tyGSOctalOptsSet(pTyGSOctalDv, CS8 | CLOCAL);
+    tyGSOctalBaudSet(dev, 9600);
+    tyGSOctalOptsSet(dev, CS8 | CLOCAL);
 
 /*
  * enable everything, really only Rx interrupts
 */
     qt->imr[block] |= ((port%2) == 0 ? SCC_ISR_RXRDY_A : SCC_ISR_RXRDY_B); 
 
-    pTyGSOctalDv->regs->u.w.imr = qt->imr[block]; /* enable RxRDY interrupt */
-    pTyGSOctalDv->chan->u.w.cr = 0x05;            /* enable Tx,Rx */
+    dev->regs->u.w.imr = qt->imr[block]; /* enable RxRDY interrupt */
+    dev->chan->u.w.cr = 0x05;            /* enable Tx,Rx */
 
     intUnlock (key);
 }
@@ -578,12 +576,12 @@ LOCAL void tyGSOctalInitChannel
  */
 LOCAL int tyGSOctalOpen
     (
-        TY_GSOCTAL_DEV *pTyGSOctalDv,
+        TY_GSOCTAL_DEV *dev,
         const char * name,
         int          mode
     )
 {
-    return (int) pTyGSOctalDv;
+    return (int) dev;
 }
 
 
@@ -594,31 +592,31 @@ LOCAL int tyGSOctalOpen
  */
 LOCAL int tyGSOctalWrite
     (
-        TY_GSOCTAL_DEV *pTyGSOctalDv,   /* device descriptor block */
+        TY_GSOCTAL_DEV *dev,   /* device descriptor block */
         char *write_bfr,                /* ptr to an output buffer */
         long write_size                 /* # bytes to write */
     )
 {
     static char *fn_nm = "tyGSOctalWrite";
-    SCC2698_CHAN *chan = pTyGSOctalDv->chan;
+    SCC2698_CHAN *chan = dev->chan;
     int nbytes;
 
     /*
      * verify that the device descriptor is valid
      */
-    if (!pTyGSOctalDv) {
+    if (!dev) {
         logMsg("%s: NULL device descriptor from %s\n",
                 (int)fn_nm, (int)taskName(taskIdSelf()), 3,4,5,6);
         return -1;
     }
 
-    if (pTyGSOctalDv->mode == RS485)
+    if (dev->mode == RS485)
         /* disable recv, 1000=assert RTSN (low) */
         chan->u.w.cr = 0x82;
 
-    nbytes = tyWrite(&pTyGSOctalDv->tyDev, write_bfr, write_size);
+    nbytes = tyWrite(&dev->tyDev, write_bfr, write_size);
 
-    if (pTyGSOctalDv->mode == RS485) {
+    if (dev->mode == RS485) {
         /* make sure all data sent */
         while(!(chan->u.r.sr & 0x08))   /* Wait for TxEMT */
             ;
@@ -636,20 +634,20 @@ LOCAL int tyGSOctalWrite
  * NOMANUAL
  */
 
-LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
-    SCC2698_CHAN *chan = pTyGSOctalDv->chan;
-    SCC2698 *regs = pTyGSOctalDv->regs;
-    QUAD_TABLE *qt = pTyGSOctalDv->qt;
+LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *dev, int mr1, int mr2) {
+    SCC2698_CHAN *chan = dev->chan;
+    SCC2698 *regs = dev->regs;
+    QUAD_TABLE *qt = dev->qt;
 
     if (qt->modelID == GSIP_OCTAL485) {
-        pTyGSOctalDv->mode = RS485;
+        dev->mode = RS485;
 
         /* MPOa/b are Tx output enables, must be controlled by driver */
         mr1 &= 0x7f; /* no auto RxRTS */
         mr2 &= 0xcf; /* no CTS enable Tx */
     }
     else {
-        pTyGSOctalDv->mode = RS232;
+        dev->mode = RS232;
         /* MPOa/b are RTS outputs, may be controlled by UART */
     }
     regs->u.w.opcr = 0x80; /* MPPn = output, MPOa/b = RTSN */
@@ -669,7 +667,7 @@ LOCAL void tyGSOctalSetmr(TY_GSOCTAL_DEV *pTyGSOctalDv, int mr1, int mr2) {
  * NOMANUAL
  */
 
-LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
+LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *dev, int opts)
 {
     epicsUInt8 mr1 = 0, mr2 = 0;
 
@@ -704,8 +702,8 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
         mr2 |= 0x10;      /* Enable Tx using CTS */
     }
 
-    tyGSOctalSetmr(pTyGSOctalDv, mr1, mr2);
-    pTyGSOctalDv->opts = opts & (CSIZE | STOPB | PARENB | PARODD | CLOCAL);
+    tyGSOctalSetmr(dev, mr1, mr2);
+    dev->opts = opts & (CSIZE | STOPB | PARENB | PARODD | CLOCAL);
 }
 
 /******************************************************************************
@@ -715,9 +713,9 @@ LOCAL void tyGSOctalOptsSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int opts)
  * NOMANUAL
  */
 
-LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
+LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *dev, int baud)
 {
-    SCC2698_CHAN *chan = pTyGSOctalDv->chan;
+    SCC2698_CHAN *chan = dev->chan;
 
     switch(baud) {  /* NB: ACR[7]=1 */
     case 1200:
@@ -743,7 +741,7 @@ LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
         return ERROR;
     }
 
-    pTyGSOctalDv->baud = baud;
+    dev->baud = baud;
     return OK;
 }
 
@@ -758,7 +756,7 @@ LOCAL STATUS tyGSOctalBaudSet(TY_GSOCTAL_DEV *pTyGSOctalDv, int baud)
  */
 LOCAL STATUS tyGSOctalIoctl
     (
-    TY_GSOCTAL_DEV *pTyGSOctalDv,   /* device to control */
+    TY_GSOCTAL_DEV *dev,   /* device to control */
     int request,                    /* request code */
     int arg                         /* some argument */
     )
@@ -771,22 +769,22 @@ LOCAL STATUS tyGSOctalIoctl
     case FIOBAUDRATE:
     case SIO_BAUD_SET:
         key = intLock ();
-        status = tyGSOctalBaudSet(pTyGSOctalDv, arg);
+        status = tyGSOctalBaudSet(dev, arg);
         intUnlock (key);
         break;
     case SIO_BAUD_GET:
-        *(int *)arg = pTyGSOctalDv->baud;
+        *(int *)arg = dev->baud;
         break;
     case SIO_HW_OPTS_SET:
         key = intLock ();
-        tyGSOctalOptsSet(pTyGSOctalDv, arg);
+        tyGSOctalOptsSet(dev, arg);
         intUnlock (key);
         break;
     case SIO_HW_OPTS_GET:
-        *(int *)arg = pTyGSOctalDv->opts;
+        *(int *)arg = dev->opts;
         break;
     default:
-        status = tyIoctl (&pTyGSOctalDv->tyDev, request, arg);
+        status = tyIoctl (&dev->tyDev, request, arg);
         break;
     }
 
@@ -810,11 +808,11 @@ void tyGSOctalConfig (
     char flow
 ) {
     static char *fn_nm = "tyGSOctalConfig";
-    TY_GSOCTAL_DEV *pTyGSOctalDv = (TY_GSOCTAL_DEV *) iosDevFind(name, NULL);
+    TY_GSOCTAL_DEV *dev = (TY_GSOCTAL_DEV *) iosDevFind(name, NULL);
     int opts = 0;
     int key;
 
-    if (!pTyGSOctalDv) {
+    if (!dev) {
         printf("%s: Device %s not found\n", fn_nm, name);
         return;
     }
@@ -846,8 +844,8 @@ void tyGSOctalConfig (
         opts |= PARENB | PARODD;
 
     key = intLock ();
-    tyGSOctalOptsSet(pTyGSOctalDv, opts);
-    tyGSOctalBaudSet(pTyGSOctalDv, baud);
+    tyGSOctalOptsSet(dev, opts);
+    tyGSOctalBaudSet(dev, baud);
     intUnlock (key);
 }
 
@@ -858,83 +856,89 @@ void tyGSOctalConfig (
  */
 void tyGSOctalInt
     (
-    int idx
+    int mod
     )
 {
     epicsUInt8 sr, isr;
-    int spin;
-    QUAD_TABLE *pQt = &tyGSOctalModules[idx];
+    QUAD_TABLE *qt = &tyGSOctalModules[mod];
     SCC2698 *regs;
     volatile epicsUInt8 *flush = NULL;
+    int scan;
 
-    pQt->interruptCount++;
+    qt->interruptCount++;
 
-    for (spin=0; spin < MAX_SPIN_TIME; spin++) {
-        int i;
 
-        /*
-         * check each port for work
-         */ 
-        for (i = 0; i < 8; i++)
+    /*
+     * Check each port for work, stop when we find some.
+     * Next time we're called for this module, continue
+     * scanning with the next port (enforce fairness).
+     */
+    for (scan = 1; scan <= 8; scan++) {
+        int port = (qt->scan + scan) & 7;
+        TY_GSOCTAL_DEV *dev = &qt->dev[port];
+        SCC2698_CHAN *chan;
+        int block;
+        int key;
+
+        if (!dev->created)
+            continue;
+
+        block = dev->block;
+        chan = dev->chan;
+        regs = dev->regs;
+
+        key = intLock();
+        sr = chan->u.r.sr;
+
+        /* Only examine the active interrupts */
+        isr = regs->u.r.isr & qt->imr[block];
+
+        /* Channel B interrupt data is on the upper nibble */
+        if ((port % 2) == 1)
+            isr >>= 4;
+
+        if (isr & 0x02) /* a byte needs to be read */
         {
-            TY_GSOCTAL_DEV *pTyGSOctalDv = &pQt->port[i];
-            SCC2698_CHAN *chan;
-            int block;
-            int key;
+            char inChar = chan->u.r.rhr;
 
-            if (!pTyGSOctalDv->created)
-                continue;
+            tyIRd(&dev->tyDev, inChar);
+            dev->readCount++;
+        }
 
-            block = pTyGSOctalDv->block;
-            chan = pTyGSOctalDv->chan;
-            regs = pTyGSOctalDv->regs;
+        if (isr & 0x01) /* a byte needs to be sent */
+        {
+            char outChar;
 
-            key = intLock();
-            sr = chan->u.r.sr;
-
-            /* Only examine the active interrupts */
-            isr = regs->u.r.isr & pQt->imr[block];
-            
-            /* Channel B interrupt data is on the upper nibble */
-            if ((i%2) == 1)
-                isr >>= 4;
-
-            if (isr & 0x02) /* a byte needs to be read */
-            {
-                char inChar = chan->u.r.rhr;
-
-                tyIRd(&pTyGSOctalDv->tyDev, inChar);
-                pTyGSOctalDv->readCount++;
-            }
-
-            if (isr & 0x01) /* a byte needs to be sent */
-            {
-                char outChar;
-
-                if (tyITx(&pTyGSOctalDv->tyDev, &outChar) == OK) {
-                    chan->u.w.thr = outChar;
-                    /* Not flushable */
-                    pTyGSOctalDv->writeCount++;
-                }
-                else {
-                    /* deactivate Tx INT and disable Tx INT */
-                    pQt->imr[block] &= ~pTyGSOctalDv->imr;
-                    regs->u.w.imr = pQt->imr[block];
-                    flush = &regs->u.w.imr;
-                }
-            }
-
-            /* Reset errors */
-            if (sr & 0xf0)
-            {
-                pTyGSOctalDv->errorCount++;
-                chan->u.w.cr = 0x40;
+            if (tyITx(&dev->tyDev, &outChar) == OK) {
+                chan->u.w.thr = outChar;
+                dev->writeCount++;
+                chan->u.w.cr = 0;   /* Null command */
                 flush = &chan->u.w.cr;
             }
+            else {
+                /* deactivate Tx INT and disable Tx INT */
+                qt->imr[block] &= ~dev->irqEnable;
+                regs->u.w.imr = qt->imr[block];
+                flush = &regs->u.w.imr;
+            }
+        }
 
-            intUnlock(key);
+        /* Reset errors */
+        if (sr & 0xf0) {
+            dev->errorCount++;
+            chan->u.w.cr = 0x40;
+            flush = &chan->u.w.cr;
+        }
+
+        intUnlock(key);
+
+        /* Exit after processing one channel */
+        if ((isr & 0x03) || (sr & 0xf0)) {
+            qt->scan = port;
+            break;
         }
     }
+
     if (flush)
         isr = *flush;    /* Flush last write cycle */
 }
@@ -947,27 +951,27 @@ void tyGSOctalInt
 */
 LOCAL void tyGSOctalStartup
     (
-    TY_GSOCTAL_DEV *pTyGSOctalDv    /* ty device to start up */
+    TY_GSOCTAL_DEV *dev    /* ty device to start up */
     )
 {
     char outChar;
-    QUAD_TABLE *qt = pTyGSOctalDv->qt;
-    SCC2698 *regs = pTyGSOctalDv->regs;
-    SCC2698_CHAN *chan = pTyGSOctalDv->chan;
-    int block = pTyGSOctalDv->block;
+    QUAD_TABLE *qt = dev->qt;
+    SCC2698 *regs = dev->regs;
+    SCC2698_CHAN *chan = dev->chan;
+    int block = dev->block;
     int key;
 
     key = intLock();
-    if (tyITx (&pTyGSOctalDv->tyDev, &outChar) == OK) {
+    if (tyITx (&dev->tyDev, &outChar) == OK) {
         if (chan->u.r.sr & 0x04)
             chan->u.w.thr = outChar;
 
-        qt->imr[block] |= pTyGSOctalDv->imr; /* activate Tx interrupt */
+        qt->imr[block] |= dev->irqEnable; /* activate Tx interrupt */
         regs->u.w.imr = qt->imr[block]; /* enable Tx interrupt */
         intUnlock(key);
     }
     else {
-        qt->imr[block] &= ~pTyGSOctalDv->imr;
+        qt->imr[block] &= ~dev->irqEnable;
         regs->u.w.imr = qt->imr[block];
         intUnlock(key);
     }
