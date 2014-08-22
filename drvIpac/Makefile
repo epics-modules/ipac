@@ -24,11 +24,13 @@ LIBSRCS += drvTvme200.c
 LIBSRCS += drvXy9660.c
 LIBSRCS += drvHy8002.c
 
-# MVME162 & MVME172: IPchip carrier driver
-LIBSRCS_vxWorks += drvIpMv162.c
+# MVME162 & MVME172: IPchip carrier driver (68k only)
+LIBSRCS_vxWorks-68040 += drvIpMv162.c
 
-# ISAbus: SBS ATC40 carrier driver (Intel-based systems only!)
-LIBSRCS_vxWorks += drvAtc40.c
+# ISAbus: SBS ATC40 carrier driver (Intel only)
+LIBSRCS_vxWorks-pentium += drvAtc40.c
+
+LIBSRCS_vxWorks += $(LIBSRCS_$(T_A))
 
 Ipac_LIBS += $(EPICS_BASE_IOC_LIBS)
 
