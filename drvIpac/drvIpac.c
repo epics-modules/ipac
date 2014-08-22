@@ -258,13 +258,14 @@ Function:
     Check on presence of an IPAC ID Prom at the given location.
 
 Description:
-    Probes the IDprom space to ensure an IPAC is installed, and checks that 
-    the IDprom starts with the "IPAC", "IPAH" or "VITA4 " identifier.
+    This routine must not be called if no module is present and an
+    access to the id pointer could trigger a bus error or SEGV. It
+    checks that the ID Prom starts with the format-1 "IPAC" or "IPAH"
+    or format-2 "VITA4 " identifiers.
 
 Returns:
     0 = OK,
     S_IPAC_badDriver = NULL pointer passed for id
-    S_IPAC_noModule = No module installed,
     S_IPAC_noIpacId = "IPAC"/"IPAH"/"VITA4 " identifier not found
 
 */
@@ -277,9 +278,7 @@ int ipcCheckId (
     if (id == NULL) {
 	return S_IPAC_badDriver;
     }
-    if (devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)) {
-	return S_IPAC_noModule;
-    }
+    word = id->asciiI;
     if ((word & 0xff) != 'I') {
 	return S_IPAC_noIpacId;
     }
@@ -322,15 +321,17 @@ Function:
     Check on presence of an IPAC module at the given carrier & slot number.
 
 Description:
-    Does a quick check to make sure the carrier and slot numbers are legal, 
-    then delegates the remaining checks to the ipcCheckId() routine.
+    Checks to make sure the carrier and slot numbers are legal, then probes for
+    the presence of an ID Prom, delegating this operation to the carrier driver
+    if it provides a moduleProbe() routine. If access to a the ID Prom space is
+    safe it delegates checking the IPAC header to the ipcCheckId() routine.
 
 Returns:
     0 = OK,
     S_IPAC_badAddress = Bad carrier or slot number,
-    S_IPAC_badDriver = Carrier driver returned NULL ID address
+    S_IPAC_badDriver = Carrier driver returned NULL ID address,
     S_IPAC_noModule = No module installed,
-    S_IPAC_noIpacId = "IPAC"/"IPAH"/"VITA4 " identifier not found
+    S_IPAC_noIpacId = "IPAC"/"IPAH"/"VITA4 " identifier not found.
 
 */
 
@@ -349,6 +350,18 @@ int ipmCheck (
 
     id = (ipac_idProm_t *) ipmBaseAddr(carrier, slot, ipac_addrID);
 
+    if (carriers.info[carrier].driver->moduleProbe == NULL) {
+	epicsUInt16 word;
+
+	if (devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)) {
+	    return S_IPAC_noModule;
+	}
+    }
+    else {
+	if (carriers.info[carrier].driver->moduleProbe(
+		carriers.info[carrier].cPrivate, slot) == 0)
+	return S_IPAC_noModule;
+    }
     return ipcCheckId(id);
 }
 

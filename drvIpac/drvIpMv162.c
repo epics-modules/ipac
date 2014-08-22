@@ -369,6 +369,7 @@ static ipac_carrier_t ipmv162 = {
     NULL,
     baseAddr,
     irqCmd,
+    NULL,
     NULL
 };
 

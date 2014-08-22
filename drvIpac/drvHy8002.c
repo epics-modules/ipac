@@ -596,10 +596,12 @@ static int initialise (
     /* On the 8004, use 32MHz clocks where modules support them */
     if (ipclock < 0 && prom[VME64CR_MOD2] == 0x04) {
         for (slot = 0; slot < SLOTS; slot++) {
+            epicsUInt16 word;
             ipac_idProm_t *id = (ipac_idProm_t *)
                 private->addr[ipac_addrID][slot];
 
-            if (ipcCheckId(id) == OK) {
+            if (!devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)
+                && ipcCheckId(id) == OK) {
                 if ((id->asciiP & 0xff) == 'P') {
                     /* ID Prom is Format 1 */
                     if ((id->asciiC & 0xff) == 'H')
@@ -607,14 +609,14 @@ static int initialise (
                 } else {
                     /* ID Prom is Format 2 */
                     ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
-                    epicsUInt16 flags = id2->flags;
+                    word = id2->flags;
 
-                    if (flags & 1) {
+                    if (word & 1) {
                         printf("%s: IP module at (%d,%d) has flags = %x\n",
-                            drvname, carrier, slot, flags);
+                            drvname, carrier, slot, word);
                         continue;
                     }
-                    if (flags & 4)
+                    if (word & 4)
                         csr |= CSR_IPACLK << slot;
                 }
             }
@@ -838,6 +840,7 @@ static ipac_carrier_t Hy8002 = {
     report,
     baseAddr,
     irqCmd,
+    NULL,
     NULL
 };
 

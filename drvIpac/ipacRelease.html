@@ -20,8 +20,27 @@ version appears at the bottom, with more recent releases above it.</P>
 <HR>
 <H2>Version 2.13</H2>
 
+<P>Added:</P>
+<UL>
+
+<LI>New routine <TT>int moduleProbe(void *cPrivate, epicsUInt16 slot);</TT>
+added to the <TT>ipac_carrier_t</TT> table. This is optional for VME carriers
+where the devLib routine devReadProbe() can be used to check for the presence of
+a module in a specific carrier slot. If it safe to access the ID Prom of an
+empty slot, the carrier routine may just return 1, it does not need to check
+whether the slot is currently occupied.</LI>
+
+</UL>
+
 <P>Changed:</P>
 <UL>
+
+<LI>The routine <TT>ipcCheckId()</TT> no longer calls the devLib routine
+devReadProbe(), so it can now be used on non-VME systems. Carrier drivers that
+used this routine to detect the presence of a module in a slot must be modified
+to perform their own probe before calling <TT>ipcCheckId()</TT>. Both the
+drvXy9660.c and drvHy8002.c carrier drivers were modified to do this, so can be
+used as examples of the changes needed.</LI>
 
 <LI>In the Xy9660 driver the parameter string parser would not accept the 'R'
 card reset request described in the documentation. This bug has existed in all

@@ -782,7 +782,8 @@ static ipac_carrier_t atc40 = {
     report,
     baseAddr,
     irqCmd,
-    intVecConnect
+    intVecConnect,
+    NULL
 };
 
 int ipacAddATC40(const char *cardParams) {

@@ -336,6 +336,7 @@ static ipac_carrier_t vipc610 = {
     NULL,
     baseAddr,
     irqCmd_610,
+    NULL,
     NULL
 };
 
@@ -350,6 +351,7 @@ static ipac_carrier_t vipc610_01 = {
     NULL,
     baseAddr,
     irqCmd_610_01,
+    NULL,
     NULL
 };
 

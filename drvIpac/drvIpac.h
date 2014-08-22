@@ -191,9 +191,13 @@ typedef struct {
     int (*irqCmd)(void *cPrivate, epicsUInt16 slot,
 		epicsUInt16 irqNumber, ipac_irqCmd_t cmd);
 			/* Interrupt manipulation */
+    /* The remaining routines are optional. Some drvIpac routines may call
+     * devLib if these routines are NULL or not provided. */
     int (*intConnect)(void *cPrivate, epicsUInt16 slot, epicsUInt16 vecNum,
 		void (*routine)(int parameter), int parameter);
 			/* Connect routine to interrupt vector */
+    int (*moduleProbe)(void *cPrivate, epicsUInt16 slot);
+			/* Return 0 if reading ID Prom would Bus Error */
 } ipac_carrier_t;
 
 

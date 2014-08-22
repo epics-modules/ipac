@@ -190,21 +190,21 @@ Run <tt>gnumake</tt> in the top level directory.</li>
 </ol>
 
 <h3>
-<a NAME="Bus Issues"></a>Bus Issues</h3>
+<a NAME="Bus Issues"></a>OS and Bus Issues</h3>
 
 <p>
-From version 2-1 this software supports little-endian as well as big-endian
+This version if the IPAC driver supports little-endian as well as big-endian
 CPUs, and provides a means of isolating module drivers from some of the
-differences between interrrupt handling on different busses.</p>
+differences between interrrupt handling and module probing on different
+busses.</p>
 
 <p>
-
 The endian problem only exists when accessing I/O registers and the IPAC ID PROM
 using byte addresses. In drvIpac all accesses are made using 16-bit read/write
 cycles, so there are no known issues with endianness.  This is done by declaring
-the structure of a module's registers using <tt>short</tt> variables instead of
-<tt>char</tt>. With this done the only other requirement is to mask off the top
-8 bits of every value read from the hardware.</p>
+the structure of a module's registers using <tt>epicsUInt16</tt> variables
+instead of <tt>char</tt>. With this done the only other requirement is to mask
+off the top 8 bits of every value read from the hardware.</p>
 
 <p>
 Some busses such as ISAbus do not support interrupt vectors and require a
@@ -213,10 +213,18 @@ hardware interrupts, although the IndustryPack standard does require that any
 IP module that generates interrupts should provide a vector. On ISA bus
 carriers this vector can be read by the carrier driver to work out which module
 caused the interrupt. A module driver should not need to know about the
-particular bus type its carrier is on, thus Ipac now provides the routine <a
-href="#ipmIntConnect">ipmIntConnect()</a> to allow it to pass such issues off to
-the carrier driver to handle. The interface to this is very similar to the
+particular bus type its carrier is on, thus Ipac now provides the routine
+<a href="#ipmIntConnect">ipmIntConnect()</a> to allow it to pass such issues off
+to the carrier driver to handle. The interface to this is very similar to the
 standard VxWorks intConnect() routine.</p>
+
+<p>
+Some IPAC driver routines such as ipmCheck() need to be able to tell whether
+they can safely access the ID Prom space for a given IP slot. If the carrier
+driver provides a moduleProbe() routine this will be consulted; if not, the
+devReadProbe() routine from devLib is used. It is assumed that probing one
+location in the ID Prom is sufficient to answer the question for all ID Prom
+locations.</p>
 
 <hr>
 
@@ -741,9 +749,10 @@ Module identification &ndash; see <a href="#carrierSlot">above</a></dd>
 Description</h4>
 
 <p>
-Does a quick check to make sure the carrier and slot numbers are legal,
-probes the IDprom space to ensure an IPAC is installed, and checks that
-the IDprom starts with an "IPAC", "IPAH" or "VITA4" identifier.</p>
+Checks to make sure the carrier and slot numbers are legal, then probes for the
+presence of an ID Prom, delegating this operation to the carrier driver if it
+provides a moduleProbe() routine. If access to a the ID Prom space is safe it
+delegates checking the IPAC header to <tt>ipcCheckId()</tt>.</p>
 
 <h4>
 Returns</h4>
@@ -1184,17 +1193,16 @@ Description</h4>
 
 <p>
 Checks input parameters, then passes the request to the carrier driver routine.
-If no carrier routine is provided it uses the standard VxWorks intConnect()
+If no carrier routine is provided it uses the devLib devConnectInterrupt()
 routine instead. This is not quite a direct replacement for the VxWorks
 intConnect() call; as well as providing the carrier and slot numbers the module
 driver does not use the INUM_TO_IVEC(vecNum) macro but just passes the vector
 number to this routine.</p>
 
 <p>
-VxWorks' interrupt vectoring mechanism varies between bus types, and
-<tt>ipmIntConnect()</tt> allows a module driver to connect its routine to an
-interrupt vector from a particular IPAC module without knowing the requirements
-of the particular bus type. Some carrier drivers will need to maintain a private
+The <tt>ipmIntConnect()</tt> routine allows a module driver to connect an ISR to
+an interrupt vector from a particular IPAC module without independent of the
+underlying OS or carrier. Some carrier drivers will need to maintain a private
 interrupt dispatch table if the bus type (i.e. ISA) does not support interrupt
 vectoring.</p>
 
@@ -1317,8 +1325,9 @@ Pointer to the module ID prom to be checked</dd>
 Description</h4>
 
 <p>
-Probes the IDprom space to ensure an IPAC module is installed, and checks that
-the IDprom starts with an "IPAC", "IPAH" or "VITA4 " identifier.</p>
+This routine must not be called if no module is present and an access to the id
+pointer could trigger a bus error or SEGV. It checks that the ID Prom starts
+with the format-1 "IPAC" or "IPAH" or format-2 "VITA4 " identifiers.</p>
 
 <h4>
 Returns</h4>
@@ -1345,12 +1354,6 @@ Returns</h4>
 <td>S_IPAC_badDriver</td>
 
 <td>NULL pointer passed for id address</td>
-</tr>
-
-<tr>
-<td>S_IPAC_noModule</td>
-
-<td>No IP module installed</td>
 </tr>
 
 <tr>
@@ -2342,15 +2345,16 @@ need some of the definitions in the <i>drvIpac.h</i> file.</p>
 All routines must be re-entrant, and no static variables should be used unless
 (like the mv162) only one carrier board of this type is possible in a
 particular system. In this case re-entrancy is still necessary, but static
-variables may be used to hold information about the carrier provided these are
+variables may be used to hold information about the carrier, provided these are
 protected from simultaneous updates by different tasks.</p>
 
 <p>
-The sole interface between the Carrier Driver and the IPAC driver is through
-the <tt>ipac_carrier_t</tt> typedef structure given in the header file. Note
-that the structure changed slightly since version 2.0 with the addition of the
-carrier parameter to the initialise() routine, and the new intConnect()
-routine. This is defined as follows:</p>
+The sole interface between the Carrier Driver and the IPAC driver is through the
+<tt>ipac_carrier_t</tt> typedef structure given in the header file. Note that
+the structure has changed slightly in different IPAC versions with the addition
+of the carrier parameter to the initialise() routine, and by adding the optional
+intConnect() and moduleProbe() routines. The structure is defined as
+follows:</p>
 
 <blockquote>
 <pre>typedef struct {
@@ -2364,9 +2368,13 @@ routine. This is defined as follows:</p>
                                        <i>/* Return base addresses for this slot */</i>
     int (*irqCmd)(void *cPrivate, epicsUInt16 slot, epicsUInt16 irqNumber,
                   ipac_irqCmd_t cmd);  <i>/* Interrupt control */</i>
+    <i>/* The remaining routines are optional. Some drvIpac routines may call</i>
+    <i> * devLib if these routines are NULL or not provided. */</i>
     int (*intConnect)(void *cPrivate, epicsUInt16 slot, epicsUInt16 vecNum,
                       void (*routine)(int parameter), int parameter);
                                        <i>/* Connect routine to interrupt vector */</i>
+    int (*moduleProbe)(void *cPrivate, epicsUInt16 slot);
+                                       <i>/* Return 0 if reading ID Prom would Bus Error */</i>
 } ipac_carrier_t;</pre>
 </blockquote>
 
@@ -2387,16 +2395,29 @@ and passes the same pointer back to the other routines when referring to that
 particular carrier board at a later stage.</p>
 
 <p>
-The intConnect() function pointer may be set to NULL if the standard VxWorks
-intConnect() provides all the funtionality needed to install an interrupt
-vector &ndash; this will probably only be needed for ISA bus carriers.</p>
-
-<p>
 The other parameters to the routines are identical to those described in detail
 in the corresponding IPAC Driver routines above. The IPAC Driver performs
 parameter checking on the <tt>slot</tt> and <tt>irqNumber</tt> parameters
-before calling the Carrier Driver routine, so these values can be used with
-confidence.</p>
+before calling the Carrier Driver routine, so these values can be used without
+having to check them.</p>
+
+<p>
+The intConnect() function pointer may be set to NULL if the devLib routine
+devConnectInterrupt() provides all the functionality needed to install an
+interrupt vector &ndash; carriers that are not interfaced through the EPICS
+devLib routines will need to provide this routine.</p>
+
+<p> The moduleProbe() function pointer may be set to NULL if the devLib routine
+devReadProbe() can be used to detect the presence of a module by probing the ID
+Prom space. Carriers that are not interfaced through the EPICS devLib routines
+will need to provide this routine, which indicates whether it is safe to read
+the ID Prom space of the given slot. Returning zero means that there is no
+module present in that slot and accessing the ID Prom is prohibited; returning a
+non-zero value permits the IPAC Driver routines to check for the presence of a
+module by reading from the ID Prom and looking for a valid IPAC header. If the
+carrier hardware is designed such that reading the ID PROM of an empty slot
+never triggers a VME Bus Error or segment violation, this routine can just
+return 1 for all inputs.</p>
 
 <p>
 The simplest way to write a carrier driver is to copy the VIPC610 or TVME200

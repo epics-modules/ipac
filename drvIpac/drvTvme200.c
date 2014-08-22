@@ -403,6 +403,7 @@ static ipac_carrier_t tvme200 = {
     report,
     baseAddr,
     irqCmd,
+    NULL,
     NULL
 };
 

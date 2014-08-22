@@ -288,24 +288,26 @@ static int initialise (
         epicsUInt16 clkControl = 0;
 
         for (slot = 0; slot < SLOTS; slot++) {
+            epicsUInt16 word;
             ipac_idProm_t *id = (ipac_idProm_t *)
                 private->addr[ipac_addrID][slot];
 
-            if (ipcCheckId(id) == OK) {
+            if (!devReadProbe(sizeof(word), (void *)&id->asciiI, (char *)&word)
+                && ipcCheckId(id) == OK) {
                 if ((id->asciiP & 0xff) == 'P') {
                     /* ID Prom is Format 1 */
                     clkControl |= ((id->asciiC & 0xff) == 'H') << slot;
                 } else {
                     /* ID Prom is Format 2 */
                     ipac_idProm2_t *id2 = (ipac_idProm2_t *) id;
-                    epicsUInt16 flags = id2->flags;
 
-                    if (flags & 1) {
+                    word = id2->flags;
+                    if (word & 1) {
                         printf("AVME-IP: IP module at (%d,%d) has flags = %x\n",
-                            carrier, slot, flags);
+                            carrier, slot, word);
                         continue;
                     }
-                    if (flags & 4)
+                    if (word & 4)
                         clkControl |= 1 << slot;
                 }
             }
@@ -456,6 +458,7 @@ static ipac_carrier_t avme96XX = {
     NULL,
     baseAddr,
     irqCmd,
+    NULL,
     NULL
 };
 

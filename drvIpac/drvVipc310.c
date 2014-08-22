@@ -286,6 +286,7 @@ static ipac_carrier_t vipc310 = {
     NULL,
     baseAddr,
     irqCmd,
+    NULL,
     NULL
 };
 
