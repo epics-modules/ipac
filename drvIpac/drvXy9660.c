@@ -60,6 +60,7 @@ Copyright (c) 2007 UChicago Argonne LLC.
 #include <epicsExit.h>
 #include <iocsh.h>
 #include <epicsExport.h>
+#include <epicsEndian.h>
 
 /* Module headers */
 #include "drvIpac.h"
@@ -237,11 +238,13 @@ static int initialise (
 
     /* Safely disable everything on the carrier */
     value = 0;
-    if ((status = devWriteProbe(2, &regs->ctlStatus, &value)) ||
-        (status = devWriteProbe(2, &regs->memEnable, &value)) ||
-        (status = devWriteProbe(2, &regs->irqEnable, &value))) {
-        printf("AVME-IP: Card probe at VME A16:%4.4x failed, is it there?\n",
-            baseAddr);
+    /* Only byte-wide writes work; address the low byte */
+    #define B0 (EPICS_BYTE_ORDER == EPICS_ENDIAN_BIG)
+    if ((status = devWriteProbe(1, B0 + (char *) &regs->ctlStatus, &value)) ||
+        (status = devWriteProbe(1, B0 + (char *) &regs->memEnable, &value)) ||
+        (status = devWriteProbe(1, B0 + (char *) &regs->irqEnable, &value))) {
+        printf("AVME-IP: Write to %p (VME A16:%4.4x) failed, is it there?\n",
+            ptr, baseAddr);
         return status;
     }
 

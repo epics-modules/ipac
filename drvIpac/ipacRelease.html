@@ -46,6 +46,11 @@ used as examples of the changes needed.</LI>
 card reset request described in the documentation. This bug has existed in all
 previous versions of the driver, but should now be fixed.</LI>
 
+<LI>The Xy9660 driver would not work with some VME CPUs because the calls to
+<TT>devWriteProbe</TT> in the <TT>initialise</TT> routine requested word-size
+write operations, but only single-byte operations succeed. The routine has been
+changed to use byte-size write probes.</LI>
+
 </UL>
 
 <HR>
