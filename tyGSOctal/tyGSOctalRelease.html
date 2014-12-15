@@ -11,7 +11,7 @@
 <CENTER>
 <H2>SBS/GreenSpring Octal Serial Driver Release Notes</H2>
 <P>Software by <I>Peregrine McGehee</I><BR>
-Release by <I>Andrew Johnson</I></P>
+Rewritten and maintained by <I>Andrew Johnson</I></P>
 </CENTER>
 
 <P>This document describes changes made to Peregrine McGehee's vxWorks driver
@@ -19,6 +19,19 @@ for the SBS/GreenSpring Octal RS232/RS422/RS485 IndustryPack modules since this
 driver was merged into the unbundled EPICS ipac support area. Version numbers
 refer to the release of the ipac support software as a whole. The earliest
 version appears at the bottom, with more recent releases above it.</P><HR>
+
+<HR>
+<H2>Version 2.13</H2>
+
+<P>Bugs Fixed:</P>
+
+<UL>
+
+<LI>Fixed problems using this driver on MVME3100 and 6100 boards by changing the
+ISR. It now only processes one channel per interrupt, and when called it starts
+scanning for work to be done from the next channel in turn.</LI>
+
+</UL>
 
 <HR>
 <H2>Version 2.12</H2>
