@@ -799,7 +799,7 @@ LOCAL STATUS tyGSOctalIoctl
  * flow control for the specified port.
  *
  */
-void tyGSOctalConfig (
+STATUS tyGSOctalConfig (
     char *name,
     int baud,
     char parity,
@@ -812,9 +812,9 @@ void tyGSOctalConfig (
     int opts = 0;
     int key;
 
-    if (!dev) {
+    if (!dev || strcmp(dev->tyDev.devHdr.name, name)) {
         printf("%s: Device %s not found\n", fn_nm, name);
-        return;
+        return ERROR;
     }
 
     switch (bits) {
@@ -847,6 +847,7 @@ void tyGSOctalConfig (
     tyGSOctalOptsSet(dev, opts);
     tyGSOctalBaudSet(dev, baud);
     intUnlock (key);
+    return OK;
 }
 
 /*****************************************************************************

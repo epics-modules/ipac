@@ -55,7 +55,6 @@ typedef struct quadTable {
 int tyGSOctalDrv(int);
 int tyGSOctalModuleInit(const char *, const char *, int, int, int);
 const char *tyGSOctalDevCreate(char *, const char *, int, int, int);
-void tyGSOctalConfig(char *, int, char, int, int, char);
 void tyGSOctalReport(void);
 
 #endif
