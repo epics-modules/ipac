@@ -1,0 +1,5 @@
+# This driver depends on drvIpac:
+include "drvIpac.dbd"
+
+# It supplies iocsh commands, so needs a registrar:
+registrar(IP520Registrar)

@@ -1,0 +1,50 @@
+------ Call Charts -----
+
+Software Versions:
+VxWorks - 6.9.4.1
+ASYN    - 4.26
+IPAC    - 2.14
+
+-> IP520Drv() - from VxWorks console shell. 
+  -> iosDrvInstall()
+
+-> IP520ModuleInit() - from VxWorks console shell. 
+  -> ipmValidate()
+  -> ipmBaseAddr()
+  -> ipmIntConnect()
+
+-> IP520DevCreate() - from the VxWorks console shell OR IP520AsynInit(). 
+  -> IP520OctalFindQT()
+  -> tyDevInit()
+  -> IP520InitChannel()
+    -> IP520BaudSet()
+    -> ip520OptsSet()
+
+-> connectIt - from drvAsynSerialPort.c 
+  -> ioCreateOrOpen (VxWorks)
+    -> ioOpen (VxWorks)
+        -> IP520Open()
+  -> applyOptions (asyn)
+    -> ioctl (VxWorks)
+      -> iosIoctlInternal (VxWorks)
+        -> iosFdEntryIoctl (VxWorks)
+          -> IP520Ioctl
+ 
+-> portThread (asynManager.c:876) - call chart from asynrRecord to IP520TxStartup().
+  -> asynCallbackProcess (asynRecord.c:813)
+    -> performIO (asynRecord.c:1319)
+      -> performOctetIO (asynRecord.c:1532)
+        -> writeIt (asynInterposeEos.c:174)
+          -> writeIt (asynOctetBase.c:222)
+            -> writeIt (drvAsynSerialPort.c:670)
+              -> write (ioLib.c:887)
+                -> ioReadWrite (ioLib.c:800)
+                  -> iosWrite (iosLib.c:1585)
+                    -> IP520Write (ip520.c:568)
+                      -> tyWrite (tyLib.c:1439)
+                        -> tyTxStartup (tyLib.c:2168)
+                          -> IP520TxStartup (ip520.c:1039)
+
+
+ 
+
