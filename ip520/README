@@ -18,7 +18,7 @@ IPAC    - 2.14
   -> tyDevInit()
   -> IP520InitChannel()
     -> IP520BaudSet()
-    -> ip520OptsSet()
+    -> IP520OptsSet()
 
 -> connectIt - from drvAsynSerialPort.c 
   -> ioCreateOrOpen (VxWorks)

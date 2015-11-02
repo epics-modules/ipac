@@ -10,14 +10,14 @@ alink="0000080">
 
 <h2>Introduction</h2>
 
-<p>This is the driver for the Acromag IP520 EIA/TIA-232E Industry Pack 
-communication module (the companion 422/485 IP521 board is not yet supported).
-</p>
+<p>This is a driver for the Acromag IP520 EIA/TIA-232E Industry Pack
+communication module (the companion 422/485 IP521 board is not yet
+supported).</p>
 
-<p>The driver uses <a href="drvIpac">drvIpac</a> for configuration of the
+<p>The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the
 carrier board plus access routines for the underlying ST16C554/654 octalUart
-used in the IP modules. The driver implements a standard vxWorks terminal
-driver making use of the vxWorks tyLib system library.</p>
+used in the IP modules. The driver implements a standard VxWorks terminal
+port making use of the vxWorks tyLib system library.</p>
 
 <h2>Configuration Example</h2>
 
@@ -101,8 +101,7 @@ IP520DevCreateAll "/tyGS/1,0/",   "Mod2", 512, 512
 IP520Config "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
 
 # Ports default to 9600, 'N', 1, 8, 'N'
-
-  </pre>
+</pre>
 </blockquote>
 
 </body>

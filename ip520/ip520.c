@@ -8,58 +8,78 @@ Last Modified:  $Date$
 HeadURL:        $URL$
 */
 
+/**************************************************************************
+ History:
+ who  when       what
+ ---  ---------- ------------------------------------------------
+ RLS  2014/05/05 Original. Based on Andrew Johnson's "tyGSOctal".
+**************************************************************************/
 
 /*
- History:
- who  when        what
- ---  ----------  ------------------------------------------------
- RLS  2014/05/05  Original. Based on Andrew Johnson's "tyGSOctal".
- 
- 
-Implentation Notes: 
- 
-- The three Rx Error Flags (Overrun, Parity, Framing) in the LSR register are cleared whenever the CPU reads the LSR 
-  register. Therefore, Rx error processing must/should be done whenever the LSR register is read. The exception to
-  this rule is IP520Report(). It is assumed that IP520Report() will only be called to identify a known problem. 
- 
-- see README file for more info. 
- 
+Implentation Notes:
+
+- The three Rx Error Flags (Overrun, Parity, Framing) in the LSR register are
+  cleared whenever the CPU reads the LSR register. Therefore, Rx error
+  processing must/should be done whenever the LSR register is read. The
+  exception to this rule is IP520Report(). It is assumed that IP520Report() will
+  only be called to identify a known problem.
+
+- see README file for more info.
+
 */
+
+/* This is needed for vxWorks 6.x to prevent an obnoxious compiler warning */
+#define _VSB_CONFIG_FILE <../lib/h/config/vsbConfig.h>
 
 #include <rebootLib.h>
 #include <intLib.h>
 #include <errnoLib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <logLib.h>
+#include <taskLib.h>
 #include <vxLib.h>
 #include <sioLib.h>
-#include <ctype.h>
 
-#include "IP520Ext.h"
-#include "IP520Int.h"
-#include "drvIpac.h"        /* IP management (from drvIpac) */
-#include "iocsh.h"
-#include "epicsExport.h"
 #include "epicsString.h"
 #include "epicsInterrupt.h"
+#include "drvIpac.h"
+#include "iocsh.h"
+#include "epicsExport.h"
 
 #include "Acromag_ip_modules.h"
+#include "IP520Ext.h"
+#include "IP520Int.h"
+
+/*
+ * Macros
+ */
 
 /* VxWorks 6.9 changed tyDevinit()'s txStartup argument type.
  * This avoids compiler warnings for that call.
  */
-#if !defined(_WRS_VXWORKS_MAJOR) || (_WRS_VXWORKS_MAJOR == 6) && (_WRS_VXWORKS_MINOR < 9)
+#if !defined(_WRS_VXWORKS_MAJOR) || \
+    (_WRS_VXWORKS_MAJOR == 6) && (_WRS_VXWORKS_MINOR < 9)
 #define TY_DEVSTART_PTR FUNCPTR
 #endif
+
+#define isPower2(x) ((x) && !((x) & ((x) - 1)))
+
+/*
+ * Module variables
+ */
 
 LOCAL MOD_TABLE *IP520Modules;
 LOCAL int IP520MaxModules;
 int IP520LastModule;
 
 LOCAL int IP520DrvNum;      /* driver number assigned to this driver */
-LOCAL epicsUInt8 savellc;   /* Save LLC value for EFROn & EFROff functions. */
+LOCAL epicsUInt8 savedlcr;   /* Saved LCR value for EFROn & EFROff functions. */
 
 /*
- * forward declarations
+ * Forward declarations
  */
 void         IP520Int(int);
 LOCAL void   IP520InitChannel(MOD_TABLE *, int);
@@ -70,15 +90,11 @@ LOCAL int    IP520Write(TY_IP520_DEV *, char *, long);
 LOCAL STATUS IP520Ioctl(TY_IP520_DEV *, int, int);
 LOCAL void   IP520TxStartup(TY_IP520_DEV *);
 LOCAL STATUS IP520BaudSet(TY_IP520_DEV *, int);
-LOCAL void   ip520OptsSet(TY_IP520_DEV *, int);
+LOCAL void   IP520OptsSet(TY_IP520_DEV *, int);
 LOCAL void   EFROn(REGMAP *);
 LOCAL void   EFROff(REGMAP *);
 LOCAL void   IsrErrMsg(epicsUInt8, TY_IP520_DEV *);
 
-LOCAL int isPower2(unsigned int x)
-{
-    return ((x != 0) && !(x & (x - 1)));
-}
 
 /******************************************************************************
  *
@@ -113,7 +129,7 @@ STATUS IP520Drv(int maxModules)
 
     IP520MaxModules = maxModules;
     IP520LastModule = 0;
-    IP520Modules = (MOD_TABLE *) calloc(maxModules, sizeof(MOD_TABLE)); 
+    IP520Modules = (MOD_TABLE *) calloc(maxModules, sizeof(MOD_TABLE));
 
     if (!IP520Modules)
     {
@@ -145,7 +161,7 @@ void IP520Report(void)
 
             if (dev->created)
             {
-                printf("  Port %d: %lu chars in, %lu chars out, %lu overrun, %lu parity, %lu framming\n", port,
+                printf("  Port %d: %lu chars in, %lu chars out, %u overrun, %u parity, %u framing\n", port,
                        dev->readCount, dev->writeCount, dev->overCount, dev->parityCount, dev->frameCount);
                 printf("  Port %d: IER = 0x%2.2hhX, LSR = 0x%2.2hhX, MCR = 0x%2.2hhX, LCR = 0x%2.2hhX\n", port,
                        regs->u.read.ier, regs->u.read.lsr, regs->u.read.mcr, regs->u.read.lcr);
@@ -241,9 +257,9 @@ int IP520ModuleInit
         modelID = IP520_OCTAL232;
 /* For Future use.
     else if (strstr(type, "422"))
-        modelID = GSIP_OCTAL422;
+        modelID = IP520_OCTAL422;
     else if (strstr(type, "485"))
-        modelID = GSIP_OCTAL485;
+        modelID = IP520_OCTAL485;
 */
     else
     {
@@ -349,7 +365,7 @@ int IP520ModuleInit
  * to be used should have exactly one device associated with it by calling
  * this routine.
  *
- * For instance, to create the device "/SBS/0,1/3", with buffer sizes 
+ * For instance, to create the device "/SBS/0,1/3", with buffer sizes
  * of 512 bytes, the proper calls would be:
  * .CS
  *    if (IP520ModuleInit("232-1", "232", 0x60, 0, 1) != ERROR) {
@@ -386,11 +402,11 @@ const char * IP520DevCreate
     /* if there is a device already on this channel, don't do it */
     if (dev->created)
         return NULL;
-    
+
     /* initialize the ty descriptor */
     if (tyDevInit (&dev->tyDev, rdBufSize, wrtBufSize, (TY_DEVSTART_PTR) IP520TxStartup) != OK)
         return NULL;
-    
+
     /* initialize the channel hardware */
     IP520InitChannel(pmod, port);
 
@@ -514,7 +530,7 @@ LOCAL void IP520InitChannel(MOD_TABLE *pmod, int port)
  * 9600 baud, no parity, 1 stop bit, 8 bits per char, no flow control
  */
     IP520BaudSet(dev, 9600);
-    ip520OptsSet(dev, CS8 | CLOCAL);
+    IP520OptsSet(dev, CS8 | CLOCAL);
 
     regs->u.write.ier |= 0x05;      /* enable FIFO and Rx interrupts */
     regs->u.write.mcr |= 0x08;      /* enable port interrupts */
@@ -582,19 +598,19 @@ LOCAL int IP520Write
 
 /******************************************************************************
  *
- * ip520OptsSet - set channel serial options
+ * IP520OptsSet - set channel serial options
  *
  * NOMANUAL
  */
 
-LOCAL void ip520OptsSet(TY_IP520_DEV * dev, int opts)
+LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
 {
     MOD_TABLE *pmod = dev->pmod;
     REGMAP *regs    = dev->regs;
-    epicsUInt8 llcr, lefr, lmcr, lisr, LocalFCR;
+    epicsUInt8 llcr, lefr, lmcr, lisr, lfcr;
     int mask = (CSIZE | STOPB | PARENB | PARODD | CLOCAL);
     int baud, hardwareflowcontrol = 0;
-    
+
     switch (opts & CSIZE)
     {
         case CS5:
@@ -641,26 +657,26 @@ LOCAL void ip520OptsSet(TY_IP520_DEV * dev, int opts)
 
     baud = dev->baud;
     if (baud <= 9600)
-        LocalFCR = 0xA1;          /* Set Rx FIFO trigger level = 60. */
+        lfcr = 0xA1;            /* Set Rx FIFO trigger level = 60. */
     else if (baud >= 115200)
     {
         if (hardwareflowcontrol == 0)
-            LocalFCR = 0x01;      /* Set Rx FIFO trigger level = 8. */
+            lfcr = 0x01;        /* Set Rx FIFO trigger level = 8. */
         else
-            LocalFCR = 0x81;      /* Set Rx FIFO trigger level = 56. */
+            lfcr = 0x81;        /* Set Rx FIFO trigger level = 56. */
     }
     else if (baud == 19200)
-        LocalFCR = 0x81;          /* Set Rx FIFO trigger level = 56. */
-    else                          /* For 38,400 and 57,600 baud. */
+        lfcr = 0x81;            /* Set Rx FIFO trigger level = 56. */
+    else                        /* For 38,400 and 57,600 baud. */
     {
         if (hardwareflowcontrol == 0)
-            LocalFCR = 0x41;          /* Set Rx FIFO trigger level = 16. */
+            lfcr = 0x41;        /* Set Rx FIFO trigger level = 16. */
         else
-            LocalFCR = 0x81;          /* Set Rx FIFO trigger level = 56. */
+            lfcr = 0x81;        /* Set Rx FIFO trigger level = 56. */
     }
 
     regs->u.write.fcr  = 0x00;      /* Clear FIFO's. */
-    regs->u.write.fcr  = LocalFCR;  /* Set Rx FIFO trigger level based on baudrate,
+    regs->u.write.fcr  = lfcr;      /* Set Rx FIFO trigger level based on baudrate,
                                      * Set Tx FIFO trigger level to 8 charaters. */
     EFROn(regs);
     lefr = regs->u.read.isr;        /* Read EFR.*/
@@ -694,11 +710,11 @@ LOCAL STATUS IP520BaudSet(TY_IP520_DEV *dev, int baud)
     REGMAP *regs = dev->regs;
     epicsUInt8 llcr, lmcr, dlm, dll;
 
-    if (dev->baud == baud)              /* Any changes? */ 
-        return(rtnstat);                /* No. Exit.    */ 
+    if (dev->baud == baud)              /* Any changes? */
+        return(rtnstat);                /* No. Exit.    */
 
     EFROn(regs);
-    regs->u.write.lcr = savellc;        /* Restore LCR to saved value for following MCR write, but
+    regs->u.write.lcr = savedlcr;       /* Restore LCR to saved value for following MCR write, but
                                            don't disable writes to enhanced functions (EF's). */
     if (baud == 57600)
         regs->u.write.mcr |=   0x80;    /* Only 57600 requires MCR bit#7 = 1; crystal freq. divide by 4.*/
@@ -737,8 +753,8 @@ LOCAL STATUS IP520BaudSet(TY_IP520_DEV *dev, int baud)
             dll = 0x18; /* DLL */
             break;
         case 57600:
-            dlm = 0x00;  /* DLM */
-            dll = 0x04;  /* DLL */
+            dlm = 0x00; /* DLM */
+            dll = 0x04; /* DLL */
             break;
         case 115200:
             dlm = 0x00; /* DLM */
@@ -763,7 +779,7 @@ LOCAL STATUS IP520BaudSet(TY_IP520_DEV *dev, int baud)
     regs->u.write.lcr &= ~(0x80); /* Hide DLL/DLM; expose RBR/THR. */
     llcr = regs->u.read.lcr;      /* Read to flush posted writes. */
 
-    return (rtnstat); 
+    return rtnstat;
 }
 
 /******************************************************************************
@@ -793,7 +809,7 @@ LOCAL STATUS IP520Ioctl
             {
                 key = intLock();
                 status = IP520BaudSet(dev, arg);
-                ip520OptsSet(dev, dev->opts);   /* Always call after IP520BaudSet. */
+                IP520OptsSet(dev, dev->opts);   /* Always call after IP520BaudSet. */
                 intUnlock(key);
             }
             break;
@@ -802,7 +818,7 @@ LOCAL STATUS IP520Ioctl
             break;
         case SIO_HW_OPTS_SET:
             key = intLock();
-            ip520OptsSet(dev, arg);
+            IP520OptsSet(dev, arg);
             intUnlock(key);
             break;
         case SIO_HW_OPTS_GET:
@@ -866,7 +882,7 @@ STATUS IP520Config(char *name, int baud, char parity, int stop, int bits, char f
 
     key = intLock();
     IP520BaudSet(dev, baud);
-    ip520OptsSet(dev, opts);    /* Always call after IP520BaudSet. */
+    IP520OptsSet(dev, opts);    /* Always call after IP520BaudSet. */
     intUnlock(key);
     return(OK);
 }
@@ -876,7 +892,7 @@ STATUS IP520Config(char *name, int baud, char parity, int stop, int bits, char f
  *
  * LOGIC
  * Loop through each of the 8 serial ports, until no Rx or Tx processing required.
- * 
+ *
  */
 void IP520Int(int mod)
 {
@@ -1016,7 +1032,7 @@ LOCAL void IsrErrMsg(epicsUInt8 lsr, TY_IP520_DEV *dev)
  *  ELSE
  *      Set Tx counter to 0.
  *  ENDIF
- * 
+ *
  *  Disable interrupts for Tx FIFO fill.
  *  WHILE (the Tx FIFO is not full, AND, another Tx character is available)
  *      Write character to Tx holding register (THR).
@@ -1067,7 +1083,7 @@ LOCAL void EFROn(REGMAP *regs)
 {
     epicsUInt8 llcr, lefr;
 
-    savellc = regs->u.read.lcr;         /* Save LCR. */
+    savedlcr = regs->u.read.lcr;        /* Save LCR. */
     regs->u.write.lcr = 0xBF;           /* Expose EFR/Xon-1/Xon-2/Xoff-1/Xoff-2; hide ISR/FCR/MCR/LSR/MSR/SCR. */
     llcr = regs->u.read.lcr;            /* Read LCR to flush posted writes. */
     regs->u.write.fcr |= 0x10;          /* Write to EFR; enable writes to enhanced functions. */
@@ -1083,7 +1099,7 @@ LOCAL void EFROff(REGMAP * regs)
                                          * Expose RBR/THR/IER; hide DLL/DLM, AND,
                                          * Expose ISR/FCR/MCR/LSR/MSR/SCR; hide EFR/Xon-1/Xon-2/Xoff-1/Xoff-2. */
     lefr = regs->u.read.isr;            /* Read EFR to flush posted writes. */
-    regs->u.write.lcr = savellc;        /* Restore LCR to save value. */
+    regs->u.write.lcr = savedlcr;       /* Restore LCR to save value. */
     llcr = regs->u.read.lcr;            /* Read LCR to flush posted writes. */
 }
 
