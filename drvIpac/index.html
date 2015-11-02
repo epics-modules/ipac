@@ -330,6 +330,89 @@ have to make any more changes to the drvIpac release files, you already made
 those when you followed the instructions in the previous section.</p>
 
 <h3>
+EPICS R3.14.3 or later</h3>
+
+<ol>
+<li>
+You must use drvIpac release 2.6 or later, see the above table for accurate
+version requirements. Edit the <tt>configure/RELEASE</tt> file and add the line
+
+<blockquote>
+<pre>IPAC=<i>/path/to/ipac/version</i></pre>
+</blockquote></li>
+
+<li>
+In the application source directory where the object files are linked together,
+edit the <tt>Makefile</tt> and add
+
+<blockquote>
+<pre>
+&lt;myapp&gt;_LIBS += Ipac         # for drvIpac,
+&lt;myapp&gt;_LIBS += Tip810       # for CANbus support
+&lt;myapp&gt;_LIBS += TyGSOctal    # for SBS Octal UART
+&lt;myapp&gt;_LIBS += IP520        # for IP520 Octal UART</pre>
+</blockquote></li>
+
+<li>
+Ensure one or more of the following lines is included in the construction of
+the application's database definition file <tt>xxxInclude.dbd</tt>:
+
+<blockquote>
+<pre>
+include "drvIpac.dbd"              # if you only want drvIpac,
+include "devTip810.dbd"            # if you want IPAC + CANbus support, or
+include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support
+include "IP520.dbd"                # for IPAC + IP520 Serial support</pre>
+</blockquote></li>
+
+<li>
+You may also need to make a local copy of the <tt>drvIpac.dbd</tt> file in your
+application's source directory if you need to change the set of carrier drivers
+to be included in the application - these are controlled by the
+<tt>registrar()</tt> statements which are uncommented in that file.</li>
+
+<li>
+Rebuild the application and use the newly installed support as desired.</li>
+</ol>
+
+<h3>
+EPICS R3.14.2</h3>
+
+<ol>
+<li>
+You must use drvIpac release 2.5. Edit the <tt>configure/RELEASE</tt> file and
+add the line
+
+<blockquote>
+<pre>IPAC=<i>/path/to/ipac/version</i></pre>
+</blockquote></li>
+
+<li>
+In the application source directory where the object files are linked together,
+edit the <tt>Makefile</tt> and add
+
+<blockquote>
+<pre>
+&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/ipacLib    # for drvIpac,
+&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/tip810Lib  # for CANbus support
+&lt;myapp&gt;_OBJS_vxWorks   += $(IPAC_BIN)/tyGSOctal  # for SBS Octal UART</pre>
+</blockquote></li>
+
+<li>
+Ensure the following is included in the construction of the application's
+database definition file <tt>appInclude.dbd</tt>.
+
+<blockquote>
+<pre>
+include "drvIpac.dbd"              # if you only want drvIpac,
+include "devTip810.dbd"            # if you want CANbus support too</pre>
+</blockquote></li>
+
+<li>
+Rebuild the application and use the newly installed support as desired.</li>
+</ol>
+
+<h3>
 EPICS R3.13.x</h3>
 
 <ol>
@@ -374,89 +457,6 @@ database definition file
 include "drvIpac.dbd"              # if you only want drvIpac, or
 include "devTip810.dbd"            # if you want CANbus support too</pre>
 </blockquote></li>
-
-<li>
-Rebuild the application and use the newly installed support as desired.</li>
-</ol>
-
-<h3>
-EPICS R3.14.2</h3>
-
-<ol>
-<li>
-You must use drvIpac release 2.5. Edit the <tt>configure/RELEASE</tt> file and
-add the line
-
-<blockquote>
-<pre>IPAC=<i>/path/to/ipac/version</i></pre>
-</blockquote></li>
-
-<li>
-In the application source directory where the object files are linked together,
-edit the <tt>Makefile</tt> and add
-
-<blockquote>
-<pre>
-&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/ipacLib    # for drvIpac,
-&lt;myapp&gt;_LDOBJS_vxWorks += $(IPAC_BIN)/tip810Lib  # for CANbus support
-&lt;myapp&gt;_OBJS_vxWorks   += $(IPAC_BIN)/tyGSOctal  # for SBS Octal UART</pre>
-</blockquote></li>
-
-<li>
-Ensure the following is included in the construction of the application's
-database definition file <tt>appInclude.dbd</tt>.
-
-<blockquote>
-<pre>
-include "drvIpac.dbd"              # if you only want drvIpac,
-include "devTip810.dbd"            # if you want CANbus support too</pre>
-</blockquote></li>
-
-<li>
-Rebuild the application and use the newly installed support as desired.</li>
-</ol>
-
-<h3>
-EPICS R3.14.3 or later</h3>
-
-<ol>
-<li>
-You must use drvIpac release 2.6 or later, see the above table for accurate
-version requirements. Edit the <tt>configure/RELEASE</tt> file and add the line
-
-<blockquote>
-<pre>IPAC=<i>/path/to/ipac/version</i></pre>
-</blockquote></li>
-
-<li>
-In the application source directory where the object files are linked together,
-edit the <tt>Makefile</tt> and add
-
-<blockquote>
-<pre>
-&lt;myapp&gt;_LIBS += Ipac         # for drvIpac,
-&lt;myapp&gt;_LIBS += Tip810       # for CANbus support
-&lt;myapp&gt;_LIBS += TyGSOctal    # for SBS Octal UART
-&lt;myapp&gt;_LIBS += IP520        # for IP520 Octal UART</pre>
-</blockquote></li>
-
-<li>
-Ensure one or more of the following lines is included in the construction of
-the application's database definition file <tt>xxxInclude.dbd</tt>:
-
-<blockquote>
-<pre>
-include "drvIpac.dbd"              # if you only want drvIpac,
-include "devTip810.dbd"            # if you want IPAC + CANbus support, or
-include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support
-include "IP520.dbd"                # for IPAC + IP520 Serial support</pre>
-</blockquote></li>
-
-<li>
-You may also need to make a local copy of the <tt>drvIpac.dbd</tt> file in your
-application's source directory if you need to change the set of carrier drivers
-to be included in the application - these are controlled by the
-<tt>registrar()</tt> statements which are uncommented in that file.</li>
 
 <li>
 Rebuild the application and use the newly installed support as desired.</li>
