@@ -18,4 +18,7 @@ drvTip810_DEPEND_DIRS = drvIpac
 DIRS += tyGSOctal
 tyGSOctal_DEPEND_DIRS = drvIpac
 
+DIRS += ip520
+ip520_DEPEND_DIRS = drvIpac
+
 include $(TOP)/configure/RULES_TOP
