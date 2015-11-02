@@ -40,32 +40,62 @@ Hardware Supported</h2>
 <p>
 Software is included to control the following hardware:</p>
 
+<h3>Carriers</h3>
+
 <ul>
 <li>
 <a href="http://www.gefanucembedded.com/">GE Fanuc Embedded Systems</a> (was
-GreenSpring, then SBS) VIPC310, VIPC610, VIPC616,
-<a href="http://www.gefanucembedded.com/search/index.php?type=products&search=VIPC">VIPC626</a>
-(VIPC627, VIPC628 and VIPC664 may also work) and ATC40 dumb carrier boards</li>
+GreenSpring, then SBS)
+<a href="http://www.gefanucembedded.com/products/394">VIPC310</a>,
+<a href="http://www.gefanucembedded.com/products/131">VIPC610</a>,
+<a href="http://www.gefanucembedded.com/products/128">VIPC616</a>,
+<a href="http://www.gefanucembedded.com/products/480">VIPC626</a>, (VIPC618,
+VIPC627, VIPC628 and VIPC664 may also work) and
+<a href="http://www.gefanucembedded.com/products/263">ATC40</a> dumb carrier
+boards</li>
 
 <li>
-<a href="http://www.tews.com">TEWS Technologies</a>
+<a href="http://www.tews.com/">TEWS Technologies</a>
 <a href="http://www.tews.com/Products/ArticleGroup/TVME/TVME200.html">TVME200</a>
 4 slot carrier board (TVME201 and TVME220 should also work)</li>
 
 <li>
-<a href="http://mcg.motorola.com">Motorola</a>
-<a href="http://mcg.motorola.com/cfm/templates/category.cfm?subCatID=1">
-MVME162 and MVME172</a> MC680x0 CPU boards with IP slots</li>
+<a href="http://www.acromag.com/">Acromag</a>
+<a href="http://www.acromag.com/catalog/414">AVME-9660</a>,
+<a href="http://www.acromag.com/catalog/415">AVME-9668</a> and
+<a href="http://www.acromag.com/catalog/416">AVME-9670</a> 4 slot carrier
+boards, which were also sold by Xycom as the XVME-9660 and 9670</li>
 
+<li>
+<a href="http://www.hytec-electronics.co.uk/Index.aspx">Hytec Electronics</a>
+<a href="http://www.hytec-electronics.co.uk/DescriptionPages/DataSheet.aspx?prodID=387">VICB8002</a>
+and
+<a href="http://www.hytec-electronics.co.uk/DescriptionPages/DataSheet.aspx?prodID=493">VICB8004</a>
+4 slot carrier boards</li>
+
+<li>
+Motorola MVME162 and MVME172 MC680x0 CPU boards with IP slots</li>
+
+</ul>
+
+<h3>Modules</h3>
+
+<ul>
 <li>
 <a href="http://www.tews.com">TEWS Technologies</a>
 <a href="http://www.tews.com/Products/ArticleGroup/TIP/TIP810.html">Tip810</a>
 Basic CANbus interface module</li>
 
 <li>
-<a href="http://www.sbs.com/">SBS</a> (was GreenSpring)
-<a href="http://www.gefanucembedded.com/products/141">IP-OCTAL-232
-serial interface module</a> (<i>not</i> the newer IP-OctalPlus-232)</li>
+<a href="http://www.gefanucembedded.com/">GE Fanuc Embedded Systems</a> (was
+GreenSpring, then SBS)
+<a href="http://www.gefanucembedded.com/products/141">IP-OCTAL-232 serial
+interface module</a> (<em>not</em> the newer IP-OctalPlus-232)</li>
+
+<li>
+<a href="http://www.acromag.com/">Acromag</a>
+<a href="http://www.acromag.com/catalog/393/embedded-io-and-carrier-cards/industry-pack-io-modules/serial-communication/ip500-series">IP520</a>
+8-port asynchronous EIA/TIA-232E serial communication module.</li>
 
 </ul>
 
@@ -91,10 +121,10 @@ below:
 <table border=1>
 <tr>
 <th>
-Version</th>
+IPAC Version</th>
 
 <th>
-EPICS Release</th>
+EPICS Base Version</th>
 
 <th>
 Filename</th>
@@ -102,101 +132,57 @@ Filename</th>
 
 <tr>
 <td align=center>
-2.0</td>
+2.14</td>
 
 <td>
-R3.13.x</td>
+3.14.12 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.0.tar.gz">ipac-2.0.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.14.tar.gz">ipac-2.14.tar.gz</a></td>
 </tr>
 
 <tr>
 <td align=center>
-2.1</td>
+2.13</td>
 
 <td>
-R3.13.x</td>
+3.14.9 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.1.tar.gz">ipac-2.1.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.13.tar.gz">ipac-2.13.tar.gz</a></td>
 </tr>
 
 <tr>
 <td align=center>
-2.2</td>
+2.12</td>
 
 <td>
-R3.13.x</td>
+3.14.9 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.2.tar.gz">ipac-2.2.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.12.tar.gz">ipac-2.12.tar.gz</a></td>
 </tr>
 
 <tr>
 <td align=center>
-2.3</td>
+2.11</td>
 
 <td>
-R3.13.x</td>
+3.14.9 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.11.tar.gz">ipac-2.11.tar.gz</a></td>
 </tr>
 
 <tr>
 <td align=center>
-2.4</td>
+2.10</td>
 
 <td>
-R3.13.x</td>
+3.14.9 or later</td>
 
 <td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
-</tr>
-
-<tr>
-<td align=center>
-2.5</td>
-
-<td>
-R3.14.2</td>
-
-<td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
-</tr>
-
-<tr>
-<td align=center>
-2.6</td>
-
-<td>
-R3.14.4 or later</td>
-
-<td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
-</tr>
-
-<tr>
-<td align=center>
-2.7</td>
-
-<td>
-R3.14.4 or later</td>
-
-<td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.7a.tar.gz">ipac-2.7a.tar.gz</a></td>
-</tr>
-
-<tr>
-<td align=center>
-2.8</td>
-
-<td>
-R3.14.4 or later</td>
-
-<td>
-<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.8.tar.gz">ipac-2.8.tar.gz</a></td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.10.tar.gz">ipac-2.10.tar.gz</a></td>
 </tr>
 
 <tr>
@@ -204,10 +190,109 @@ R3.14.4 or later</td>
 2.9</td>
 
 <td>
-R3.14.9 or later</td>
+3.14.9 or later</td>
 
 <td>
 <a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.9.tar.gz">ipac-2.9.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.8</td>
+
+<td>
+3.14.3 through 3.14.8.2</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.8.tar.gz">ipac-2.8.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.7</td>
+
+<td>
+3.14.3 through 3.14.8.2</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.7a.tar.gz">ipac-2.7a.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.6</td>
+
+<td>
+3.14.3 through 3.14.8.2</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.6.tar.gz">ipac-2.6.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.5</td>
+
+<td>
+3.14.2</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.5.tar.gz">ipac-2.5.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.4</td>
+
+<td>
+3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.4.tar.gz">ipac-2.4.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.3</td>
+
+<td>
+3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.3.tar.gz">ipac-2.3.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.2</td>
+
+<td>
+3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.2.tar.gz">ipac-2.2.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.1</td>
+
+<td>
+3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.1.tar.gz">ipac-2.1.tar.gz</a></td>
+</tr>
+
+<tr>
+<td align=center>
+2.0</td>
+
+<td>
+3.13.x</td>
+
+<td>
+<a href="http://www.aps.anl.gov/epics/download/modules/ipac-2.0.tar.gz">ipac-2.0.tar.gz</a></td>
 </tr>
 
 </table>
@@ -351,7 +436,8 @@ edit the <tt>Makefile</tt> and add
 <pre>
 &lt;myapp&gt;_LIBS += Ipac         # for drvIpac,
 &lt;myapp&gt;_LIBS += Tip810       # for CANbus support
-&lt;myapp&gt;_LIBS += TyGSOctal    # for SBS Octal UART</pre>
+&lt;myapp&gt;_LIBS += TyGSOctal    # for SBS Octal UART
+&lt;myapp&gt;_LIBS += IP520        # for IP520 Octal UART</pre>
 </blockquote></li>
 
 <li>
@@ -362,7 +448,8 @@ the application's database definition file <tt>xxxInclude.dbd</tt>:
 <pre>
 include "drvIpac.dbd"              # if you only want drvIpac,
 include "devTip810.dbd"            # if you want IPAC + CANbus support, or
-include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support</pre>
+include "tyGSOctal.dbd"            # for IPAC + SBS Octal Serial support
+include "IP520.dbd"                # for IPAC + IP520 Serial support</pre>
 </blockquote></li>
 
 <li>
@@ -379,120 +466,37 @@ Rebuild the application and use the newly installed support as desired.</li>
 <a name="documentation">Documentation</a></h2>
 
 <p>
-The following documentation is available:</p>
+The following documentation is provided with this release:</p>
 
-<blockquote>
-<table border=1>
+<ul>
+<li>
+<a href="drvIpac.html">drvIpac - Industry Pack Driver</a></li>
 
-<tr>
-<th>Title</th><th>Release Version</th></tr>
+<li>
+<a href="ipacRelease.html">IPAC Driver Release Notes</a></li>
 
-<tr>
-<td>Index - Read first</td>
-<td>
-<a href="../R2.3/index.html">2.3</a>
-<a href="../R2.4/index.html">2.4</a>
-<a href="../R2.5/index.html">2.5</a>
-<a href="../R2.6/index.html">2.6</a>
-<a href="../R2.7/index.html">2.7</a>
-<a href="../R2.8/index.html">2.8</a>
-<a href="index.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="drvTip810.html">drvTip810 - CAN Bus Driver</a></li>
 
-<tr>
-<td>drvIpac - Industry Pack Driver</td>
-<td>
-<a href="../R2.3/drvIpac.html">2.3</a>
-<a href="../R2.4/drvIpac.html">2.4</a>
-<a href="../R2.5/drvIpac.html">2.5</a>
-<a href="../R2.6/drvIpac.html">2.6</a>
-<a href="../R2.7/drvIpac.html">2.7</a>
-<a href="../R2.8/drvIpac.html">2.8</a>
-<a href="drvIpac.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="devCan.html">devCan - CAN Bus Device Support</a></li>
 
-<tr>
-<td>IPAC Driver Release Notes</td>
-<td>
-<a href="../R2.3/ipacRelease.html">2.3</a>
-<a href="../R2.4/ipacRelease.html">2.4</a>
-<a href="../R2.5/ipacRelease.html">2.5</a>
-<a href="../R2.6/ipacRelease.html">2.6</a>
-<a href="../R2.7/ipacRelease.html">2.7</a>
-<a href="../R2.8/ipacRelease.html">2.8</a>
-<a href="ipacRelease.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="canRelease.html">CANbus Driver Release Notes</a></li>
 
-<tr>
-<td>drvTip810 - CAN Bus Driver</td>
-<td>
-<a href="../R2.3/drvTip810.html">2.3</a>
-<a href="../R2.4/drvTip810.html">2.4</a>
-<a href="../R2.5/drvTip810.html">2.5</a>
-<a href="../R2.6/drvTip810.html">2.6</a>
-<a href="../R2.7/drvTip810.html">2.7</a>
-<a href="../R2.8/drvTip810.html">2.8</a>
-<a href="drvTip810.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="tyGSOctal.html">OctalUart IP Module Support</a></li>
 
-<tr>
-<td>devCan - CAN Bus Device Support</td>
-<td>
-<a href="../R2.3/devCan.html">2.3</a>
-<a href="../R2.4/devCan.html">2.4</a>
-<a href="../R2.5/devCan.html">2.5</a>
-<a href="../R2.6/devCan.html">2.6</a>
-<a href="../R2.7/devCan.html">2.7</a>
-<a href="../R2.8/devCan.html">2.8</a>
-<a href="devCan.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="tyGSOctalRelease.html">Octal Serial Driver Release Notes</a></li>
 
-<tr>
-<td>CANbus Driver Release Notes</td>
-<td>
-<a href="../R2.3/canRelease.html">2.3</a>
-<a href="../R2.4/canRelease.html">2.4</a>
-<a href="../R2.5/canRelease.html">2.5</a>
-<a href="../R2.6/canRelease.html">2.6</a>
-<a href="../R2.7/canRelease.html">2.7</a>
-<a href="../R2.8/canRelease.html">2.8</a>
-<a href="canRelease.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="IP520.html">Acromag IP520 Module Support</a></li>
 
-<tr>
-<td>SBS OctalUart IP Module Support</td>
-<td>
-<a href="../R2.3/tyGSOctal.html">2.3</a>
-<a href="../R2.4/tyGSOctal.html">2.4</a>
-<a href="../R2.5/tyGSOctal.html">2.5</a>
-<a href="../R2.6/tyGSOctal.html">2.6</a>
-<a href="../R2.7/tyGSOctal.html">2.7</a>
-<a href="../R2.8/tyGSOctal.html">2.8</a>
-<a href="tyGSOctal.html">2.9</a>
-</td>
-</tr>
+<li>
+<a href="IP520Release.html">Acromag IP520 Serial Driver Release Notes</a></li>
 
-<tr>
-<td>SBS Octal Serial Driver Release Notes</td>
-<td>
-<a href="../R2.3/tyGSOctalRelease.html">2.3</a>
-<a href="../R2.4/tyGSOctalRelease.html">2.4</a>
-<a href="../R2.5/tyGSOctalRelease.html">2.5</a>
-<a href="../R2.6/tyGSOctalRelease.html">2.6</a>
-<a href="../R2.7/tyGSOctalRelease.html">2.7</a>
-<a href="../R2.8/tyGSOctalRelease.html">2.8</a>
-<a href="tyGSOctalRelease.html">2.9</a>
-</td>
-</tr>
-
-</table>
-</blockquote>
+</ul>
 
 
 <h2>
