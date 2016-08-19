@@ -5,3 +5,4 @@ html
 include
 javalib
 lib
+**/O.*
