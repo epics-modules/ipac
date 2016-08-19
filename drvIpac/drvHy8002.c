@@ -19,9 +19,6 @@ Authors:
     Walter Scott (aka Scotty), HyTec Electronics Ltd
     Jim Chen, HyTec Electronics Ltd
 
-Version:
-    $Id$
-
 Portions Copyright (c) 1995-1999 Andrew Johnson
 Portions Copyright (c) 1999-2013 UChicago Argonne LLC,
     as Operator of Argonne National Laboratory

@@ -13,8 +13,6 @@ Author:
     Andrew Johnson <anjohnson@iee.org>
 Created:
     14 August 1995
-Version:
-    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

@@ -18,8 +18,6 @@ Author:
     Andrew Johnson <anjohnson@iee.org>
 Created:
     17 October 1997
-Version:
-    $Id$
 
 Copyright (c) 1995-2003 Andrew Johnson
 

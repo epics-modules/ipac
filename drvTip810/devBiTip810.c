@@ -12,8 +12,6 @@ Author:
     Andrew Johnson <anjohnson@iee.org>
 Created:
     3 April 1997
-Version:
-    $Id$
 
 Copyright (c) 1995-2000 Andrew Johnson
 

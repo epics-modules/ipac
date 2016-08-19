@@ -24,8 +24,6 @@ Author:
     Andrew Johnson <anjohnson@iee.org>
 Created:
     20th August 2007
-Version:
-    $Id$
 
 Copyright (c) 2007 UChicago Argonne LLC.
 

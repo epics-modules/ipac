@@ -15,9 +15,6 @@ Authors:
 
 Created:
     25 August 1998
-Version:
-    $Id$
-
 
 Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 
