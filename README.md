@@ -4,9 +4,7 @@ This README file describes ipac, also previously known as drvIpac, a collection
 of software mainly for vxWorks and RTEMS to drive one or more Industry Pack (IP)
 carrier boards and a small set of IP I/O modules. Other modules exist that use
 the carrier interface defined here. This software was written for use with
-EPICS, the Experimental [Physics and Industrial Control System
-toolkit](http://www.aps.anl.gov/epics)
-
+EPICS, the [Experimental Physics and Industrial Control System toolkit](http://www.aps.anl.gov/epics)
 
 ## EPICS Application Structure
 
