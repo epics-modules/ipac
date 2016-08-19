@@ -1,9 +1,9 @@
-IPAC and CANbus Driver
-======================
+IPAC Carrier and Module Drivers
+===============================
 
     This README file describes ipac, also previously known as drvIpac,
     which is a collection of software for vxWorks and RTEMS to drive one
-    or more Industry Pack carrier boards, and a small set of IP I/O
+    or more Industry Pack (IP) carrier boards and a small set of IP I/O
     modules. This software was written to use with EPICS, the Experimental
     Physics and Industrial Control System toolkit whose website is at
     http://www.aps.anl.gov/epics
@@ -12,6 +12,7 @@ IPAC and CANbus Driver
 EPICS Application Structure
 ---------------------------
 
+    This is a standard EPICS support module using the EPICS build system.
     Sites may wish to edit the top-level Makefile to change the list of
     module drivers that are built along with the ipac driver. Drivers
     should be configured to only compile on the OS platforms for which
