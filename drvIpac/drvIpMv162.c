@@ -42,10 +42,13 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <vxLib.h>
 #include <taskLib.h>
 
+#include "epicsTypes.h"
+#include "errMdef.h"
+#include "iocsh.h"
+#include "epicsExport.h"
+
 #include "drvIpac.h"
 #include "ipic.h"
-#include "epicsExport.h"
-#include "iocsh.h"
 
 
 /* Characteristics of the card */

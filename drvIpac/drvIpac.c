@@ -34,17 +34,22 @@ Copyright (c) 1995-2007 Andrew Johnson
 *******************************************************************************/
 
 
+/* ANSI headers */
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 
+/* EPICS headers */
+#include <epicsTypes.h>
+#include <errMdef.h>
 #include <drvSup.h>
 #include <epicsStdio.h>
-#include <epicsExport.h>
 #include <cantProceed.h>
 #include <devLib.h>
 #include <iocsh.h>
+#include <epicsExport.h>
 
+/* Module headers */
 #include "drvIpac.h"
 
 

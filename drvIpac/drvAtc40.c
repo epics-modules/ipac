@@ -37,9 +37,11 @@ allow the user to configure different memory sizes
 #include <iv.h>
 #include <semLib.h>
 
-#include "drvIpac.h"
-#include "epicsExport.h"
+#include "epicsTypes.h"
+#include "errMdef.h"
 #include "iocsh.h"
+#include "epicsExport.h"
+#include "drvIpac.h"
 
 
 /*

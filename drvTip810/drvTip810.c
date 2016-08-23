@@ -39,6 +39,7 @@ Copyright (c) 1995-2007 Andrew Johnson
 #include <ctype.h>
 #include <errno.h>
 
+#include <epicsTypes.h>
 #include <iocsh.h>
 #include <drvSup.h>
 #include <devLib.h>
@@ -47,9 +48,9 @@ Copyright (c) 1995-2007 Andrew Johnson
 #include <epicsMutex.h>
 #include <epicsTimer.h>
 #include <epicsThread.h>
-#include <epicsExport.h>
 #include <epicsInterrupt.h>
 #include <epicsMessageQueue.h>
+#include <epicsExport.h>
 
 #include "canBus.h"
 #include "drvTip810.h"

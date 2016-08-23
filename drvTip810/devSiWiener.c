@@ -39,6 +39,8 @@ Copyright (c) 1995-2000 Carl Lionberger and Andrew Johnson
 #include <stdlib.h>
 #include <string.h>
 
+#include <epicsTypes.h>
+#include <epicsTimer.h>
 #include <errMdef.h>
 #include <devLib.h>
 #include <dbAccess.h>

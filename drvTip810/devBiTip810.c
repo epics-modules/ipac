@@ -35,6 +35,8 @@ Copyright (c) 1995-2000 Andrew Johnson
 #include <string.h>
 #include <ctype.h>
 
+#include <epicsTypes.h>
+#include <epicsTimer.h>
 #include <dbDefs.h>
 #include <dbAccess.h>
 #include <recSup.h>

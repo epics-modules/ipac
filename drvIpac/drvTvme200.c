@@ -47,6 +47,8 @@ Modifications:
 #include <string.h>
 
 /* EPICS headers */
+#include <epicsTypes.h>
+#include <errMdef.h>
 #include <dbDefs.h>
 #include <devLib.h>
 #include <epicsThread.h>

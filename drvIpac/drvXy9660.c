@@ -52,13 +52,15 @@ Copyright (c) 2007 UChicago Argonne LLC.
 /* EPICS headers */
 #define epicsAssertAuthor "Andrew Johnson <anj@aps.anl.gov>"
 #include <epicsAssert.h>
+#include <epicsTypes.h>
+#include <errMdef.h>
 #include <dbDefs.h>
 #include <devLib.h>
 #include <epicsThread.h>
 #include <epicsExit.h>
 #include <iocsh.h>
-#include <epicsExport.h>
 #include <epicsEndian.h>
+#include <epicsExport.h>
 
 /* Module headers */
 #include "drvIpac.h"

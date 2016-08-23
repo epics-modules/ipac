@@ -39,6 +39,8 @@ Copyright (c) 1995-2003 Andrew Johnson
 #include <stdio.h>
 #include <string.h>
 
+#include <epicsTypes.h>
+#include <errMdef.h>
 #include <devLib.h>
 #include <iocsh.h>
 #include <epicsExport.h>
