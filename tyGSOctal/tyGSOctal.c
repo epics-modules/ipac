@@ -1039,6 +1039,22 @@ static void tyGSOctalDevCreateCallFunc(const iocshArgBuf *arg)
        arg[3].ival, arg[4].ival);
 }
 
+/* tyGSOctalDevCreateAll */
+static const iocshArg tyGSOctalDevCreateAllArg0 = {"devName",iocshArgString};
+static const iocshArg tyGSOctalDevCreateAllArg1 = {"moduleID", iocshArgString};
+static const iocshArg tyGSOctalDevCreateAllArg2 = {"rdBufSize", iocshArgInt};
+static const iocshArg tyGSOctalDevCreateAllArg3 = {"wrBufSize", iocshArgInt};
+static const iocshArg * const tyGSOctalDevCreateAllArgs[4] = {
+    &tyGSOctalDevCreateAllArg0, &tyGSOctalDevCreateAllArg1,
+    &tyGSOctalDevCreateAllArg2, &tyGSOctalDevCreateAllArg3 };
+static const iocshFuncDef tyGSOctalDevCreateAllFuncDef =
+    {"tyGSOctalDevCreateAll",4,tyGSOctalDevCreateAllArgs};
+static void tyGSOctalDevCreateAllCallFunc(const iocshArgBuf *arg)
+{
+    tyGSOctalDevCreateAll(arg[0].sval, arg[1].sval, arg[2].ival, arg[3].ival);
+}
+
+
 /* tyGSOctalConfig */
 static const iocshArg tyGSOctalConfigArg0 = {"devName",iocshArgString};
 static const iocshArg tyGSOctalConfigArg1 = {"baud", iocshArgInt};
@@ -1063,6 +1079,7 @@ static void tyGSOctalRegistrar(void) {
     iocshRegister(&tyGSOctalReportFuncDef,tyGSOctalReportCallFunc);
     iocshRegister(&tyGSOctalModuleInitFuncDef,tyGSOctalModuleInitCallFunc);
     iocshRegister(&tyGSOctalDevCreateFuncDef,tyGSOctalDevCreateCallFunc);
+    iocshRegister(&tyGSOctalDevCreateAllFuncDef, tyGSOctalDevCreateAllCallFunc);
     iocshRegister(&tyGSOctalConfigFuncDef,tyGSOctalConfigCallFunc);
 }
 epicsExportRegistrar(tyGSOctalRegistrar);
