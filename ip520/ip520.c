@@ -1154,6 +1154,21 @@ static void IP520DevCreateCallFunc(const iocshArgBuf *arg)
     IP520DevCreate(arg[0].sval, arg[1].sval, arg[2].ival, arg[3].ival, arg[4].ival);
 }
 
+/* IP520DevCreateAll */
+static const iocshArg IP520DevCreateAllArg0 = {"devName",iocshArgString};
+static const iocshArg IP520DevCreateAllArg1 = {"moduleID", iocshArgString};
+static const iocshArg IP520DevCreateAllArg2 = {"rdBufSize", iocshArgInt};
+static const iocshArg IP520DevCreateAllArg3 = {"wrBufSize", iocshArgInt};
+static const iocshArg * const IP520DevCreateAllArgs[4] = {
+    &IP520DevCreateAllArg0, &IP520DevCreateAllArg1,
+    &IP520DevCreateAllArg2, &IP520DevCreateAllArg3 };
+static const iocshFuncDef IP520DevCreateAllFuncDef =
+    {"IP520DevCreateAll",4,IP520DevCreateAllArgs};
+static void IP520DevCreateAllCallFunc(const iocshArgBuf *arg)
+{
+    IP520DevCreateAll(arg[0].sval, arg[1].sval, arg[2].ival, arg[3].ival);
+}
+
 /* IP520Config */
 static const iocshArg IP520ConfigArg0 = {"devName",  iocshArgString};
 static const iocshArg IP520ConfigArg1 = {"baud",     iocshArgInt};
@@ -1174,6 +1189,7 @@ static void IP520Registrar(void) {
     iocshRegister(&IP520ReportFuncDef,IP520ReportCallFunc);
     iocshRegister(&IP520ModuleInitFuncDef,IP520ModuleInitCallFunc);
     iocshRegister(&IP520DevCreateFuncDef,IP520DevCreateCallFunc);
+    iocshRegister(&IP520DevCreateAllFuncDef, IP520DevCreateAllCallFunc);
     iocshRegister(&IP520ConfigFuncDef,IP520ConfigCallFunc);
 }
 epicsExportRegistrar(IP520Registrar);
