@@ -1,0 +1,34 @@
+# ### ip520.iocsh ###
+
+#- ###################################################
+#- INSTANCE         - Name by which you want to refer to this IndustryPack module
+#- INT_VEC          - Interrupt Vector
+#- PORT             - Optional: tyGSOctal port name prefix, this script will create 8
+#-                              ports named $(PORT)0 ... $(PORT)7
+#-                    Default: /tyGS/$(CARRIER),$(SLOT)/
+#-
+#- CARRIER          - Optional: number of IP carrier (Carriers are numbered in the order
+#-                              in which they were defined in ipacAddXYZ() calls.)
+#-                    Default: 0
+#-
+#- SLOT             - Optional: location of module on carrier -- 0..3 for slot A..slot D
+#-                    Default: 0
+#-
+#- MAX_MODULES      - Optional: Max number of tyGSOctal modules that will be configured
+#-                    Default: 1
+#-
+#- IN_BUFF          - Optional: Read buffer size
+#-                    Defult: 1000
+#-
+#- OUT_BUFF         - Optional: Write buffer size
+#-                    Default: 1000
+#-
+#- ###################################################
+
+# Initialize Octal UART stuff
+$(IP520_INIT_COMPLETE="") IP520Drv($(MAX_MODULES=1))
+
+IP520ModuleInit("$(INSTANCE)", "232", $(INT_VEC), $(CARRIER=0), $(SLOT=0))
+IP520DevCreateAll("$(PORT=/tyGS/$(CARRIER=0),$(SLOT=0)/)", "$(INSTANCE)", 1000, 1000)
+
+epicsEnvSet("IP520_INIT_COMPLETE", "#")

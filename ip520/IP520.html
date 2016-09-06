@@ -104,5 +104,42 @@ IP520Config "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
 </pre>
 </blockquote>
 
+<p>When running EPICS base 3.15 or higher, the iocshLoad command can be used
+with the ip520.iocsh script included in this module's top-level iocsh
+directory. The following shows an example of such a use.</p>
+
+<blockquote>
+<pre>
+# Initialize the drvIpac carriers.
+# -------------------------------
+# carrier#0
+ipacAddMVME162    "A:m=0xe0000000,64 l=3,2"
+# carrier#1
+ipacAddVIPC616_01 "0x6400,0xB0000000"
+# carrier#2
+ipacAddTVME200    "602fb00"
+
+# Initialize an ip520 module called MOD0 that's located in slot A of
+# of the first initialized carrier (MVME162), and then create 8 tty
+# ports labeled /tyGS/0,0/0 through /tyGS/0,0/7 on that module.
+# Also tell the script that you will be initializing up to 5 more modules.
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD0, INT_VEC=0x80, CARRIER=0, SLOT=0, MAX_MODULES=6")
+
+# Initialize the ip520 module in slot B of the MVME162, the tty ports
+# created will be labeled /tyGS/0,1/0 through /tyGS/0,1/7
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD1, INT_VEC=0x81, CARRIER=0, SLOT=1")
+
+# Init two IP520 modules from the 1st SBS VIPC616_01 carrier; the 1st
+# module is in slot A, the 2nd module is in slot C.
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD2, INT_VEC=0x82, CARRIER=1, SLOT=0")
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD3, INT_VEC=0x83, CARRIER=1, SLOT=2")
+
+# Init two IP520 modules from the 2nd SBS VIPC616_01 carrier; the 1st
+# module is in slot B, the second module is in slot D.
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD4, INT_VEC=0x84, CARRIER=2, SLOT=1")
+iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD5, INT_VEC=0x85, CARRIER=2, SLOT=3")
+</pre>
+</blockquote>
+
 </body>
 </html>
