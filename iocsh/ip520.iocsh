@@ -3,11 +3,11 @@
 #- ###################################################
 #- INSTANCE         - Name by which you want to refer to this IndustryPack module
 #- INT_VEC          - Interrupt Vector
-#- PORT             - Optional: tyGSOctal port name prefix, this script will create 8 
+#- PORT             - Optional: tyGSOctal port name prefix, this script will create 8
 #-                              ports named $(PORT)0 ... $(PORT)7
 #-                    Default: /tyGS/$(CARRIER),$(SLOT)/
 #-
-#- CARRIER          - Optional: number of IP carrier (Carriers are numbered in the order 
+#- CARRIER          - Optional: number of IP carrier (Carriers are numbered in the order
 #-                              in which they were defined in ipacAddXYZ() calls.)
 #-                    Default: 0
 #-

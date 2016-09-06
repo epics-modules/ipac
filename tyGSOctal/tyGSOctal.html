@@ -43,7 +43,7 @@ tyGSOctalDrv 6
 # ----------------------------
 # tyGSOctalModuleInit(char *moduleID, char *ModuleType, int irq_num,
 #                     char *carrier#, int slot#)
-#   moduleID   - assign the IP module a name for future reference. 
+#   moduleID   - assign the IP module a name for future reference.
 #   ModuleType - "232", "422", or "485".
 #   irq_num    - interrupt request number.
 #   carrier#   - carrier# assigned from the ipacAdd<i>CarrierType</i>() call.
@@ -105,9 +105,9 @@ tyGSOctalConfig "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
   </pre>
 </blockquote>
 
-<p>Alternately, for those using EPICS base 3.15 or higher, the iocshLoad command can be used with 
-the tyGSOctal.iocsh script included in the top-level iocsh directory. The following is an example of
-such a use.</p>
+<p>When running EPICS base 3.15 or higher, the iocshLoad command can be used
+with the tyGSOctal.iocsh script included in this module's top-level iocsh
+directory. The following shows an example of such a use.</p>
 
 <blockquote>
 <pre>
@@ -120,10 +120,10 @@ ipacAddVIPC616_01 "0x6400,0xB0000000"
 # carrier#2
 ipacAddTVME200    "602fb00"
 
-# Initialize a IP-Octal module called MOD0 that's located in slot A of
-# of the first initialized carrier (MVME162), and then create 8 tty 
+# Initialize an IP-Octal module called MOD0 that's located in slot A of
+# of the first initialized carrier (MVME162), and then create 8 tty
 # ports labeled /tyGS/0,0/0 through /tyGS/0,0/7 on that module.
-# Also tell the support that you will be initializing up to 5 more modules.
+# Also tell the script that you will be initializing up to 5 more modules.
 iocshLoad("$(IPAC)/iocsh/tyGSOctal.iocsh", "INSTANCE=MOD0, INT_VEC=0x80, CARRIER=0, SLOT=0, TYPE=232, MAX_MODULES=6")
 
 # Initialize the IP-Octal module in slot B of the MVME162, the tty ports
@@ -136,8 +136,8 @@ iocshLoad("$(IPAC)/iocsh/tyGSOctal.iocsh", "INSTANCE=MOD2, INT_VEC=0x82, CARRIER
 iocshLoad("$(IPAC)/iocsh/tyGSOctal.iocsh", "INSTANCE=MOD3, INT_VEC=0x83, CARRIER=1, SLOT=2, TYPE=232")
 
 # Init two IP-Octal modules from the 2nd SBS VIPC616_01 carrier; the 1st
-# module is in slot B, the second module is in slot D. Both will implement
-# RS485 instead of RS232
+# module is in slot B, the second module is in slot D. Both are RS485
+# instead of RS232
 iocshLoad("$(IPAC)/iocsh/tyGSOctal.iocsh", "INSTANCE=MOD4, INT_VEC=0x84, CARRIER=2, SLOT=1, TYPE=485")
 iocshLoad("$(IPAC)/iocsh/tyGSOctal.iocsh", "INSTANCE=MOD5, INT_VEC=0x85, CARRIER=2, SLOT=3, TYPE=485")
 </pre>

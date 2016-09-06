@@ -104,9 +104,9 @@ IP520Config "/tyGS/0,0/0", 38400, 'N', 1, 8, 'N'
 </pre>
 </blockquote>
 
-<p>Alternately, for those using EPICS base 3.15 or higher, the iocshLoad command can be used with 
-the ip520.iocsh script included in the top-level iocsh directory. The following is an example of
-such a use.</p>
+<p>When running EPICS base 3.15 or higher, the iocshLoad command can be used
+with the ip520.iocsh script included in this module's top-level iocsh
+directory. The following shows an example of such a use.</p>
 
 <blockquote>
 <pre>
@@ -119,10 +119,10 @@ ipacAddVIPC616_01 "0x6400,0xB0000000"
 # carrier#2
 ipacAddTVME200    "602fb00"
 
-# Initialize a ip520 module called MOD0 that's located in slot A of
-# of the first initialized carrier (MVME162), and then create 8 tty 
+# Initialize an ip520 module called MOD0 that's located in slot A of
+# of the first initialized carrier (MVME162), and then create 8 tty
 # ports labeled /tyGS/0,0/0 through /tyGS/0,0/7 on that module.
-# Also tell the support that you will be initializing up to 5 more modules.
+# Also tell the script that you will be initializing up to 5 more modules.
 iocshLoad("$(IPAC)/iocsh/ip520.iocsh", "INSTANCE=MOD0, INT_VEC=0x80, CARRIER=0, SLOT=0, MAX_MODULES=6")
 
 # Initialize the ip520 module in slot B of the MVME162, the tty ports
