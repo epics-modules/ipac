@@ -188,6 +188,8 @@ LOCAL int IP520RebootHook(int type)
             {
                 dev->regs->u.write.ier = 0;
                 dev->regs->u.write.mcr &= ~(0x08); /* Port interrupt disable. */
+                if (dev->mode == RS485)
+                    dev->regs->u.write.mcr &= ~(0x03); /* disable Tx & Rx transceivers. */
             }
             ipmIrqCmd(pmod->carrier, pmod->slot, 0, ipac_irqDisable);
             ipmIrqCmd(pmod->carrier, pmod->slot, 1, ipac_irqDisable);
@@ -255,12 +257,8 @@ int IP520ModuleInit
      */
     if (strstr(type, "232"))
         modelID = IP520_OCTAL232;
-/* For Future use.
     else if (strstr(type, "422"))
-        modelID = IP520_OCTAL422;
-    else if (strstr(type, "485"))
-        modelID = IP520_OCTAL485;
-*/
+        modelID = IP521_OCTAL422;
     else
     {
         printf("%s: Unsupported module type: %s", fn_nm, type);
@@ -533,6 +531,8 @@ LOCAL void IP520InitChannel(MOD_TABLE *pmod, int port)
     IP520OptsSet(dev, CS8 | CLOCAL);
 
     regs->u.write.ier |= 0x05;      /* enable FIFO and Rx interrupts */
+    if (dev->mode == RS485)
+        regs->u.write.mcr |= 0x03;  /* enable Tx and Rx transceivers */
     regs->u.write.mcr |= 0x08;      /* enable port interrupts */
 
     intUnlock(key);
@@ -548,7 +548,6 @@ LOCAL int IP520Open(TY_IP520_DEV *dev, const char * name, int mode)
 {
     return (int) dev;
 }
-
 
 /******************************************************************************
  * IP520Write - Outputs a specified number of characters on a serial port
@@ -574,24 +573,7 @@ LOCAL int IP520Write
         return -1;
     }
 
-    if (dev->mode == RS485)
-    {
-        /* disable recv, assert RTS */
-        dev->regs->u.write.ier &= ~(0x04);
-        dev->regs->u.write.mcr |= 0x02;
-    }
-
     nbytes = tyWrite(&dev->tyDev, write_bfr, write_size);
-
-    if (dev->mode == RS485)
-    {
-        /* make sure all data sent */
-        while(!(dev->regs->u.read.isr & 0x08))   /* Wait for TxEMT */
-            ;
-        /* enable recv, de-assert RTS */
-        dev->regs->u.write.ier |= 0x04;
-        dev->regs->u.write.mcr &= ~(0x02);
-    }
 
     return nbytes;
 }
@@ -600,7 +582,37 @@ LOCAL int IP520Write
  *
  * IP520OptsSet - set channel serial options
  *
- * NOMANUAL
+ * LOGIC
+ * 
+ *  The Tx FIFO interrupt trigger level is configured to minimize interrupts
+ *  without concern for Tx underrun. Hence, the level is always set to 8.
+ *  Unless the application is sending more than 64 characters per line, the Tx
+ *  interrupt is never enabled and hence the Tx FIFO interrupt trigger level is
+ *  irrelevant in many cases.
+ * 
+ *  The Rx FIFO interrupt trigger level is configured to minimize interrupts
+ *  and to allow worst-case interrupt latency of 5ms without Rx overrun. The Rx
+ *  Rx FIFO interrupt trigger level is based on the baudrate and if hardware
+ *  handshaking is enabled or disabled.
+ * 
+ *  IF baudrate = 1200, 2400, 4800 or 9600
+ *      Set Rx level = 60 and Tx level = 8
+ *  ELSE IF baudrate == 19200
+ *      Set Rx level = 56 and Tx level = 8
+ *  ELSE IF baudrate = 115200 or 230400
+ *      IF hardware flow control is disabled
+ *          Set Rx level = 8 and Tx level = 8
+ *      ELSE
+ *          Set Rx level = 56 and Tx level = 8
+ *      ENDIF
+ *  ELSE baudrate = 38400 or 57600
+ *      IF hardware flow control is disabled
+ *          Set Rx level = 16 and Tx level = 8
+ *      ELSE
+ *          Set Rx level = 56 and Tx level = 8
+ *      ENDIF
+ *  ENDIF
+ * 
  */
 
 LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
@@ -657,7 +669,9 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
 
     baud = dev->baud;
     if (baud <= 9600)
-        lfcr = 0xA1;            /* Set Rx FIFO trigger level = 60. */
+        lfcr = 0xC1;            /* Set Rx FIFO trigger level = 60. */
+    else if (baud == 19200)
+        lfcr = 0x81;            /* Set Rx FIFO trigger level = 56. */
     else if (baud >= 115200)
     {
         if (hardwareflowcontrol == 0)
@@ -665,8 +679,6 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
         else
             lfcr = 0x81;        /* Set Rx FIFO trigger level = 56. */
     }
-    else if (baud == 19200)
-        lfcr = 0x81;            /* Set Rx FIFO trigger level = 56. */
     else                        /* For 38,400 and 57,600 baud. */
     {
         if (hardwareflowcontrol == 0)
@@ -678,23 +690,26 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
     regs->u.write.fcr  = 0x00;      /* Clear FIFO's. */
     regs->u.write.fcr  = lfcr;      /* Set Rx FIFO trigger level based on baudrate,
                                      * Set Tx FIFO trigger level to 8 charaters. */
-    EFROn(regs);
-    lefr = regs->u.read.isr;        /* Read EFR.*/
-    if (hardwareflowcontrol == 0)
-        lefr &= ~(0xC0);            /* Disable RTS/CTS flow control. */
-    else
-        lefr |=   0xC0;             /* Enable  RTS/CTS flow control. */
-    regs->u.write.fcr = lefr;       /* Write to EFR. */
-    lisr = regs->u.read.isr;        /* Read ISR to flush FCR posted writes. */
-    EFROff(regs);
+    if (dev->mode == RS232)
+    {
+        EFROn(regs);
+        lefr = regs->u.read.isr;        /* Read EFR.*/
+        if (hardwareflowcontrol == 0)
+            lefr &= ~(0xC0);            /* Disable RTS/CTS flow control. */
+        else
+            lefr |=   0xC0;             /* Enable  RTS/CTS flow control. */
+        regs->u.write.fcr = lefr;       /* Write to EFR. */
+        lisr = regs->u.read.isr;        /* Read ISR to flush FCR posted writes. */
+        EFROff(regs);
 
-    lmcr = regs->u.read.mcr;
-    if (hardwareflowcontrol == 0)
-        lmcr &= ~(0x02);            /* Set RTS off. */
-    else
-        lmcr |=   0x02;             /* Set RTS on.  */
-    regs->u.write.mcr = lmcr;
-    lmcr = regs->u.read.mcr;        /* Read to flush posted writes. */
+        lmcr = regs->u.read.mcr;
+        if (hardwareflowcontrol == 0)
+            lmcr &= ~(0x02);            /* Set RTS off. */
+        else
+            lmcr |=   0x02;             /* Set RTS on.  */
+        regs->u.write.mcr = lmcr;
+        lmcr = regs->u.read.mcr;        /* Read to flush posted writes. */
+    }
 }
 
 /******************************************************************************
@@ -1015,34 +1030,29 @@ LOCAL void IsrErrMsg(epicsUInt8 lsr, TY_IP520_DEV *dev)
  *
  * LOGIC
  *  Initialize status = OK.
- *  Disable interrupts for processing LSR
+ *  Disable interrupts for processing LSR and filling the Tx FIFO.
  *  Read line status register (LSR).
  *  IF LSR shows Rx Overrun error.
- *      Increment Rx Overrun counter.
+ *      Call IsrErrMsg().
  *  ENDIF
- *  Enable interrupts.
- *  IF Rx Overrun counter != saved/last Rx Overrun count.
- *      Update last Rx Overrun count.
- *      IF Rx Overrun count is a power of 2.
- *          Print error message.
- *      ENDIF
- *  ENDIF
+ * 
  *  IF Transmitter Hold Register is Empty (then FIFO is also empty).
  *      Set Tx counter to 64.
  *  ELSE
- *      Set Tx counter to 0.
+ *      Set Tx counter to 0 and let ISR fill the Tx FIFO.
  *  ENDIF
  *
- *  Disable interrupts for Tx FIFO fill.
- *  WHILE (the Tx FIFO is not full, AND, another Tx character is available)
+ *  WHILE (TxCtr > 0, AND, another Tx character is available)
  *      Write character to Tx holding register (THR).
- *      Increment "writeCount".
+ *      Decrement TxCtr.
  *  ENDWHILE
+ * 
  *  IF another Tx character was NOT available (the tty ringbuffer is empty)
  *      Disable Tx interrupts.
  *  ELSE
  *      Enable Tx interrupts.
  *  ENDIF
+ * 
  *  Enable interrupts.
  */
 LOCAL void IP520TxStartup(TY_IP520_DEV *dev)
