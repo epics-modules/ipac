@@ -15,6 +15,7 @@ HeadURL:        $URL$
 #define ACROMAG_ID          0xA3
 
 #define IP520_OCTAL232      0x24
+#define IP521_OCTAL422      0x25
 
 #endif 
 
