@@ -1,6 +1,6 @@
 /*
 FILENAME...     ip520.c
-USAGE...        Acromag IP520 VxWorks driver.
+USAGE...        Acromag IP520/521 VxWorks driver.
 
 Version:        $Revision$
 Modified By:    $Author$
@@ -133,7 +133,7 @@ STATUS IP520Drv(int maxModules)
 
     if (!IP520Modules)
     {
-        printf("%s: Memory allocation failed!", fn_nm);
+        printf("%s: Memory allocation failed!\n", fn_nm);
         return ERROR;
     }
 
@@ -261,7 +261,7 @@ int IP520ModuleInit
         modelID = IP521_OCTAL422;
     else
     {
-        printf("%s: Unsupported module type: %s", fn_nm, type);
+        printf("%s: Unsupported module type: %s\n", fn_nm, type);
         errnoSet(EINVAL);
         return ERROR;
     }
@@ -319,7 +319,7 @@ int IP520ModuleInit
 
         if (IP520LastModule >= IP520MaxModules)
         {
-            printf("%s: Maximum module count exceeded!", fn_nm);
+            printf("%s: Maximum module count exceeded!\n", fn_nm);
             errnoSet(ENOSPC);
             return ERROR;
         }
@@ -344,7 +344,7 @@ int IP520ModuleInit
 
         if (ipmIntConnect(carrier, slot, int_num, IP520Int, IP520LastModule))
         {
-            printf("%s: Unable to connect ISR", fn_nm);
+            printf("%s: Unable to connect ISR\n", fn_nm);
             return ERROR;
         }
 
@@ -656,8 +656,9 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
     if (pmod->modelID != IP520_OCTAL232)
     {
         dev->mode = RS485;
-
-        /* MPOa/b are Tx output enables, must be controlled by driver */
+        if (!(opts & CLOCAL))
+            printf("*Warning* device %s configured for RTS/CTS handshaking is not supported for RS422/485\n",
+                   dev->tyDev.devHdr.name);
     }
     else
     {
