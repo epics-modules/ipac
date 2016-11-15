@@ -49,7 +49,8 @@ IP520Drv 6
 # IP520ModuleInit(char *moduleID, char *ModuleType, int irq_num,
 #                     char *carrier#, int slot#)
 #   moduleID   - assign the IP module a name for future reference.
-#   ModuleType - "232" - for IP520 modules, "422" - for IP521 modules.
+#   ModuleType - "232" - for IP520 modules, "422" - for IP521 modules
+#                ("485" for the IP521 module is not yet supported).
 #   irq_num    - interrupt request number.
 #   carrier#   - carrier# assigned from the ipacAdd<i>CarrierType</i>() call.
 #   slot#      - slot number on carrier; slot[A,B,C,D] -&gt; slot#[0,1,2,3].
