@@ -188,7 +188,7 @@ LOCAL int IP520RebootHook(int type)
             {
                 dev->regs->u.write.ier = 0;
                 dev->regs->u.write.mcr &= ~(0x08); /* Port interrupt disable. */
-                if (dev->mode == RS485)
+                if (dev->mode != RS232)
                     dev->regs->u.write.mcr &= ~(0x03); /* disable Tx & Rx transceivers. */
             }
             ipmIrqCmd(pmod->carrier, pmod->slot, 0, ipac_irqDisable);
@@ -234,7 +234,7 @@ int IP520ModuleInit
     )
 {
     static char *fn_nm = "IP520ModuleInit";
-    int modelID, status, mod;
+    int modelID, status, mod, RSmode;
     MOD_TABLE *pmod;
 
     /*
@@ -256,12 +256,18 @@ int IP520ModuleInit
      * Check the IP module type.
      */
     if (strstr(type, "232"))
-        modelID = IP520_OCTAL232;
+    {
+        modelID = IP520;
+        RSmode = RS232;
+    }
     else if (strstr(type, "422"))
-        modelID = IP521_OCTAL422;
+    {
+        modelID = IP521;
+        RSmode = RS422;
+    }
     else
     {
-        printf("%s: Unsupported module type: %s\n", fn_nm, type);
+        printf("*Error* %s: Unsupported module type: %s\n", fn_nm, type);
         errnoSet(EINVAL);
         return ERROR;
     }
@@ -340,6 +346,7 @@ int IP520ModuleInit
             pmod->dev[port].pmod= pmod;
             pmod->dev[port].regs->u.write.ier = 0;
             pmod->dev[port].regs->u.write.scr = int_num;
+            pmod->dev[port].mode = RSmode;
         }
 
         if (ipmIntConnect(carrier, slot, int_num, IP520Int, IP520LastModule))
@@ -531,7 +538,7 @@ LOCAL void IP520InitChannel(MOD_TABLE *pmod, int port)
     IP520OptsSet(dev, CS8 | CLOCAL);
 
     regs->u.write.ier |= 0x05;      /* enable FIFO and Rx interrupts */
-    if (dev->mode == RS485)
+    if (dev->mode == RS422)
         regs->u.write.mcr |= 0x03;  /* enable Tx and Rx transceivers */
     regs->u.write.mcr |= 0x08;      /* enable port interrupts */
 
@@ -548,6 +555,7 @@ LOCAL int IP520Open(TY_IP520_DEV *dev, const char * name, int mode)
 {
     return (int) dev;
 }
+
 
 /******************************************************************************
  * IP520Write - Outputs a specified number of characters on a serial port
@@ -653,19 +661,15 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
     regs->u.write.lcr = llcr;
     llcr = regs->u.read.lcr;    /* Read to flush posted writes. */
 
-    if (pmod->modelID != IP520_OCTAL232)
+    if (dev->mode == RS232)
     {
-        dev->mode = RS485;
-        if (!(opts & CLOCAL))
-            printf("*Warning* device %s configured for RTS/CTS handshaking is not supported for RS422/485\n",
-                   dev->tyDev.devHdr.name);
-    }
-    else
-    {
-        dev->mode = RS232;
         if (!(opts & CLOCAL))   /* Hardware flow control */
             hardwareflowcontrol = 1;
     }
+    else if ((dev->mode == RS422) && (!(opts & CLOCAL)))
+        printf("*Warning* device %s configured for RTS/CTS handshaking is not supported for RS-422\n",
+               dev->tyDev.devHdr.name); 
+
     dev->opts = opts & mask;
 
     baud = dev->baud;
