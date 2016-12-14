@@ -40,8 +40,8 @@ ipacAddVIPC616_01 "0x6400,0xB0000000"
 # carrier#2
 ipacAddTVME200    "602fb00"
 
-# Allocate the number of IP520/521 modules to support.
-# ----------------------------------------------------
+# Allocate the total number of IP520 and IP521 modules to support.
+# ----------------------------------------------------------------
 IP520Drv 6
 
 # Initialize IP520/521 modules.
@@ -49,8 +49,7 @@ IP520Drv 6
 # IP520ModuleInit(char *moduleID, char *ModuleType, int irq_num,
 #                     char *carrier#, int slot#)
 #   moduleID   - assign the IP module a name for future reference.
-#   ModuleType - "232" - for IP520 modules, "422" - for IP521 modules
-#                ("485" for the IP521 module is not yet supported).
+#   ModuleType - "232" - for IP520 modules, "422" or "485" - for IP521 modules
 #   irq_num    - interrupt request number.
 #   carrier#   - carrier# assigned from the ipacAdd<i>CarrierType</i>() call.
 #   slot#      - slot number on carrier; slot[A,B,C,D] -&gt; slot#[0,1,2,3].
@@ -66,9 +65,9 @@ IP520ModuleInit "Mod2", "232", 0x82, 1, 0
 IP520ModuleInit "Mod3", "232", 0x83, 1, 2
 
 # Init two IP521 modules from the 2nd SBS VIPC616_01 carrier; the 1st
-# module is in slot B, the second module is in slot D.
+# module is for 422 in slot B, the second module is for 485 in slot D.
 IP520ModuleInit "Mod4", "422", 0x84, 2, 1
-IP520ModuleInit "Mod5", "422", 0x85, 2, 3
+IP520ModuleInit "Mod5", "485", 0x85, 2, 3
 
 # Create tty devices.
 # ------------------

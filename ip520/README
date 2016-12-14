@@ -30,7 +30,7 @@ IPAC    - 2.14
         -> iosFdEntryIoctl (VxWorks)
           -> IP520Ioctl
  
--> portThread (asynManager.c:876) - call chart from asynrRecord to IP520TxStartup().
+-> portThread (asynManager.c:876) - call chart from asynRecord to IP520TxStartup().
   -> asynCallbackProcess (asynRecord.c:813)
     -> performIO (asynRecord.c:1319)
       -> performOctetIO (asynRecord.c:1532)

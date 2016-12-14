@@ -21,8 +21,8 @@ HeadURL:        $URL$
 #include <tyLib.h>  /* For TY_DEV. */
 #include <epicsTypes.h>
 
-typedef enum {RS232, RS422} RSmode;  /* IP520 - RS232 only, IP521 - RS422 */
-                                     /* TODO - RS485 for IP521 */
+typedef enum {RS232, RS422, RS485} RSmode;  /* IP520 - RS232 only, IP521 - RS422 or RS485 */
+
 struct regmap {
     union {
         struct {

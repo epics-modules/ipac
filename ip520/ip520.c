@@ -265,6 +265,11 @@ int IP520ModuleInit
         modelID = IP521;
         RSmode = RS422;
     }
+    else if (strstr(type, "485"))
+    {
+        modelID = IP521;
+        RSmode = RS485;
+    }
     else
     {
         printf("*Error* %s: Unsupported module type: %s\n", fn_nm, type);
@@ -538,8 +543,8 @@ LOCAL void IP520InitChannel(MOD_TABLE *pmod, int port)
     IP520OptsSet(dev, CS8 | CLOCAL);
 
     regs->u.write.ier |= 0x05;      /* enable FIFO and Rx interrupts */
-    if (dev->mode == RS422)
-        regs->u.write.mcr |= 0x03;  /* enable Tx and Rx transceivers */
+    if (dev->mode != RS232)
+        regs->u.write.mcr |= 0x01;  /* enable Rx transceiver */
     regs->u.write.mcr |= 0x08;      /* enable port interrupts */
 
     intUnlock(key);
@@ -570,6 +575,7 @@ LOCAL int IP520Write
     )
 {
     static char *fn_nm = "IP520Write";
+    REGMAP *regs = dev->regs;
     int nbytes;
 
     /*
@@ -580,6 +586,10 @@ LOCAL int IP520Write
         logMsg("%s: NULL device descriptor from %s\n", (int)fn_nm, (int)taskName(taskIdSelf()), 3,4,5,6);
         return -1;
     }
+
+    if (dev->mode != RS232)
+        regs->u.write.mcr &= ~(0x01);   /* Disable Rx transceiver */
+        regs->u.write.mcr |= 0x02;      /* Enable  Tx transceiver */
 
     nbytes = tyWrite(&dev->tyDev, write_bfr, write_size);
 
@@ -625,7 +635,6 @@ LOCAL int IP520Write
 
 LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
 {
-    MOD_TABLE *pmod = dev->pmod;
     REGMAP *regs    = dev->regs;
     epicsUInt8 llcr, lefr, lmcr, lisr, lfcr;
     int mask = (CSIZE | STOPB | PARENB | PARODD | CLOCAL);
@@ -956,7 +965,7 @@ void IP520Int(int mod)
                 IsrErrMsg(lsr, dev);
         }
 
-        if ((ier & 0x02) && (lsr & 0x20)) /* If Tx interrupts are enabled, AND, Tx FIFO is empty. */
+        if ((ier & 0x02) && (lsr & 0x40)) /* If Tx interrupts are enabled, AND, Tx is empty (TEMT). */
         {
             STATUS status = OK;
             char outChar;
@@ -971,6 +980,11 @@ void IP520Int(int mod)
 
             if (status == ERROR)
             {
+                if (dev->mode != RS232)
+                {
+                    regs->u.write.mcr &= ~(0x02);   /* Disable Tx transceiver */
+                    regs->u.write.mcr |= 0x01;      /* Enable  Rx transceiver */
+                }
                 /* deactivate Tx INT and disable Tx INT */
                 regs->u.write.ier &= ~(0x02);
                 ier = regs->u.read.ier;
@@ -1085,7 +1099,7 @@ LOCAL void IP520TxStartup(TY_IP520_DEV *dev)
         TxCtr--;
     }
 
-    if (status == ERROR)
+    if ((status == ERROR) && (dev->mode == RS232))
         regs->u.write.ier &= ~(0x02);   /* Disable Tx interrupt */
     else
         regs->u.write.ier |= 0x02;      /*  Enable Tx interrupt */
