@@ -19,19 +19,28 @@ version appears at the bottom, with more recent releases above it.</P>
 <HR>
 <H2>Version 2.15</H2>
 
+<P>Added:</P>
+<UL>
+
+  <LI>Support for the IP521 module was added to the ip520 driver, which handles
+    both the RS-422 and RS-485 2-wire half-duplex serial standards.</LI>
+
+  <LI>IOC shell scripts were added to easily initialize IP-Octal and ip520
+    modules. Further information about scripts can be found in their respective
+    documentation and in the
+    <A HREF="https://github.com/epics-modules/xxx/wiki/IOC-Shell-Scripts">xxx
+      module wiki.</A></LI>
+
+</UL>
+
 <P>Changed:</P>
 <UL>
 
-<LI>Converted the code repository from Subversion at APS to git at github.</LI>
+  <LI>Converted the code repository from Subversion at APS to git
+    <A HREF="https://github.com/epics-modules/ipac">at github</A>.</LI>
 
-<LI>Adjusted various <TT>#include</TT> lines to follow the rules for building
-  shared libraries on Windows.</LI>
-
-<LI>IOC shell scripts were added to easily initialize IP-Octal and ip520
-  modules. Further information about scripts can be found in their respective
-  documentation and in the
-  <A HREF="https://github.com/epics-modules/xxx/wiki/IOC-Shell-Scripts">xxx
-  module wiki</A></LI>
+  <LI>Adjusted various <TT>#include</TT> lines to follow the rules for building
+    shared libraries on Windows.</LI>
 
 </UL>
 
