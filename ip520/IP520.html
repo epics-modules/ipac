@@ -1,29 +1,34 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="">
-  <title>Acromag IP520 Module Support</title>
+  <title>Acromag IP520/521 Module Support</title>
 </head>
 
 <body text="#000000" bgcolor="#ffffff" link="#000080" vlink="#707070"
 alink="0000080">
-<h1>Acromag IP520 Module Support</h1>
+<h1>Acromag IP520/521 Module Support</h1>
 
 <h2>Introduction</h2>
 
-<p>This is a driver for the Acromag IP520 EIA/TIA-232E Industry Pack
-communication module (the companion 422/485 IP521 board is not yet
-supported).</p>
+<p>
+This is a driver for the Acromag IP520 EIA/TIA-232E and IP521 EIA/TIA-422B (supports 
+EIA-485) Industry Pack communication modules.
+</p>
 
-<p>The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the
-carrier board plus access routines for the underlying ST16C554/654 octalUart
-used in the IP modules. The driver implements a standard VxWorks terminal
-port making use of the vxWorks tyLib system library.</p>
+<p>
+The driver uses <a href="drvIpac.html">drvIpac</a> for configuration of the 
+carrier board plus access routines for the underlying dual ST16C554/654 quad 
+UARTs used in the IP modules. The driver implements a standard VxWorks terminal 
+port making use of the vxWorks tyLib system library.
+</p>
 
 <h2>Configuration Example</h2>
 
-<p>The following is an example of a startup script (st.cmd) segment that
-creates and configures IP carriers, IP520 modules, and tty devices. This
-example is compatible with both vxWorks and iocsh startup scripts.</p>
+<p>
+The following is an example of a startup script (st.cmd) segment that creates 
+and configures IP carriers, IP520/521 modules, and tty devices. This example is 
+compatible with both vxWorks and iocsh startup scripts.
+</p>
 
 <blockquote>
   <pre># Initialize the drvIpac carriers.
@@ -35,16 +40,16 @@ ipacAddVIPC616_01 "0x6400,0xB0000000"
 # carrier#2
 ipacAddTVME200    "602fb00"
 
-# Allocate the number of IP520 modules to support.
-# ----------------------------------------------------
+# Allocate the total number of IP520 and IP521 modules to support.
+# ----------------------------------------------------------------
 IP520Drv 6
 
-# Initialize IP520 modules.
+# Initialize IP520/521 modules.
 # ----------------------------
 # IP520ModuleInit(char *moduleID, char *ModuleType, int irq_num,
 #                     char *carrier#, int slot#)
 #   moduleID   - assign the IP module a name for future reference.
-#   ModuleType - "232", (the IP521 EIA/TIA-422B module is not yet supported).
+#   ModuleType - "232" - for IP520 modules, "422" or "485" - for IP521 modules
 #   irq_num    - interrupt request number.
 #   carrier#   - carrier# assigned from the ipacAdd<i>CarrierType</i>() call.
 #   slot#      - slot number on carrier; slot[A,B,C,D] -&gt; slot#[0,1,2,3].
@@ -59,10 +64,10 @@ IP520ModuleInit "Mod1", "232", 0x81, 0, 1
 IP520ModuleInit "Mod2", "232", 0x82, 1, 0
 IP520ModuleInit "Mod3", "232", 0x83, 1, 2
 
-# Init two IP520 modules from the 2nd SBS VIPC616_01 carrier; the 1st
-# module is in slot B, the second module is in slot D.
-IP520ModuleInit "Mod4", "232", 0x84, 2, 1
-IP520ModuleInit "Mod5", "232", 0x85, 2, 3
+# Init two IP521 modules from the 2nd SBS VIPC616_01 carrier; the 1st
+# module is for 422 in slot B, the second module is for 485 in slot D.
+IP520ModuleInit "Mod4", "422", 0x84, 2, 1
+IP520ModuleInit "Mod5", "485", 0x85, 2, 3
 
 # Create tty devices.
 # ------------------
