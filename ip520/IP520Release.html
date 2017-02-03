@@ -2,7 +2,8 @@
 <HEAD>
 <TITLE>Acromag IP520 Serial Driver Release Notes</TITLE>
 <META NAME="Author" CONTENT="Andrew Johnson">
-<META NAME="Description" CONTENT="Release Notes for the Acromag IP520 serial driver software">
+<META NAME="Description"
+      CONTENT="Release Notes for the Acromag IP520 serial driver software">
 <META NAME="KeyWords" CONTENT="IPAC, Acromag, IP520, IP521">
 </HEAD>
 <BODY>
@@ -14,10 +15,10 @@
 </CENTER>
 
 <P>This document describes changes made to Ron Sluiter's VxWorks driver for the
-Acromag IP520 and IP521 Industry Pack boards since it was merged into the ipac support module.
-Version numbers refer to the release of the ipac support software as a whole.
-The earliest version appears at the bottom, with more recent releases above
-it.</P>
+Acromag IP520 and IP521 Industry Pack boards since it was merged into the ipac
+support module. Version numbers refer to the release of the ipac support
+software as a whole. The earliest version appears at the bottom, with more
+recent releases above it.</P>
 
 <HR>
 <H2>Version 2.15</H2>
@@ -26,13 +27,20 @@ it.</P>
 
 <UL>
 
-<LI>Support for the IP521 module. This release supports a 2-wire, half-duplex connection for both RS-422 and RS-485. The driver treats both of these electrical standards identically.</LI>
+<LI>Support for the IP521 module. This release supports a 2-wire, half-duplex
+connection for both RS-422 and RS-485. The driver treats both of these
+electrical standards identically.</LI>
 
 </UL>
 
 <P>Changed:</P>
+
 <UL>
-<LI>A minor change was made to reduce interrupt overhead by raising the Rx FIFO trigger level from 56 to 60 characters when baudrates of 9600 or below are used.</LI>
+
+<LI>A minor change was made to reduce interrupt overhead by raising the Rx FIFO
+trigger level from 56 to 60 characters when baudrates of 9600 or below are
+used.</LI>
+
 </UL>
 
 <HR>

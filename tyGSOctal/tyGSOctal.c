@@ -7,7 +7,7 @@
  serial I/O modules. This software was somewhat based on the HiDEOS
  device driver developed by Jim Kowalkowski of the Advanced Photon Source.
 **************************************************************************
- 
+
  USER-CALLABLE ROUTINES
  Most of the routines in this driver are accessible only through the I/O
  system.  Some routines, however, must be called directly: tyGSOctalDrv() to
@@ -30,10 +30,10 @@
  This driver responds to the same ioctl() codes as a normal sio driver; for
  more information, see the manual entry for tyLib and the BSP documentation
  for sioLib.
- 
+
  SEE ALSO
  tyLib, sioLib
- 
+
  History:
  who  when      what
  ---  --------  ------------------------------------------------
@@ -46,7 +46,7 @@
 
 /*
  * vxWorks includes
- */ 
+ */
 /* This is needed for vxWorks 6.x to prevent an obnoxious compiler warning */
 #define _VSB_CONFIG_FILE <../lib/h/config/vsbConfig.h>
 
@@ -360,7 +360,7 @@ int tyGSOctalModuleInit
             return ERROR;
         }
 
-        if (ipmIntConnect(carrier, slot, int_num, 
+        if (ipmIntConnect(carrier, slot, int_num,
                           tyGSOctalInt, tyGSOctalLastModule)) {
             printf("%s: Unable to connect ISR", fn_nm);
             return ERROR;
@@ -381,7 +381,7 @@ int tyGSOctalModuleInit
  * to be used should have exactly one device associated with it by calling
  * this routine.
  *
- * For instance, to create the device "/SBS/0,1/3", with buffer sizes 
+ * For instance, to create the device "/SBS/0,1/3", with buffer sizes
  * of 512 bytes, the proper calls would be:
  * .CS
  *    if (tyGSOctalModuleInit("232-1", "232", 0x60, 0, 1) != ERROR) {
@@ -418,12 +418,12 @@ const char * tyGSOctalDevCreate
     /* if there is a device already on this channel, don't do it */
     if (dev->created)
         return NULL;
-    
+
     /* initialize the ty descriptor */
     if (tyDevInit (&dev->tyDev, rdBufSize, wrtBufSize,
                    (TY_DEVSTART_PTR) tyGSOctalStartup) != OK)
         return NULL;
-    
+
     /* initialize the channel hardware */
     tyGSOctalInitChannel(qt, port);
 
@@ -567,7 +567,7 @@ LOCAL void tyGSOctalInitChannel
 /*
  * enable everything, really only Rx interrupts
 */
-    qt->imr[block] |= ((port%2) == 0 ? SCC_ISR_RXRDY_A : SCC_ISR_RXRDY_B); 
+    qt->imr[block] |= ((port%2) == 0 ? SCC_ISR_RXRDY_A : SCC_ISR_RXRDY_B);
 
     dev->regs->u.w.imr = qt->imr[block]; /* enable RxRDY interrupt */
     dev->chan->u.w.cr = 0x05;            /* enable Tx,Rx */

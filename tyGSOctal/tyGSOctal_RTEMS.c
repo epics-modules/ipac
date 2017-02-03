@@ -3,7 +3,7 @@
  *
  * Based on tyGSOctal.c by Peregrine M. McGehee as updated by Andrew Johnson.
  */
- 
+
 #include <epicsStdio.h>
 #include <epicsStdlib.h>
 #include <epicsString.h>
@@ -190,7 +190,7 @@ tyGsOctalCallbackSetAttributes(int minor, const struct termios *termios)
      || ((txcsr = csrForTermiosSpeedCode(cfgetospeed(termios))) < 0))
         return RTEMS_INVALID_NUMBER;
     chan->u.w.csr = (rxcsr << 4) | txcsr;
-    
+
     switch (termios->c_cflag & CSIZE) {
     case CS5:     mr1 = 0x0; break;
     case CS6:     mr1 = 0x1; break;
@@ -225,7 +225,7 @@ tyGsOctalCallbackSetAttributes(int minor, const struct termios *termios)
 static rtems_device_driver
 tyGsOctalOpen(rtems_device_major_number major,
               rtems_device_minor_number minor,
-              void *arg) 
+              void *arg)
 {
     rtems_libio_open_close_args_t *args = (rtems_libio_open_close_args_t *)arg;
     rtems_status_code sc;
@@ -247,7 +247,7 @@ tyGsOctalOpen(rtems_device_major_number major,
 static rtems_device_driver
 tyGsOctalClose(rtems_device_major_number major,
                rtems_device_minor_number minor,
-               void *arg) 
+               void *arg)
 {
     return rtems_termios_close(arg);
 }
@@ -255,7 +255,7 @@ tyGsOctalClose(rtems_device_major_number major,
 static rtems_device_driver
 tyGsOctalRead(rtems_device_major_number major,
               rtems_device_minor_number minor,
-              void *arg) 
+              void *arg)
 {
     return rtems_termios_read(arg);
 }
@@ -263,7 +263,7 @@ tyGsOctalRead(rtems_device_major_number major,
 static rtems_device_driver
 tyGsOctalWrite(rtems_device_major_number major,
                rtems_device_minor_number minor,
-               void *arg) 
+               void *arg)
 {
     return rtems_termios_write(arg);
 }
@@ -271,7 +271,7 @@ tyGsOctalWrite(rtems_device_major_number major,
 static rtems_device_driver
 tyGsOctalControl(rtems_device_major_number major,
                  rtems_device_minor_number minor,
-                 void *arg) 
+                 void *arg)
 {
     return rtems_termios_ioctl(arg);
 }
@@ -342,7 +342,7 @@ tyGSOctalDrv(int maxModules)
         return -1;
     }
 
-    epicsAtExit(tyGSOctalRebootHook, NULL);    
+    epicsAtExit(tyGSOctalRebootHook, NULL);
 
     sc = rtems_io_register_driver(0, &tyGsOctalDriverTable, &tyGsOctalMajor);
     if (sc != RTEMS_SUCCESSFUL) {
@@ -620,7 +620,7 @@ tyGSOctalDevCreate (
     dev->chan->u.w.cr = 0x20; /* reset recv */
     dev->chan->u.w.cr = 0x30; /* reset trans */
     dev->chan->u.w.cr = 0x40; /* reset error status */
-    qt->imr[block] |= ((port%2) == 0 ? SCC_ISR_RXRDY_A : SCC_ISR_RXRDY_B); 
+    qt->imr[block] |= ((port%2) == 0 ? SCC_ISR_RXRDY_A : SCC_ISR_RXRDY_B);
     dev->regs->u.w.imr = qt->imr[block]; /* enable RxRDY interrupt */
     dev->chan->u.w.cr = 0x05;            /* enable Tx,Rx */
     epicsInterruptUnlock(key);

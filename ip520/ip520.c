@@ -605,18 +605,18 @@ LOCAL int IP520Write
  * IP520OptsSet - set channel serial options
  *
  * LOGIC
- * 
+ *
  *  The Tx FIFO interrupt trigger level is configured to minimize interrupts
  *  without concern for Tx underrun. Hence, the level is always set to 8.
  *  Unless the application is sending more than 64 characters per line, the Tx
  *  interrupt is never enabled and hence the Tx FIFO interrupt trigger level is
  *  irrelevant in many cases.
- * 
+ *
  *  The Rx FIFO interrupt trigger level is configured to minimize interrupts
  *  and to allow worst-case interrupt latency of 5ms without Rx overrun. The Rx
  *  Rx FIFO interrupt trigger level is based on the baudrate and if hardware
  *  handshaking is enabled or disabled.
- * 
+ *
  *  IF baudrate = 1200, 2400, 4800 or 9600
  *      Set Rx level = 60 and Tx level = 8
  *  ELSE IF baudrate == 19200
@@ -634,7 +634,7 @@ LOCAL int IP520Write
  *          Set Rx level = 56 and Tx level = 8
  *      ENDIF
  *  ENDIF
- * 
+ *
  */
 
 LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
@@ -681,7 +681,7 @@ LOCAL void IP520OptsSet(TY_IP520_DEV * dev, int opts)
     }
     else if ((dev->mode == RS422) && (!(opts & CLOCAL)))
         printf("*Warning* device %s configured for RTS/CTS handshaking is not supported for RS-422\n",
-               dev->tyDev.devHdr.name); 
+               dev->tyDev.devHdr.name);
 
     dev->opts = opts & mask;
 
@@ -1057,7 +1057,7 @@ LOCAL void IsrErrMsg(epicsUInt8 lsr, TY_IP520_DEV *dev)
  *  IF LSR shows Rx Overrun error.
  *      Call IsrErrMsg().
  *  ENDIF
- * 
+ *
  *  IF Transmitter Hold Register is Empty (then FIFO is also empty).
  *      Set Tx counter to 64.
  *  ELSE
@@ -1068,13 +1068,13 @@ LOCAL void IsrErrMsg(epicsUInt8 lsr, TY_IP520_DEV *dev)
  *      Write character to Tx holding register (THR).
  *      Decrement TxCtr.
  *  ENDWHILE
- * 
+ *
  *  IF another Tx character was NOT available (the tty ringbuffer is empty)
  *      Disable Tx interrupts.
  *  ELSE
  *      Enable Tx interrupts.
  *  ENDIF
- * 
+ *
  *  Enable interrupts.
  */
 LOCAL void IP520TxStartup(TY_IP520_DEV *dev)
