@@ -84,6 +84,13 @@
 #define TY_DEVSTART_PTR FUNCPTR
 #endif
 
+#if __STDC_VERSION__ < 199901L
+#  define fn_nm __FUNCTION__
+#else
+#  define fn_nm __func__
+#endif
+
+
 LOCAL QUAD_TABLE *tyGSOctalModules;
 LOCAL int tyGSOctalMaxModules;
 int tyGSOctalLastModule;
@@ -132,8 +139,6 @@ STATUS tyGSOctalDrv
     int maxModules
     )
 {
-    static char *fn_nm = "tyGSOctalDrv";
-
     /* check if driver already installed */
     if (tyGSOctalDrvNum > 0)
         return OK;
@@ -231,7 +236,6 @@ int tyGSOctalModuleInit
     int          slot            /* slot number */
     )
 {
-    static char *fn_nm = "tyGSOctalModuleInit";
     int modelID;
     int status;
     int mod;
@@ -600,7 +604,6 @@ LOCAL int tyGSOctalWrite
         long write_size                 /* # bytes to write */
     )
 {
-    static char *fn_nm = "tyGSOctalWrite";
     SCC2698_CHAN *chan = dev->chan;
     int nbytes;
 
@@ -810,7 +813,6 @@ STATUS tyGSOctalConfig (
     int bits,
     char flow
 ) {
-    static char *fn_nm = "tyGSOctalConfig";
     TY_GSOCTAL_DEV *dev = (TY_GSOCTAL_DEV *) iosDevFind(name, NULL);
     int opts = 0;
     int key;

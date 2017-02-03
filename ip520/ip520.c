@@ -68,6 +68,13 @@ Implentation Notes:
 
 #define isPower2(x) ((x) && !((x) & ((x) - 1)))
 
+#if __STDC_VERSION__ < 199901L
+#  define fn_nm __FUNCTION__
+#else
+#  define fn_nm __func__
+#endif
+
+
 /*
  * Module variables
  */
@@ -122,8 +129,6 @@ LOCAL void   IsrErrMsg(epicsUInt8, TY_IP520_DEV *);
 
 STATUS IP520Drv(int maxModules)
 {
-    static char *fn_nm = "IP520Drv";
-
     /* check if driver already installed */
     if (IP520DrvNum > 0)
         return OK;
@@ -234,7 +239,6 @@ int IP520ModuleInit
     int          slot            /* slot number */
     )
 {
-    static char *fn_nm = "IP520ModuleInit";
     int modelID, status, mod, RSmode;
     MOD_TABLE *pmod;
 
@@ -575,7 +579,6 @@ LOCAL int IP520Write
     long write_size     /* # bytes to write */
     )
 {
-    static char *fn_nm = "IP520Write";
     REGMAP *regs = dev->regs;
     int nbytes;
 
@@ -872,7 +875,6 @@ LOCAL STATUS IP520Ioctl
  */
 STATUS IP520Config(char *name, int baud, char parity, int stop, int bits, char flow)
 {
-    static char *fn_nm = "IP520Config";
     TY_IP520_DEV *dev = (TY_IP520_DEV *) iosDevFind(name, NULL);
     int opts = 0;
     int key;

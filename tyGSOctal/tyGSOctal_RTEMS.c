@@ -31,6 +31,13 @@ typedef void *TY_DEV;
 #include "tyGSOctal.h"      /* Device driver includes */
 #include "drvIpac.h"        /* IP management (from drvIpac) */
 
+#if __STDC_VERSION__ < 199901L
+#  define fn_nm __FUNCTION__
+#else
+#  define fn_nm __func__
+#endif
+
+
 /*
  * 'Global' variables
  */
@@ -396,7 +403,6 @@ int tyGSOctalModuleInit
     int          slot            /* slot number */
     )
 {
-    static  char    *fn_nm = "tyGSOctalModuleInit";
     int modelID;
     int status;
     int mod;
