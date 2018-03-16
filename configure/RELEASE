@@ -2,4 +2,4 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-EPICS_BASE=/home/phoebus/ANJ/epics/base/3-14-dev
+EPICS_BASE=/home/phoebus/ANJ/epics/base/7.0
