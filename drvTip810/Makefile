@@ -24,6 +24,8 @@ LIBSRCS += devSiWiener.c
 LIBSRCS += devBiTip810.c
 LIBSRCS += drvTip810.c
 
+USR_CFLAGS += -DUSE_TYPED_RSET
+
 LIBRARY_IOC_vxWorks = Tip810
 LIBRARY_IOC_RTEMS = Tip810
 
