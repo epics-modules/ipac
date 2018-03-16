@@ -3,7 +3,8 @@
 driver(drvIpac)
 registrar(ipacRegistrar)
 
-# Register your carrier driver(s) with these
+# Register your carrier driver(s) by copying one or more of these
+# lines corresponding to your carrier(s) into your IOC's DBD file
 #registrar(mv162ipRegistrar)
 #registrar(vipc310Registrar)
 #registrar(vipc610Registrar)
