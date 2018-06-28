@@ -11,7 +11,7 @@ Description:
     layout and programming model for the chip used on the TIP810 IP module.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     19 July 1995
 

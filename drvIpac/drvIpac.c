@@ -11,7 +11,7 @@ Description:
     drivers and the IPAC Carrier drivers.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     3 July 1995
 

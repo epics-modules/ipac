@@ -12,7 +12,7 @@ Description:
 	2. Downwards to the IPAC Carrier driver
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     1 July 1995
 

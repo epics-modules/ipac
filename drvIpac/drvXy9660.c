@@ -21,7 +21,7 @@ Description:
     IP modules at 32MHz.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     20th August 2007
 

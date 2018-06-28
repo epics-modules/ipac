@@ -12,7 +12,7 @@ Description:
     hardware.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     6 July 1995
 

@@ -13,7 +13,7 @@ Description:
     accesses to dual-slot IP modules.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     5 July 1995
 

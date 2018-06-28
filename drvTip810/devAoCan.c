@@ -10,7 +10,7 @@ Description:
     CANBUS Analogue Output device support
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     9 August 1995
 

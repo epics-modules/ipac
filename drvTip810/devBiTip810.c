@@ -1,4 +1,5 @@
 /*******************************************************************************
+
 Project:
     CAN Bus Driver for EPICS
 
@@ -9,7 +10,7 @@ Description:
     TIP810 Status Binary Input device support
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     3 April 1997
 

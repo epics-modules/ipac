@@ -11,7 +11,7 @@ Description:
     layout and programming model for the IPIC chip used on the MVME162.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     6 July 1995
 

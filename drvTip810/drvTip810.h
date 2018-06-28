@@ -10,7 +10,7 @@ Description:
     Header file for TEWS TIP810 CAN Bus driver.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     20 July 1995
 

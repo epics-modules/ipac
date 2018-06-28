@@ -15,7 +15,7 @@ Description:
     carriers, which is different to (and more useful than) the VIPC616.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     17 October 1997
 

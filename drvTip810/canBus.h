@@ -10,7 +10,7 @@ Description:
     CANBUS specific constants
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     25 July 1995
 

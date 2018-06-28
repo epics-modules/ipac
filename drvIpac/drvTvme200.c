@@ -18,7 +18,7 @@ Description:
     IP modules.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     10 December 2004
 

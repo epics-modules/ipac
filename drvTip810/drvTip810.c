@@ -10,7 +10,7 @@ Description:
     CAN Bus driver for TEWS TIP810 Industry-Pack Module.
 
 Author:
-    Andrew Johnson <anjohnson@iee.org>
+    Andrew Johnson <Andrew.N.Johnson@gmail.com>
 Created:
     20 July 1995
 
