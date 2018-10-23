@@ -202,7 +202,7 @@ typedef struct {
 /* Functions for startup and interactive use */
 
 epicsShareFunc int ipacAddCarrier(ipac_carrier_t *pcarrier, const char *cardParams);
-epicsShareFunc int ipacReport(int interest);
+epicsShareFunc long ipacReport(int interest);
 epicsShareFunc int ipacAddNullCarrier (void);
 epicsShareFunc int ipacLatestCarrier(void);
 

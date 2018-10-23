@@ -32,6 +32,8 @@ LIBSRCS_vxWorks-pentium += drvAtc40.c
 
 LIBSRCS_vxWorks += $(LIBSRCS_$(T_A))
 
+USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
+
 Ipac_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES

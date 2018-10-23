@@ -69,10 +69,10 @@ Copyright (c) 1995-2007 Andrew Johnson
 
 /* EPICS Driver Support Entry Table */
 
-struct drvet drvTip810 = {
+drvet drvTip810 = {
     2,
-    (DRVSUPFUN) t810Report,
-    (DRVSUPFUN) t810Initialise
+    t810Report,
+    t810Initialise
 };
 epicsExportAddress(drvet, drvTip810);
 
@@ -173,7 +173,7 @@ Returns:
 
 */
 
-int t810Report (
+long t810Report (
     int interest
 ) {
     t810Dev_t *pdevice = pt810First;
@@ -282,7 +282,7 @@ Example:
 
 */
 
-int t810Create (
+long t810Create (
     char *pbusName,	/* Unique Identifier for this device */
     int card,		/* Ipac Driver card .. */
     int slot,		/* .. and slot number */
@@ -311,7 +311,8 @@ int t810Create (
 	{ 0,	0,		0		}
     };
     t810Dev_t *pdevice, *plist = (t810Dev_t *) &pt810First;
-    int status, rateIndex, id;
+    long status;
+    int rateIndex, id;
 
     status = ipmValidate(card, slot, IP_MANUFACTURER_TEWS, 
 			 IP_MODEL_TEWS_TIP810);
@@ -701,7 +702,7 @@ Returns:
 
 */
 
-int t810Initialise (
+long t810Initialise (
     void
 ) {
     t810Dev_t *pdevice = pt810First;

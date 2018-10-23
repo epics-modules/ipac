@@ -79,8 +79,8 @@ typedef struct biCanBus_s {
     int status;
 } biCanBus_t;
 
-static long init_bi(struct biRecord *prec);
-static long get_ioint_info(int cmd, struct biRecord *prec, IOSCANPVT *ppvt);
+static long init_bi(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long read_bi(struct biRecord *prec);
 static void ProcessCallback(CALLBACK *pcallback);
 static void biMessage(void *private, const canMessage_t *pmessage);
@@ -88,18 +88,16 @@ static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pcallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN read_bi;
+    dset common;
+    long (*read_bi)(struct biRecord *prec);
 } devBiCan = {
-    5,
-    NULL,
-    NULL,
-    init_bi,
-    get_ioint_info,
+    {
+        5,
+        NULL,
+        NULL,
+        init_bi,
+        get_ioint_info
+    },
     read_bi
 };
 epicsExportAddress(dset, devBiCan);
@@ -108,8 +106,9 @@ static biCanBus_t *firstBus;
 
 
 static long init_bi (
-    struct biRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct biRecord *prec = (struct biRecord *) pcommon;
     biCanPrivate_t *pcanBi;
     biCanBus_t *pbus;
     int status;
@@ -209,9 +208,10 @@ static long init_bi (
 
 static long get_ioint_info (
     int cmd,
-    struct biRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct biRecord *prec = (struct biRecord *) pcommon;
     biCanPrivate_t *pcanBi = prec->dpvt;
 
     if (pcanBi->ioscanpvt == NULL) {

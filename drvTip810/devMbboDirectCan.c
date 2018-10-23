@@ -76,26 +76,24 @@ typedef struct mbboDirectCanBus_s {
     int status;
 } mbboDirectCanBus_t;
 
-static long init_mbboDirect(struct mbboDirectRecord *prec);
-static long get_ioint_info(int cmd, struct mbboDirectRecord *prec, IOSCANPVT *ppvt);
+static long init_mbboDirect(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long write_mbboDirect(struct mbboDirectRecord *prec);
 static void mbboDirectMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN write_mbboDirect;
+    dset common;
+    long (*write_mbboDirect)(struct mbboDirectRecord *prec);
 } devMbboDirectCan = {
-    5,
-    NULL,
-    NULL,
-    init_mbboDirect,
-    get_ioint_info,
+    {
+        5,
+        NULL,
+        NULL,
+        init_mbboDirect,
+        get_ioint_info
+    },
     write_mbboDirect
 };
 epicsExportAddress(dset, devMbboDirectCan);
@@ -104,8 +102,9 @@ static mbboDirectCanBus_t *firstBus;
 
 
 static long init_mbboDirect (
-    struct mbboDirectRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct mbboDirectRecord *prec = (struct mbboDirectRecord *) pcommon;
     mbboDirectCanPrivate_t *pcanMbboDirect;
     mbboDirectCanBus_t *pbus;
     int status;
@@ -194,9 +193,10 @@ static long init_mbboDirect (
 
 static long get_ioint_info (
     int cmd,
-    struct mbboDirectRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct mbboDirectRecord *prec = (struct mbboDirectRecord *) pcommon;
     mbboDirectCanPrivate_t *pcanMbboDirect = prec->dpvt;
 
     if (pcanMbboDirect->ioscanpvt == NULL) {

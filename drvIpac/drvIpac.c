@@ -82,12 +82,12 @@ LOCAL ipac_carrier_t nullCarrier = {
 
 /* Driver Support Entry Table */
 
-LOCAL int ipacInitialise(int after);
+LOCAL long ipacInitialise(int after);
 
-struct drvet drvIpac = {
-    2, 
-    (DRVSUPFUN) ipacReport, 
-    (DRVSUPFUN) ipacInitialise
+drvet drvIpac = {
+    2,
+    ipacReport,
+    ipacInitialise
 };
 epicsExportAddress(drvet, drvIpac);
 
@@ -782,7 +782,7 @@ Returns:
 
 */
 
-int ipacReport (
+long ipacReport (
     int interest
 ) {
     int carrier, slot;
@@ -836,7 +836,7 @@ Returns:
 
 */
 
-LOCAL int ipacInitialise (
+LOCAL long ipacInitialise (
     int after
 ) {
     return OK;

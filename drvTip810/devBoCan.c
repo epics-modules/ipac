@@ -76,26 +76,24 @@ typedef struct boCanBus_s {
     int status;
 } boCanBus_t;
 
-static long init_bo(struct boRecord *prec);
-static long get_ioint_info(int cmd, struct boRecord *prec, IOSCANPVT *ppvt);
+static long init_bo(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long write_bo(struct boRecord *prec);
 static void boMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN write_bo;
+    dset common;
+    long (*write_bo)(struct boRecord *prec);
 } devBoCan = {
-    5,
-    NULL,
-    NULL,
-    init_bo,
-    get_ioint_info,
+    {
+        5,
+        NULL,
+        NULL,
+        init_bo,
+        get_ioint_info
+    },
     write_bo
 };
 epicsExportAddress(dset, devBoCan);
@@ -104,8 +102,9 @@ static boCanBus_t *firstBus;
 
 
 static long init_bo (
-    struct boRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct boRecord *prec = (struct boRecord *) pcommon;
     boCanPrivate_t *pcanBo;
     boCanBus_t *pbus;
     int status;
@@ -192,9 +191,10 @@ static long init_bo (
 
 static long get_ioint_info (
     int cmd,
-    struct boRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct boRecord *prec = (struct boRecord *) pcommon;
     boCanPrivate_t *pcanBo = prec->dpvt;
 
     if (pcanBo->ioscanpvt == NULL) {

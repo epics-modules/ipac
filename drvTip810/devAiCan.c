@@ -85,8 +85,8 @@ typedef struct aiCanBus_s {
     int status;
 } aiCanBus_t;
 
-static long init_ai(struct aiRecord *prec);
-static long get_ioint_info(int cmd, struct aiRecord *prec, IOSCANPVT *ppvt);
+static long init_ai(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long read_ai(struct aiRecord *prec);
 static long special_linconv(struct aiRecord *prec, int after);
 static void ProcessCallback(CALLBACK *pcallback);
@@ -95,19 +95,17 @@ static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN read_ai;
-    DEVSUPFUN special_linconv;
+    dset common;
+    long (*read_ai)(struct aiRecord *prec);
+    long (*linconv)(struct aiRecord *prec, int after);
 } devAiCan = {
-    6,
-    NULL,
-    NULL,
-    init_ai,
-    get_ioint_info,
+    {
+        6,
+        NULL,
+        NULL,
+        init_ai,
+        get_ioint_info
+    },
     read_ai,
     special_linconv
 };
@@ -117,8 +115,9 @@ static aiCanBus_t *firstBus;
 
 
 static long init_ai (
-    struct aiRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct aiRecord *prec = (struct aiRecord *) pcommon;
     aiCanPrivate_t *pcanAi;
     aiCanBus_t *pbus;
     int status;
@@ -257,9 +256,10 @@ static long init_ai (
 
 static long get_ioint_info (
     int cmd,
-    struct aiRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct aiRecord *prec = (struct aiRecord *) pcommon;
     aiCanPrivate_t *pcanAi = prec->dpvt;
 
     if (pcanAi->ioscanpvt == NULL) {

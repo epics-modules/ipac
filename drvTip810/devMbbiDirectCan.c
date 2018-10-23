@@ -79,8 +79,8 @@ typedef struct mbbiDirectCanBus_s {
     int status;
 } mbbiDirectCanBus_t;
 
-static long init_mbbiDirect(struct mbbiDirectRecord *prec);
-static long get_ioint_info(int cmd, struct mbbiDirectRecord *prec, IOSCANPVT *ppvt);
+static long init_mbbiDirect(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long read_mbbiDirect(struct mbbiDirectRecord *prec);
 static void ProcessCallback(CALLBACK *pcallback);
 static void mbbiDirectMessage(void *private, const canMessage_t *pmessage);
@@ -88,18 +88,16 @@ static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN read_mbbiDirect;
+    dset common;
+    long (*read_mbbiDirect)(struct mbbiDirectRecord *prec);
 } devMbbiDirectCan = {
-    5,
-    NULL,
-    NULL,
-    init_mbbiDirect,
-    get_ioint_info,
+    {
+        5,
+        NULL,
+        NULL,
+        init_mbbiDirect,
+        get_ioint_info
+    },
     read_mbbiDirect
 };
 epicsExportAddress(dset, devMbbiDirectCan);
@@ -108,8 +106,9 @@ static mbbiDirectCanBus_t *firstBus;
 
 
 static long init_mbbiDirect (
-    struct mbbiDirectRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct mbbiDirectRecord *prec = (struct mbbiDirectRecord *) pcommon;
     mbbiDirectCanPrivate_t *pcanMbbiDirect;
     mbbiDirectCanBus_t *pbus;
     int status;
@@ -211,9 +210,10 @@ static long init_mbbiDirect (
 
 static long get_ioint_info (
     int cmd,
-    struct mbbiDirectRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct mbbiDirectRecord *prec = (struct mbbiDirectRecord *) pcommon;
     mbbiDirectCanPrivate_t *pcanMbbiDirect = prec->dpvt;
 
     if (pcanMbbiDirect->ioscanpvt == NULL) {

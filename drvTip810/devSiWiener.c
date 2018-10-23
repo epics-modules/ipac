@@ -78,8 +78,8 @@ typedef struct siCanBus_s {
     int status;
 } siCanBus_t;
 
-static long init_si(struct stringinRecord *prec);
-static long get_ioint_info(int cmd, struct stringinRecord *prec, IOSCANPVT *ppvt);
+static long init_si(struct dbCommon *prec);
+static long get_ioint_info(int cmd, struct dbCommon *prec, IOSCANPVT *ppvt);
 static long read_si(struct stringinRecord *prec);
 static void ProcessCallback(CALLBACK *pcallback);
 static void siMessage(void *private, const canMessage_t *pmessage);
@@ -87,18 +87,16 @@ static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
 struct {
-    long number;
-    DEVSUPFUN report;
-    DEVSUPFUN init;
-    DEVSUPFUN init_record;
-    DEVSUPFUN get_ioint_info;
-    DEVSUPFUN read_si;
+    dset common;
+    long (*read_si)(struct stringinRecord *prec);
 } devSiWiener = {
-    5,
-    NULL,
-    NULL,
-    init_si,
-    get_ioint_info,
+    {
+        5,
+        NULL,
+        NULL,
+        init_si,
+        get_ioint_info
+    },
     read_si
 };
 epicsExportAddress(dset, devSiWiener);
@@ -106,8 +104,9 @@ epicsExportAddress(dset, devSiWiener);
 static siCanBus_t *firstBus;
 
 static long init_si (
-    struct stringinRecord *prec
+    struct dbCommon *pcommon
 ) {
+    struct stringinRecord *prec = (struct stringinRecord *) pcommon;
     siCanPrivate_t *pcanSi;
     siCanBus_t *pbus;
     int status;
@@ -196,9 +195,10 @@ static long init_si (
 
 static long get_ioint_info (
     int cmd,
-    struct stringinRecord *prec, 
+    struct dbCommon *pcommon,
     IOSCANPVT *ppvt
 ) {
+    struct stringinRecord *prec = (struct stringinRecord *) pcommon;
     siCanPrivate_t *pcanSi = prec->dpvt;
 
     if (pcanSi->ioscanpvt == NULL) {
