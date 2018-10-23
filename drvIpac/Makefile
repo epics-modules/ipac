@@ -14,23 +14,23 @@ HTMLS += ipacRelease.html
 
 LIBRARY_IOC = Ipac
 
-LIBSRCS += drvIpac.c
+Ipac_SRCS += drvIpac.c
 
 # Any VMEbus: VIPC/TVME/XVME carrier drivers
-LIBSRCS += drvVipc310.c
-LIBSRCS += drvVipc610.c
-LIBSRCS += drvVipc616.c
-LIBSRCS += drvTvme200.c
-LIBSRCS += drvXy9660.c
-LIBSRCS += drvHy8002.c
+Ipac_SRCS += drvVipc310.c
+Ipac_SRCS += drvVipc610.c
+Ipac_SRCS += drvVipc616.c
+Ipac_SRCS += drvTvme200.c
+Ipac_SRCS += drvXy9660.c
+Ipac_SRCS += drvHy8002.c
 
 # MVME162 & MVME172: IPchip carrier driver (68k only)
-LIBSRCS_vxWorks-68040 += drvIpMv162.c
+Ipac_SRCS_vxWorks-68040 += drvIpMv162.c
 
 # ISAbus: SBS ATC40 carrier driver (Intel only)
-LIBSRCS_vxWorks-pentium += drvAtc40.c
+Ipac_SRCS_vxWorks-pentium += drvAtc40.c
 
-LIBSRCS_vxWorks += $(LIBSRCS_$(T_A))
+Ipac_SRCS_vxWorks += $(Ipac_SRCS_$(T_A))
 
 USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
 

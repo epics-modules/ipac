@@ -12,17 +12,17 @@ HTMLS += devCan.html
 HTMLS += drvTip810.html
 HTMLS += canRelease.html
 
-LIBSRCS += devAiCan.c
-LIBSRCS += devAoCan.c
-LIBSRCS += devBiCan.c
-LIBSRCS += devBoCan.c
-LIBSRCS += devMbbiCan.c
-LIBSRCS += devMbboCan.c
-LIBSRCS += devMbbiDirectCan.c
-LIBSRCS += devMbboDirectCan.c
-LIBSRCS += devSiWiener.c
-LIBSRCS += devBiTip810.c
-LIBSRCS += drvTip810.c
+Tip810_SRCS += devAiCan.c
+Tip810_SRCS += devAoCan.c
+Tip810_SRCS += devBiCan.c
+Tip810_SRCS += devBoCan.c
+Tip810_SRCS += devMbbiCan.c
+Tip810_SRCS += devMbboCan.c
+Tip810_SRCS += devMbbiDirectCan.c
+Tip810_SRCS += devMbboDirectCan.c
+Tip810_SRCS += devSiWiener.c
+Tip810_SRCS += devBiTip810.c
+Tip810_SRCS += drvTip810.c
 
 USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
 
