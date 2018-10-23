@@ -82,7 +82,7 @@ LOCAL ipac_carrier_t nullCarrier = {
 
 /* Driver Support Entry Table */
 
-LOCAL long ipacInitialise(int after);
+LOCAL long ipacInitialise(void);
 
 drvet drvIpac = {
     2,
@@ -836,9 +836,7 @@ Returns:
 
 */
 
-LOCAL long ipacInitialise (
-    int after
-) {
+LOCAL long ipacInitialise (void) {
     return OK;
 }
 
