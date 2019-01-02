@@ -7,9 +7,9 @@ File:
     drvVipc310.c
 
 Description:
-    IPAC Carrier Driver for the SBS/GreenSpring VIPC310 Dual IndustryPack 
-    Carrier VME board, provides the interface between IPAC driver and the 
-    hardware.  This carrier is 3U high, and thus cannot support 32-bit 
+    IPAC Carrier Driver for the SBS/GreenSpring VIPC310 Dual IndustryPack
+    Carrier VME board, provides the interface between IPAC driver and the
+    hardware.  This carrier is 3U high, and thus cannot support 32-bit
     accesses to dual-slot IP modules.
 
 Author:
@@ -86,45 +86,45 @@ Purpose:
     Creates new private table for VIPC310 at addresses given by cardParams
 
 Description:
-    Checks the parameter string for the address of the card I/O space and 
+    Checks the parameter string for the address of the card I/O space and
     optional size of the memory space for the modules.  If both the I/O and
-    memory base addresses can be reached from the CPU, a private table is 
-    created for this board.  The private table is a 2-D array of pointers 
+    memory base addresses can be reached from the CPU, a private table is
+    created for this board.  The private table is a 2-D array of pointers
     to the base addresses of the various accessible parts of the IP module.
 
 Parameters:
-    The parameter string should comprise a hex number (the 0x or 0X at the 
-    start is optional) optionally followed by a comma and a decimal integer.  
-    The first number is the I/O base address of the card in the VME A16 
-    address space (the factory default is 0x6000).  If present the second 
+    The parameter string should comprise a hex number (the 0x or 0X at the
+    start is optional) optionally followed by a comma and a decimal integer.
+    The first number is the I/O base address of the card in the VME A16
+    address space (the factory default is 0x6000).  If present the second
     number gives the memory space in Kbytes allocated to each IP module.
     The memory base address of the VIPC310 card is set using the same jumpers
     as the I/O base address and is always 256 times the I/O base address,
     but in the VME A24 address space.  The factory default fot the memory
     base address is thus 0x600000.  If the memory size parameter is omitted
     or set to zero then neither IP module provides any memory space.  Legal
-    memory size values are 0, 64, 128, 256, 512, 1024 or 2048.  The memory 
+    memory size values are 0, 64, 128, 256, 512, 1024 or 2048.  The memory
     size interacts with the memory base address such that it is possible to
-    set the existance of memory in either slot independently with suitable 
+    set the existance of memory in either slot independently with suitable
     adjustment of the base address.
 
 Examples:
-    "0x6000" 
+    "0x6000"
 	This indicates that the carrier has its I/O base set to 0x6000, and
 	neither slot uses any memory space.
     "1000,512"
-	Here the I/O base is set to 0x1000, and there is 512 Kbytes of 
-	memory on each module, with the IP module A memory at 0x100000 
+	Here the I/O base is set to 0x1000, and there is 512 Kbytes of
+	memory on each module, with the IP module A memory at 0x100000
 	and module B at 0x180000.
     "0xfe00, 128"
-	The I/O base is at 0xfe00, and hence the carrier memory base is 
+	The I/O base is at 0xfe00, and hence the carrier memory base is
 	0xfe0000. However because the memory size is set to give each module
-	128 Kbytes of memory space, module A cannot be selected (128 K = 
-	0x020000, so the module is decoded at 0xfc0000 but can't be accessed 
+	128 Kbytes of memory space, module A cannot be selected (128 K =
+	0x020000, so the module is decoded at 0xfc0000 but can't be accessed
 	because this is below the memory base).
 
 Returns:
-    0 = OK, 
+    0 = OK,
     S_IPAC_badAddress = Parameter string error, or address not reachable
 
 */
@@ -209,9 +209,9 @@ Purpose:
     Returns the base address for the requested slot & address space
 
 Description:
-    Because we did all that hard work in the initialise routine, this 
+    Because we did all that hard work in the initialise routine, this
     routine only has to do a table lookup in the private array.
-    Note that no parameter checking is required - the IPAC driver which 
+    Note that no parameter checking is required - the IPAC driver which
     calls this routine handles that.
 
 Returns:
@@ -237,9 +237,9 @@ Purpose:
     Handles interrupter commands and status requests
 
 Description:
-    The carrier board is limited to fixed interrupt levels, and has 
+    The carrier board is limited to fixed interrupt levels, and has
     no control over interrupts.  The only commands thus supported are
-    a request of the interrupt level associated with a particular slot 
+    a request of the interrupt level associated with a particular slot
     and interrupt number, or to enable interrupts by making sure the
     VMEbus interrupter is listening on the necessary level.
 
@@ -257,7 +257,7 @@ LOCAL int irqCmd (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	{ IRQ_A0, IRQ_A1 } , 
+	{ IRQ_A0, IRQ_A1 } ,
 	{ IRQ_B0, IRQ_B1 }
     };
 

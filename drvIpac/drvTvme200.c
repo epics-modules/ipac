@@ -159,7 +159,7 @@ Examples:
         carrier initialization code.
 
 Returns:
-    0 = OK, 
+    0 = OK,
     S_IPAC_badAddress = Parameter string error, or address not reachable
 
 */
@@ -210,20 +210,20 @@ static int initialise (
         mSize = 0;
         mAM = 0;                /* prevent compiler warning */
         break;
-        
+
     case 1: case 2: case 3: case 4: case 5: case 6: case 7:
         /* A24, variable size per module */
         mSize = 16384 << s4;    /* Calculate size: 1=32KB, 2=64KB, ... */
         mAM = atVMEA24;
         break;
-        
+
     case 0xf:
         /* A32, 8MB allocated per module */
         mSize = 8 << 20;        /* 8MB */
         mBase <<= 8;
         mAM = atVMEA32;
         break;
-        
+
     default:
         return S_IPAC_badAddress;
     }
@@ -284,7 +284,7 @@ static char *report (
     int ctl = ctrl->control;
     static char output[IPAC_REPORT_LEN];
 
-    sprintf(output, "%sInt0: level %d%s    Int1: level %d%s", 
+    sprintf(output, "%sInt0: level %d%s    Int1: level %d%s",
             (ctl & 4 ? "Error signal    " : ""),
             (irq & 7), (ctl & 1 ? ", active" : ""),
             (irq >> 4 & 7), (ctl & 2 ? ", active" : ""));
@@ -300,9 +300,9 @@ Purpose:
     Returns the base address for the requested slot & address space
 
 Description:
-    Because we did all that hard work in the initialise routine, this 
+    Because we did all that hard work in the initialise routine, this
     routine only has to do a table lookup in the private settings array.
-    Note that no parameter checking is required - the IPAC driver which 
+    Note that no parameter checking is required - the IPAC driver which
     calls this routine handles that.
 
 Returns:

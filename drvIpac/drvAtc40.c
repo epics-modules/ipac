@@ -167,12 +167,12 @@ Description:
 Parameters:
     The parameter string should comprise a integer number in scanf %p format
     (with GNU a leading 0x or 0X followed by a hexadecimal integer is required),
-    optionally followed by white space and an integer in scanf %i format, optionally 
-    followed by white space and another integer in scanf %i format. The first number 
-    is the I/O base address of the card in the CPU's address space (the factory default 
-    is 0xfc0000 but the software default is 0xa0000).  If present the second number 
-    specifies the memory address space consumption in Kbytes allocated to each IP module. 
-    If present the third number specifies the ISA interrupt request level that will be 
+    optionally followed by white space and an integer in scanf %i format, optionally
+    followed by white space and another integer in scanf %i format. The first number
+    is the I/O base address of the card in the CPU's address space (the factory default
+    is 0xfc0000 but the software default is 0xa0000).  If present the second number
+    specifies the memory address space consumption in Kbytes allocated to each IP module.
+    If present the third number specifies the ISA interrupt request level that will be
     used by the card.
 
     The ATC40 must be installed in a 16-bit ISA bus slot. This allows both
@@ -373,7 +373,7 @@ LOCAL int disableAtc40Ints(int startType)
     }
     for (irq = 0; irq < NELEMENTS(irqATC40Table); irq++) {
         for (pConfig = (atc40Config_t *) lstFirst(&irqATC40Table[irq].deviceList);
-             pConfig; 
+             pConfig;
              pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
             /*
              * disable interrupts
@@ -512,7 +512,7 @@ LOCAL int intVecConnect(void *cPrivate, ushort_t slot, ushort_t vecNum,
 
 /*
  * intVecConnectLocked ()
- * 
+ *
  * global int disable is used instead of a device int disable because several
  * ATC40 devices might be using the same int dispatch table
  */
@@ -538,7 +538,7 @@ LOCAL int intVecConnectLocked(void *cPrivate, ushort_t slot, ushort_t vecNum,
         if ((intDispatchTable[vecNum].pConfig != pConfig) ||
             (intDispatchTable[vecNum].slot != slot)) {
             logMsg("IPAC interrupt vector %#x in use by carrier %u slot %u,\n",
-               vecNum, intDispatchTable[vecNum].pConfig->carrier, 
+               vecNum, intDispatchTable[vecNum].pConfig->carrier,
                intDispatchTable[vecNum].slot, 0, 0, 0);
             logMsg("can't reallocate vector to carrier %u slot %u.\n",
                pConfig->carrier, slot, 0, 0, 0, 0);
@@ -588,11 +588,11 @@ LOCAL int intVecConnectLocked(void *cPrivate, ushort_t slot, ushort_t vecNum,
 
 /*
  * Routine: atc40GlobalISR
- * 
+ *
  * Function: global interrupt service routine for all ATC 40 carriers
- * 
+ *
  * Description: calls atc40ISR for each atc 40 carrier that has been installed
- * 
+ *
  * Returns: void
  */
 LOCAL void atc40GlobalISR(int irq)
@@ -601,12 +601,12 @@ LOCAL void atc40GlobalISR(int irq)
 
     /*
      * call atc40 ISR for each carrier card that has been installed
-     * 
+     *
      * interrupts are locked when adding to, or removing from, this list at task
      * level
      */
     for (pConfig = (atc40Config_t *) lstFirst(&irqATC40Table[irq].deviceList);
-        pConfig; 
+        pConfig;
         pConfig = (atc40Config_t *) lstNext(&pConfig->node)) {
         /*
          * dispatch interrupts
@@ -617,12 +617,12 @@ LOCAL void atc40GlobalISR(int irq)
 
 /*
  * Routine: atc40ISR
- * 
+ *
  * Function: interrupt service routine for one ATC 40 carrier
- * 
+ *
  * Description: fetches vector and calls the module supplied routine if it
  * exists and prints an error message if not
- * 
+ *
  * Returns: void
  */
 LOCAL void atc40ISR(atc40Device * pDev)
@@ -703,7 +703,7 @@ LOCAL void atc40ISR(atc40Device * pDev)
     }
     /*
      * reenable ints
-     * 
+     *
      * toggle edge trigger if ints are still pending
      */
     pDev->intEnable = 1;
@@ -733,10 +733,10 @@ LOCAL char *reportInterruptStatus (char *pReport, unsigned vecNum, unsigned leve
 {
     unsigned nChar;
 
-    nChar = sprintf (pReport, " vec%u=%x ISR=%p(%d) use=%u", 
-        level, vecNum, 
-        intDispatchTable[vecNum].pISR, 
-        intDispatchTable[vecNum].parameter, 
+    nChar = sprintf (pReport, " vec%u=%x ISR=%p(%d) use=%u",
+        level, vecNum,
+        intDispatchTable[vecNum].pISR,
+        intDispatchTable[vecNum].parameter,
         intDispatchTable[vecNum].useCount);
     pReport = &pReport[nChar];
     if ( active ) {

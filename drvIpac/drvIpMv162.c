@@ -7,8 +7,8 @@ File:
     drvIpMv162.c
 
 Description:
-    IPAC Carrier Driver for the IndustryPack carriers on the Motorola 
-    MVME162 CPU board, provides the interface between IPAC driver and the 
+    IPAC Carrier Driver for the IndustryPack carriers on the Motorola
+    MVME162 CPU board, provides the interface between IPAC driver and the
     hardware.
 
 Author:
@@ -81,15 +81,15 @@ LOCAL ipic_t *ipic = (ipic_t *) IPIC_BASE;
 /* IP Recovery Timers */
 
 LOCAL const uchar_t recoveryTime[] = {
-    IPIC_GEN_RT_0, 
-    IPIC_GEN_RT_2, 
-    IPIC_GEN_RT_2, 
-    IPIC_GEN_RT_4, 
-    IPIC_GEN_RT_4, 
-    IPIC_GEN_RT_8, 
-    IPIC_GEN_RT_8, 
-    IPIC_GEN_RT_8, 
-    IPIC_GEN_RT_8 
+    IPIC_GEN_RT_0,
+    IPIC_GEN_RT_2,
+    IPIC_GEN_RT_2,
+    IPIC_GEN_RT_4,
+    IPIC_GEN_RT_4,
+    IPIC_GEN_RT_8,
+    IPIC_GEN_RT_8,
+    IPIC_GEN_RT_8,
+    IPIC_GEN_RT_8
 };
 
 
@@ -112,16 +112,16 @@ Purpose:
     Initialises the MVME162 IPIC chip with settings given in cardParams
 
 Description:
-    
+
 
 Parameters:
-    
+
 
 Examples:
     "A:m=0x80000000,1024 l=4;B:l=2,2;C:m=0x80100000,64"
 
 Returns:
-    0 = OK, 
+    0 = OK,
     S_IPAC_tooMany = Carrier already registered
     S_IPAC_badDriver = IPIC chip not found
     S_IPAC_badAddress = Parameter string error, or address not reachable
@@ -156,7 +156,7 @@ LOCAL int initialise (
 	taskDelay(sysClkRateGet() / 10 + 2);
 	cardParams++;
     }
-    
+
     /* Initialise the IPIC chip */
     for (slot = 0; slot < SLOTS; slot++) {
 	ipic->intCtrl[slot][0] = IPIC_INT_ICLR;
@@ -218,11 +218,11 @@ LOCAL int initialise (
 		    return S_IPAC_badAddress;
 		}
 
-		ipic->genCtrl[slot] = (ipic->genCtrl[slot] & ~IPIC_GEN_RT) | 
+		ipic->genCtrl[slot] = (ipic->genCtrl[slot] & ~IPIC_GEN_RT) |
 				      recoveryTime[p1];
 		cardParams += next;
 		break;
-	    
+
 	    case 'w':
 		p1 = 0;
 		count = sscanf(cardParams, "= %ld %n", &p1, &next);
@@ -244,9 +244,9 @@ LOCAL int initialise (
 			    /* Illegal for odd-numbered slots */
 			    return S_IPAC_badAddress;
 			}
-			ipic->genCtrl[slot] = IPIC_GEN_WIDTH_32 | 
+			ipic->genCtrl[slot] = IPIC_GEN_WIDTH_32 |
 				(ipic->genCtrl[slot] & ~IPIC_GEN_WIDTH);
-			ipic->genCtrl[slot+1] &= ~(IPIC_GEN_WIDTH | 
+			ipic->genCtrl[slot+1] &= ~(IPIC_GEN_WIDTH |
 						   IPIC_GEN_MEN);
 			break;
 		    default:
@@ -270,7 +270,7 @@ Purpose:
 
 Description:
     This routine only has to do a table lookup in the mBase array.
-    Note that no parameter checking is required - the IPAC driver which 
+    Note that no parameter checking is required - the IPAC driver which
     calls this routine handles that.
 
 Returns:
@@ -322,10 +322,10 @@ LOCAL int irqCmd (
 	case ipac_irqLevel5:
 	case ipac_irqLevel6:
 	case ipac_irqLevel7:
-	    ipic->intCtrl[slot][irqNumber] = (cmd & IPIC_INT_LEVEL) | 
+	    ipic->intCtrl[slot][irqNumber] = (cmd & IPIC_INT_LEVEL) |
 		(ipic->intCtrl[slot][irqNumber] & ~IPIC_INT_LEVEL);
 	    return OK;
-	    
+
 	case ipac_irqGetLevel:
 	    return ipic->intCtrl[slot][irqNumber] & IPIC_INT_LEVEL;
 

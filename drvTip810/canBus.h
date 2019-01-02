@@ -94,9 +94,9 @@ epicsShareFunc int canBusRestart(const char *busName);
 epicsShareFunc int canRead(canBusID_t busID, canMessage_t *pmessage, double timeout);
 epicsShareFunc int canWrite(canBusID_t busID, const canMessage_t *pmessage,
 		    double timeout);
-epicsShareFunc int canMessage(canBusID_t busID, canID_t identifier, 
+epicsShareFunc int canMessage(canBusID_t busID, canID_t identifier,
 		      canMsgCallback_t callback, void *pprivate);
-epicsShareFunc int canMsgDelete(canBusID_t busID, canID_t identifier, 
+epicsShareFunc int canMsgDelete(canBusID_t busID, canID_t identifier,
 			canMsgCallback_t callback, void *pprivate);
 epicsShareFunc int canSignal(canBusID_t busID, canSigCallback_t callback,
 		     void *pprivate);
@@ -104,4 +104,3 @@ epicsShareFunc int canIoParse(char *canString, canIo_t *pcanIo);
 
 
 #endif /* INCcanBusH */
-

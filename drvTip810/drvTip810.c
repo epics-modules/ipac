@@ -63,7 +63,7 @@ Copyright (c) 1995-2007 Andrew Johnson
 #define RECV_Q_SIZE 1000	/* Num messages to buffer */
 
 /* These are the IPAC IDs for this module */
-#define IP_MANUFACTURER_TEWS 0xb3 
+#define IP_MANUFACTURER_TEWS 0xb3
 #define IP_MODEL_TEWS_TIP810 0x01
 
 
@@ -133,7 +133,7 @@ Purpose:
     Return status of given t810 device
 
 Description:
-    Returns the status of the t810 device identified by the input parameter, 
+    Returns the status of the t810 device identified by the input parameter,
     or -1 if not a device ID.
 
 Returns:
@@ -182,8 +182,8 @@ long t810Report (
     int status;
 
     if (interest > 0) {
-	printf("  Receive queue holds %d messages, max %d = %d %% used.\n", 
-		RECV_Q_SIZE, t810maxQueued, 
+	printf("  Receive queue holds %d messages, max %d = %d %% used.\n",
+		RECV_Q_SIZE, t810maxQueued,
 		(100 * t810maxQueued) / RECV_Q_SIZE);
     }
 
@@ -193,8 +193,8 @@ long t810Report (
 	    return S_t810_badDevice;
 	}
 
-	printf("  '%s' : IP Carrier %hd Slot %hd, Bus rate %d Kbits/sec\n", 
-		pdevice->pbusName, pdevice->card, pdevice->slot, 
+	printf("  '%s' : IP Carrier %hd Slot %hd, Bus rate %d Kbits/sec\n",
+		pdevice->pbusName, pdevice->card, pdevice->slot,
 		pdevice->busRate);
 
 	switch (interest) {
@@ -225,7 +225,7 @@ long t810Report (
 		if (printed == 0) {
 		    printf("None.");
 		}
-		printf("\n\tcanRead Status : %s\n", 
+		printf("\n\tcanRead Status : %s\n",
 			pdevice->preadBuffer ? "Active" : "Idle");
 		break;
 
@@ -233,7 +233,7 @@ long t810Report (
 		printf("    pca82c200 Chip Status:\n");
 		status = pdevice->pchip->status;
 
-		printf("\tBus Status             : %s\n", 
+		printf("\tBus Status             : %s\n",
 			status & PCA_SR_BS ? "Bus-Off" : "Bus-On");
 		printf("\tError Status           : %s\n",
 			status & PCA_SR_ES ? "Error" : "Ok");
@@ -314,7 +314,7 @@ long t810Create (
     long status;
     int rateIndex, id;
 
-    status = ipmValidate(card, slot, IP_MANUFACTURER_TEWS, 
+    status = ipmValidate(card, slot, IP_MANUFACTURER_TEWS,
 			 IP_MODEL_TEWS_TIP810);
     if (status) {
 	return status;
@@ -333,8 +333,8 @@ long t810Create (
 
     while (plist->pnext != NULL) {
 	plist = plist->pnext;
-	if (strcmp(plist->pbusName, pbusName) == 0 || 
-	    (plist->card == card && 
+	if (strcmp(plist->pbusName, pbusName) == 0 ||
+	    (plist->card == card &&
 	     plist->slot == slot)) {
 	    return S_t810_duplicateDevice;
 	}
@@ -434,7 +434,7 @@ Purpose:
     Copy a received message from chip to memory
 
 Description:
-    Reads a message from the chip receive buffer into the message buffer 
+    Reads a message from the chip receive buffer into the message buffer
     and flags to chip to release the buffer for further input.
 
 Returns:
@@ -478,7 +478,7 @@ Purpose:
     Copy a message from memory to the chip
 
 Description:
-    Copies a message from the message buffer into the chip receive buffer 
+    Copies a message from the message buffer into the chip receive buffer
     and flags to chip to transmit the message.
 
 Returns:
@@ -672,7 +672,7 @@ static void t810RecvTask(void *dummy) {
 	/* If canRead is waiting for this ID, give it the message and kick it */
 	if (rmsg.pdevice->preadBuffer != NULL &&
 	    rmsg.pdevice->preadBuffer->identifier == rmsg.message.identifier) {
-	    memcpy(rmsg.pdevice->preadBuffer, &rmsg.message, 
+	    memcpy(rmsg.pdevice->preadBuffer, &rmsg.message,
 		   sizeof(canMessage_t));
 	    rmsg.pdevice->preadBuffer = NULL;
 	    epicsEventSignal(rmsg.pdevice->rxSem);
@@ -866,16 +866,16 @@ int canBusStop (
 Routine:
     canBusRestart
 
-Purpose: 
+Purpose:
     Restart I/O on named CANbus
 
 Description:
     Restarts the chip for the named bus after a canBusStop
 
-Returns: 
+Returns:
     0, or S_can_noDevice if no match found.
 
-Example: 
+Example:
     status = canBusRestart("CAN1");
 
 */
@@ -966,7 +966,7 @@ Example:
 */
 
 int canIoParse (
-    char *canString, 
+    char *canString,
     canIo_t *pcanIo
 ) {
     char separator;
@@ -1063,7 +1063,7 @@ Description:
     available within a the given number of seconds.
 
 Returns:
-    0, 
+    0,
     S_can_badMessage for bad identifier, message length or rtr value,
     S_can_badDevice for bad device pointer,
     S_t810_timeout indicates timeout,
@@ -1122,12 +1122,12 @@ Description:
     restrictions in what the routine can perform (see vxWorks User
     Guide for details of these).  The callback routine should be
     declared of type canMsgCallback_t
-	void callback(void *pprivate, can_Message_t *pmessage); 
+	void callback(void *pprivate, can_Message_t *pmessage);
     The pprivate value supplied to canMessage is passed to the callback
     routine with each message to allow it to identify its context.
 
 Returns:
-    0, 
+    0,
     S_can_badMessage for bad identifier or NULL callback routine,
     S_t810_badDevice for bad device pointer,
     ENOMEM if malloc() fails.
@@ -1190,7 +1190,7 @@ Description:
     identical to those given to canMessage.
 
 Returns:
-    0, 
+    0,
     S_can_badMessage for bad identifier or NULL callback routine,
     S_can_noMessage for no matching message callback,
     S_t810_badDevice for bad device pointer.
@@ -1319,7 +1319,7 @@ Description:
 
 Returns:
     0, or
-    S_t810_badDevice for bad bus ID, 
+    S_t810_badDevice for bad bus ID,
     S_can_badMessage for bad message Identifier or length,
     S_t810_timeout for timeout
 
@@ -1459,7 +1459,7 @@ static const iocshFuncDef t810CreateFuncDef =
     {"t810Create",5,t810CreateArgs};
 static void t810CreateCallFunc(const iocshArgBuf *arg)
 {
-    t810Create(arg[0].sval, arg[1].ival, arg[2].ival, arg[3].ival, 
+    t810Create(arg[0].sval, arg[1].ival, arg[2].ival, arg[3].ival,
 	       arg[4].ival);
 }
 
@@ -1511,4 +1511,3 @@ static void drvTip810Registrar(void) {
     iocshRegister(&canBusRestartFuncDef,canBusRestartCallFunc);
 }
 epicsExportRegistrar(drvTip810Registrar);
-

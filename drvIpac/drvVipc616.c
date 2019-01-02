@@ -107,20 +107,20 @@ Purpose:
     Creates new private table for VIPC616 at addresses given by cardParams
 
 Description:
-    Checks the parameter string for the address of the card I/O space and 
-    optional address and size of the card memory space.  A private table 
-    is created for this card which is a 2-D array of pointers to the base 
+    Checks the parameter string for the address of the card I/O space and
+    optional address and size of the card memory space.  A private table
+    is created for this card which is a 2-D array of pointers to the base
     addresses of the various accessible parts of each IP module.
 
 Parameters:
     The parameter string should comprise a hex number (the 0x or 0X at
     the start is optional), optionally followed by a comma and another
-    hex number, and possibly then another comma and a decimal integer.  
+    hex number, and possibly then another comma and a decimal integer.
     The first number is the I/O base address of the card in the VME A16
     address space (the factory default is 0x6000).  If the second
     number is present without the third number, this is the base
     address of the module memory space in the VME A32 address space
-    (the address can then only have non-zero bits in A25 to A31; each 
+    (the address can then only have non-zero bits in A25 to A31; each
     IP module is allocated 8Mb for memory in the VME A32 space).  If a
     third number is present, the second number is the card memory
     address within the VME A24 address space and the third number is
@@ -130,29 +130,29 @@ Parameters:
     exclude memory from the lower slots while still providing access to
     memory in the later slots by adjusting the base address suitably.
 
-    The factory default for the memory base address of the VIPC616 is 
-    0xD0000000 (A32 space).  If the memory address parameters are omitted 
-    then none of the IP modules on the carrier provide any memory space.  
+    The factory default for the memory base address of the VIPC616 is
+    0xD0000000 (A32 space).  If the memory address parameters are omitted
+    then none of the IP modules on the carrier provide any memory space.
 
 Examples:
-    "0x6000" 
-	This indicates that the carrier board has its I/O base set to 
+    "0x6000"
+	This indicates that the carrier board has its I/O base set to
 	0x6000, and none of the slots provide memory space.
     "1000,80000000"
 	Here the I/O base is set to 0x1000, and the module memory areas
-	are accessible in A32 space starting at 0x80000000, so IP module 
-	A memory starts at 0x80000000, module B at 0x80800000, module C 
+	are accessible in A32 space starting at 0x80000000, so IP module
+	A memory starts at 0x80000000, module B at 0x80800000, module C
 	at 0x81000000 and D at 0x81800000.
     "6000,700000,1024"
-	The I/O base is at 0x6000, and the carrier memory base is in A24 
-	space at 0x700000.  However because the memory size is set to 
-	1024 Kbytes, modules A, B and C cannot be selected (1024 K = 
-	0x100000, so they are decoded at 0x400000, 0x500000 and 0x600000 
-	but can't be accessed because these are below the memory base 
+	The I/O base is at 0x6000, and the carrier memory base is in A24
+	space at 0x700000.  However because the memory size is set to
+	1024 Kbytes, modules A, B and C cannot be selected (1024 K =
+	0x100000, so they are decoded at 0x400000, 0x500000 and 0x600000
+	but can't be accessed because these are below the memory base
 	address).
 
 Returns:
-    0 = OK, 
+    0 = OK,
     S_IPAC_badAddress = Parameter string error, or address not reachable
 
 */
@@ -258,9 +258,9 @@ Purpose:
     Returns the base address for the requested slot & address space
 
 Description:
-    Because we did all that hard work in the initialise routine, this 
+    Because we did all that hard work in the initialise routine, this
     routine only has to do a table lookup in the private array.
-    Note that no parameter checking is required - the IPAC driver which 
+    Note that no parameter checking is required - the IPAC driver which
     calls this routine handles that.
 
 Returns:
@@ -286,9 +286,9 @@ Purpose:
     Handles interrupter commands and status requests
 
 Description:
-    The carrier board is limited to fixed interrupt levels, and has 
+    The carrier board is limited to fixed interrupt levels, and has
     no control over interrupts.  The only commands thus supported are
-    a request of the interrupt level associated with a particular slot 
+    a request of the interrupt level associated with a particular slot
     and interrupt number, or to enable interrupts by making sure the
     VMEbus interrupter is listening on the necessary level.
 
@@ -326,7 +326,7 @@ LOCAL int irqCmd_616 (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	{ IRQ_A0, IRQ_A1 }, 
+	{ IRQ_A0, IRQ_A1 },
 	{ IRQ_B0, IRQ_B1 },
 	{ IRQ_C0, IRQ_C1 },
 	{ IRQ_D0, IRQ_D1 }
@@ -341,7 +341,7 @@ LOCAL int irqCmd_616_01 (
     ipac_irqCmd_t cmd
 ) {
     static const int irqLevel[SLOTS][IPAC_IRQS] = {
-	{ IRQ_A0_01, IRQ_A1_01 }, 
+	{ IRQ_A0_01, IRQ_A1_01 },
 	{ IRQ_B0_01, IRQ_B1_01 },
 	{ IRQ_C0_01, IRQ_C1_01 },
 	{ IRQ_D0_01, IRQ_D1_01 }
