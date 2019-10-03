@@ -2,9 +2,10 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 
-EPICS_BASE=/home/phoebus/ANJ/epics/base/7.0
-
-# These allow developers to override the RELEASE variable settings
-# without having to modify the configure/RELEASE file itself.
+EPICS_BASE=/corvette/usr/local/epics-devel/base-7.0.3
+# These lines allow developers to override these RELEASE settings
+# without having to modify this file directly.
 -include $(TOP)/../RELEASE.local
+-include $(TOP)/../RELEASE.$(EPICS_HOST_ARCH).local
 -include $(TOP)/configure/RELEASE.local
+
