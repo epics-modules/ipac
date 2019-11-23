@@ -1,8 +1,8 @@
-bin
-db
-dbd
-html
-include
-javalib
-lib
+/bin
+/configure/*.local
+/db
+/dbd
+/html
+/include
+/lib
 **/O.*
