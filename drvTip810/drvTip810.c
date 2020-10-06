@@ -193,7 +193,7 @@ long t810Report (
 	    return S_t810_badDevice;
 	}
 
-	printf("  '%s' : IP Carrier %hd Slot %hd, Bus rate %d Kbits/sec\n",
+	printf("  '%s' : IP Carrier %d Slot %d, Bus rate %d Kbits/sec\n",
 		pdevice->pbusName, pdevice->card, pdevice->slot,
 		pdevice->busRate);
 
