@@ -20,6 +20,26 @@ changes to the CANbus driver.</P>
 
 <HR>
 
+<H2>Version 2.16</H2>
+
+<P>Changed:</P>
+<UL>
+
+<LI>Fixed a <TT>printf()</TT> format string in <TT>t810Report()</TT>.</LI>
+
+</UL>
+
+<P>Added:</P>
+<UL>
+
+<LI>When built against EPICS 7.0.4 or later the device support code makes use of
+the record-specific device support entry table structures that are now being
+defined inside the record header files. This provides protection against any
+future changes to the device support entry structure definitions.</LI>
+
+</UL>
+<HR>
+
 <H2>Version 2.15</H2>
 
 <P>Changed:</P>
