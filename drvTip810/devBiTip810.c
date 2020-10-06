@@ -57,10 +57,13 @@ Copyright (c) 1995-2000 Andrew Johnson
 static long init_bi(struct dbCommon *prec);
 static long read_bi(struct biRecord *prec);
 
-struct {
+#ifndef HAS_bidset
+typedef struct {
     dset common;
     long (*read_bi)(struct biRecord *prec);
-} devBiTip810 = {
+} bidset;
+#endif
+bidset devBiTip810 = {
     {
         5,
         NULL,

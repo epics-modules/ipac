@@ -94,11 +94,14 @@ static void aiMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_aidset
+typedef struct aidset {
     dset common;
     long (*read_ai)(struct aiRecord *prec);
     long (*linconv)(struct aiRecord *prec, int after);
-} devAiCan = {
+} aidset;
+#endif
+aidset devAiCan = {
     {
         6,
         NULL,

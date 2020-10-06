@@ -87,10 +87,13 @@ static void biMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pcallback);
 
-struct {
+#ifndef HAS_bidset
+typedef struct {
     dset common;
     long (*read_bi)(struct biRecord *prec);
-} devBiCan = {
+} bidset;
+#endif
+bidset devBiCan = {
     {
         5,
         NULL,

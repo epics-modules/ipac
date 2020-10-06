@@ -86,10 +86,13 @@ static void siMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_stringindset
+typedef struct {
     dset common;
     long (*read_si)(struct stringinRecord *prec);
-} devSiWiener = {
+} stringindset;
+#endif
+stringindset devSiWiener = {
     {
         5,
         NULL,

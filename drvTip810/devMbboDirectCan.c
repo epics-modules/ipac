@@ -83,10 +83,13 @@ static void mbboDirectMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_mbbodirectdset
+typedef struct {
     dset common;
     long (*write_mbboDirect)(struct mbboDirectRecord *prec);
-} devMbboDirectCan = {
+} mbbodirectdset;
+#endif
+mbbodirectdset devMbboDirectCan = {
     {
         5,
         NULL,

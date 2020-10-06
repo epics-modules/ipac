@@ -87,10 +87,13 @@ static void mbbiDirectMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_mbbidirectdset
+typedef struct {
     dset common;
     long (*read_mbbiDirect)(struct mbbiDirectRecord *prec);
-} devMbbiDirectCan = {
+} mbbidirectdset;
+#endif
+mbbidirectdset devMbbiDirectCan = {
     {
         5,
         NULL,

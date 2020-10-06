@@ -87,10 +87,13 @@ static void mbbiMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_mbbidset
+typedef struct {
     dset common;
     long (*read_mbbi)(struct mbbiRecord *prec);
-} devMbbiCan = {
+} mbbidset;
+#endif
+mbbidset devMbbiCan = {
     {
         5,
         NULL,

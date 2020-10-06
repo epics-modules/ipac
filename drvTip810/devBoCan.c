@@ -83,10 +83,13 @@ static void boMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_bodset
+typedef struct {
     dset common;
     long (*write_bo)(struct boRecord *prec);
-} devBoCan = {
+} bodset;
+#endif
+bodset devBoCan = {
     {
         5,
         NULL,

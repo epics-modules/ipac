@@ -90,11 +90,14 @@ static void aoMessage(void *private, const canMessage_t *pmessage);
 static void busSignal(void *private, int status);
 static void busCallback(CALLBACK *pCallback);
 
-struct {
+#ifndef HAS_aodset
+typedef struct aodset {
     dset common;
     long (*write_ao)(struct aoRecord *prec);
-    long (*linconv)(struct aoRecord *prec, int after);
-} devAoCan = {
+    long (*special_linconv)(struct aoRecord *prec, int after);
+} aodset;
+#endif
+aodset devAoCan = {
     {
         6,
         NULL,
