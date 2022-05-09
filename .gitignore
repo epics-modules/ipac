@@ -1,6 +1,6 @@
 /bin
 /configure/*.local
-/db
+/db/
 /dbd
 /html
 /include
