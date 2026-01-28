@@ -556,7 +556,7 @@ Returns:
 */
 
 static void t810ISR (
-    int pdev
+    void* pdev
 ) {
     t810Dev_t *pdevice = (t810Dev_t *) pdev;
     int intSource = pdevice->pchip->interrupt;
@@ -728,7 +728,7 @@ long t810Initialise (
 	pdevice->busOffCount = 0;
 
 	status = ipmIntConnect(pdevice->card, pdevice->slot, pdevice->irqNum,
-			       t810ISR, (int)pdevice);
+			       t810ISR, (void*)pdevice);
 
 	/* The TIP810's intVec register is external to the PCA82C200 chip */
 	*((epicsUInt8 *) pdevice->pchip + 0x41) = pdevice->irqNum;
