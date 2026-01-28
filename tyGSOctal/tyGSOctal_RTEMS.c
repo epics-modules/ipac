@@ -50,8 +50,9 @@ rtems_device_major_number tyGsOctalMajor;
  * Interrupt handler
  */
 static void
-tyGSOctalInt(int mod)
+tyGSOctalInt(void* pmod)
 {
+    int mod = (int)pmod;
     epicsUInt8 sr, isr;
     QUAD_TABLE *qt = &tyGSOctalModules[mod];
     SCC2698 *regs;
@@ -527,7 +528,7 @@ int tyGSOctalModuleInit
         }
 
         if (ipmIntConnect(carrier, slot, int_num, tyGSOctalInt,
-            tyGSOctalLastModule)) {
+            (void*)tyGSOctalLastModule)) {
             printf("%s: Unable to connect ISR", fn_nm);
             return -1;
         }
