@@ -93,8 +93,8 @@ Description:
     to the base addresses of the various accessible parts of the IP module.
 
 Parameters:
-    The parameter string should comprise a hex number (the 0x or 0X at the
-    start is optional) optionally followed by a comma and a decimal integer.
+    The parameter string should comprise a hex number (0x or 0X at the start
+    is now required) optionally followed by a comma and a decimal integer.
     The first number is the I/O base address of the card in the VME A16
     address space (the factory default is 0x6000).  If present the second
     number gives the memory space in Kbytes allocated to each IP module.
@@ -112,7 +112,7 @@ Examples:
     "0x6000"
 	This indicates that the carrier has its I/O base set to 0x6000, and
 	neither slot uses any memory space.
-    "1000,512"
+    "0x1000,512"
 	Here the I/O base is set to 0x1000, and there is 512 Kbytes of
 	memory on each module, with the IP module A memory at 0x100000
 	and module B at 0x180000.
@@ -150,7 +150,7 @@ LOCAL int initialise (
 	/* No params or empty string, use manufacturers default settings */
 	ioBase = 0x6000;
     } else {
-	params = sscanf(cardParams, "%i,%i", &ioBase, &mSize);
+	params = sscanf(cardParams, "%u,%i", &ioBase, &mSize);
 	if (params < 1 || params > 2 ||
 	    ioBase > 0xfe00 || ioBase & 0x01ff ||
 	    mSize < 0 || mSize > 2048 || mSize & 63) {
