@@ -19,9 +19,12 @@
 #include <termios.h>
 #include <errno.h>
 #include <iocsh.h>
-#include <rtems/system.h>
-#include <rtems/io.h>
+
 #include <rtems/error.h>
+#ifndef RTEMS_INLINE_ROUTINE
+#include <rtems/system.h>
+#endif
+#include <rtems/io.h>
 #include <rtems/termiostypes.h>
 
 typedef void *TY_DEV;
