@@ -50,6 +50,7 @@ Copyright (c) 1995-2000 Andrew Johnson
 #define S_t810_badDevice	(M_t810| 3) /*device pointer is not for t810*/
 #define S_t810_transmitterBusy	(M_t810| 4) /*transmit buffer unexpectedly busy*/
 #define S_t810_timeout		(M_t810| 5) /*timeout during request*/
+#define S_t810_nullBusName      (M_t810| 6) /*Null bus name not permitted*/
 
 
 epicsShareFunc int t810Status(canBusID_t busID);

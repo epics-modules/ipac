@@ -314,6 +314,9 @@ long t810Create (
     long status;
     int rateIndex, id;
 
+    if (pbusName == NULL)
+        return S_t810_nullBusName;
+
     status = ipmValidate(card, slot, IP_MANUFACTURER_TEWS,
 			 IP_MODEL_TEWS_TIP810);
     if (status) {
