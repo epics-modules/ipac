@@ -21,4 +21,9 @@ tyGSOctal_DEPEND_DIRS = drvIpac
 DIRS += ip520
 ip520_DEPEND_DIRS = drvIpac
 
+# 'make distclean' removes (rm -rf ./iocsh), so distclean deleted the sources, so put them instead in stanadrd synApps locations instead
+
+DIRS += ipacApp
+ipacApp_DEPEND_DIRS = configure
+
 include $(TOP)/configure/RULES_TOP

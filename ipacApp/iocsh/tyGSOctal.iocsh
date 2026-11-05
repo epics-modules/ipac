@@ -1,0 +1,35 @@
+# ### tyGSOctal.iocsh ###
+
+#- ###################################################
+#- INSTANCE         - Name by which you want to refer to this IndustryPack module
+#- TYPE             - Serial hardware standard the module implements (232, 422, or 485)
+#- INT_VEC          - Interrupt Vector
+#- PORT             - Optional: tyGSOctal port name prefix, this script will create 8
+#-                              ports named $(PORT)0 ... $(PORT)7
+#-                    Default: /tyGS/$(CARRIER),$(SLOT)/
+#-
+#- CARRIER          - Optional: number of IP carrier (Carriers are numbered in the order
+#-                              in which they were defined in ipacAddXYZ() calls.)
+#-                    Default: 0
+#-
+#- SLOT             - Optional: location of module on carrier -- 0..3 for slot A..slot D
+#-                    Default: 0
+#-
+#- MAX_MODULES      - Optional: Max number of tyGSOctal modules that will be configured
+#-                    Default: 1
+#-
+#- IN_BUFF          - Optional: Read buffer size
+#-                    Defult: 1000
+#-
+#- OUT_BUFF         - Optional: Write buffer size
+#-                    Default: 1000
+#-
+#- ###################################################
+
+# Initialize Octal UART stuff
+$(TYGSOCTAL_INIT_COMPLETE="") tyGSOctalDrv($(MAX_MODULES=1))
+
+tyGSOctalModuleInit("$(INSTANCE)", "$(TYPE)", $(INT_VEC), $(CARRIER=0), $(SLOT=0))
+tyGSOctalDevCreateAll("$(PORT=/tyGS/$(CARRIER=0),$(SLOT=0)/)", "$(INSTANCE)", 1000, 1000)
+
+epicsEnvSet("TYGSOCTAL_INIT_COMPLETE", "#")
